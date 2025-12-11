@@ -305,7 +305,7 @@ export default function ProjectPage({
           </div>
 
           <div>
-            <p className="text-base leading-relaxed text-zinc-600">
+            <p className="text-base leading-relaxed whitespace-pre-line text-zinc-600">
               {project.summary}
             </p>
           </div>
