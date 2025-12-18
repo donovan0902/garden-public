@@ -24,6 +24,43 @@ import { ReadinessBadge } from "@/components/ReadinessBadge";
 import Link from "next/link";
 import { Pencil } from "lucide-react";
 
+type ProjectOrigin =
+  | "personal_workflow"
+  | "team_request"
+  | "department_initiative"
+  | "leadership_requested"
+  | "compliance_process";
+
+type PainScope = "me" | "my_team" | "a_department" | "multiple_groups";
+
+function getOriginLabel(origin: ProjectOrigin): string {
+  switch (origin) {
+    case "personal_workflow":
+      return "Personal workflow";
+    case "team_request":
+      return "Team request";
+    case "department_initiative":
+      return "Department initiative";
+    case "leadership_requested":
+      return "Leadership-requested";
+    case "compliance_process":
+      return "Compliance / process requirement";
+  }
+}
+
+function getPainScopeLabel(scope: PainScope): string {
+  switch (scope) {
+    case "me":
+      return "Me";
+    case "my_team":
+      return "My team";
+    case "a_department":
+      return "A department";
+    case "multiple_groups":
+      return "Multiple groups";
+  }
+}
+
 function MediaCarousel({
   mediaFiles,
 }: {
@@ -136,6 +173,19 @@ function formatProjectLink(link?: string | null): {
   }
 }
 
+function parseSmcSummary(summary: string): { problem?: string; built?: string; raw: string } {
+  const normalized = (summary ?? "").trim();
+  const parts = normalized.split(/\n\s*\n+/).map((p) => p.trim()).filter(Boolean);
+  if (parts.length >= 2) {
+    return {
+      raw: normalized,
+      problem: parts[0],
+      built: parts.slice(1).join("\n\n").trim(),
+    };
+  }
+  return { raw: normalized };
+}
+
 export default function ProjectPage({
   params,
 }: {
@@ -196,6 +246,7 @@ export default function ProjectPage({
   }
 
   const projectLink = formatProjectLink(project.link);
+  const smc = parseSmcSummary(project.summary);
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -304,11 +355,57 @@ export default function ProjectPage({
             )}
           </div>
 
-          <div>
-            <p className="text-base leading-relaxed text-zinc-600">
-              {project.summary}
-            </p>
-          </div>
+          {(project.origin || project.painScope) && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
+              {project.origin && (
+                <span className="rounded-full bg-white px-2.5 py-1 border border-zinc-200">
+                  Origin: {getOriginLabel(project.origin as ProjectOrigin)}
+                </span>
+              )}
+              {project.painScope && (
+                <span className="rounded-full bg-white px-2.5 py-1 border border-zinc-200">
+                  Pain felt by: {getPainScopeLabel(project.painScope as PainScope)}
+                </span>
+              )}
+            </div>
+          )}
+
+          {project.readinessStatus !== "ready_to_use" && (
+            <div className="rounded-2xl border border-zinc-200 bg-white/80 p-4 text-sm text-zinc-600">
+              <p className="font-medium text-zinc-900">Rough cut — sharing early.</p>
+              <p className="mt-1">
+                Expect rough edges. Feedback and questions are welcome.
+              </p>
+            </div>
+          )}
+
+          {smc.problem && smc.built ? (
+            <div className="space-y-6">
+              <section className="rounded-2xl border border-zinc-200 bg-white/80 p-5">
+                <h2 className="text-sm font-semibold text-zinc-900">
+                  What was bugging you?
+                </h2>
+                <p className="mt-2 whitespace-pre-wrap text-base leading-relaxed text-zinc-700">
+                  {smc.problem}
+                </p>
+              </section>
+              <section className="rounded-2xl border border-zinc-200 bg-white/80 p-5">
+                <h2 className="text-sm font-semibold text-zinc-900">
+                  What I built
+                </h2>
+                <p className="mt-2 whitespace-pre-wrap text-base leading-relaxed text-zinc-700">
+                  {smc.built}
+                </p>
+              </section>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-zinc-200 bg-white/80 p-5">
+              <h2 className="text-sm font-semibold text-zinc-900">Notes</h2>
+              <p className="mt-2 whitespace-pre-wrap text-base leading-relaxed text-zinc-700">
+                {project.summary}
+              </p>
+            </div>
+          )}
 
           {projectMedia && projectMedia.length > 0 && (
             <div className="my-8">
@@ -318,6 +415,9 @@ export default function ProjectPage({
 
           <div id="discussion">
             <div className="space-y-4">
+              <div className="rounded-2xl border border-zinc-200 bg-white/80 p-4 text-sm text-zinc-600">
+                Ask a question, offer help, or share a similar workaround.
+              </div>
               <CommentForm projectId={projectId} />
               {comments === undefined ? (
                 <div className="py-8 text-center text-sm text-zinc-500">

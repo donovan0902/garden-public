@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useConvexAuth } from "convex/react";
@@ -35,7 +35,59 @@ type Project = {
   creatorAvatar: string;
   focusAreas: FocusArea[];
   readinessStatus?: "in_progress" | "ready_to_use";
+  origin?:
+    | "personal_workflow"
+    | "team_request"
+    | "department_initiative"
+    | "leadership_requested"
+    | "compliance_process";
+  painScope?: "me" | "my_team" | "a_department" | "multiple_groups";
 };
+
+function getOriginLabel(
+  origin: NonNullable<Project["origin"]>
+): string {
+  switch (origin) {
+    case "personal_workflow":
+      return "Personal workflow";
+    case "team_request":
+      return "Team request";
+    case "department_initiative":
+      return "Department initiative";
+    case "leadership_requested":
+      return "Leadership-requested";
+    case "compliance_process":
+      return "Compliance / process";
+  }
+}
+
+function getPainScopeLabel(
+  scope: NonNullable<Project["painScope"]>
+): string {
+  switch (scope) {
+    case "me":
+      return "Me";
+    case "my_team":
+      return "My team";
+    case "a_department":
+      return "A department";
+    case "multiple_groups":
+      return "Multiple groups";
+  }
+}
+
+function parseSmcSummary(summary: string): { problem?: string; built?: string } {
+  const normalized = (summary ?? "").trim();
+  if (!normalized) return {};
+
+  const parts = normalized.split(/\n\s*\n+/).map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2) return {};
+
+  const problem = parts[0].replace(/\s+/g, " ");
+  const built = parts.slice(1).join("\n\n").trim().replace(/\s+/g, " ");
+  if (!problem || !built) return {};
+  return { problem, built };
+}
 
 type NewestProject = {
   _id: Id<"projects">;
@@ -69,28 +121,12 @@ function getRelativeTime(timestamp: number): string {
 }
 
 export default function Home() {
-  const [query, setQuery] = useState("");
   const projects = useQuery(api.projects.list);
   const toggleUpvote = useMutation(api.projects.toggleUpvote);
 
   const filteredProjects = useMemo(() => {
-    if (!projects) return [];
-    const q = query.trim().toLowerCase();
-    if (!q) return projects;
-    return projects.filter((project) => {
-      return (
-        project.name.toLowerCase().includes(q) ||
-        project.summary.toLowerCase().includes(q) ||
-        (project.headline && project.headline.toLowerCase().includes(q)) ||
-        (project.team && project.team.toLowerCase().includes(q)) ||
-        project.creatorName.toLowerCase().includes(q) ||
-        project.focusAreas.some((area) =>
-          area.name.toLowerCase().includes(q) ||
-          area.group.toLowerCase().includes(q)
-        )
-      );
-    });
-  }, [query, projects]);
+    return projects ?? [];
+  }, [projects]);
 
   const handleUpvote = async (projectId: Id<"projects">) => {
     try {
@@ -107,10 +143,29 @@ export default function Home() {
           <div className="space-y-6">
             <div>
               <h2 className="text-3xl font-semibold tracking-tight flex items-center gap-3">
-                What people at Honda are building
+                What people are sharing this week
                 <Badge className="text-xs font-medium">For you</Badge>
               </h2>
-              <p className="mt-2 text-lg text-zinc-600">This week&apos;s most popular projects, based on your interests</p>
+              <p className="mt-2 text-lg text-zinc-600">
+                If you built something in response to friction — personal, team, or department — it belongs here.
+              </p>
+              <p className="mt-1 text-sm text-zinc-500">
+                Rough, unfinished, and hacky is welcome — you can always edit later.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2 text-xs text-zinc-700">
+                {[
+                  "A script you wrote for yourself",
+                  "A tool your manager asked you to build",
+                  "A dashboard requested by a department",
+                  "A workaround created under deadline pressure",
+                  "An internal prototype that never shipped",
+                  "A compliance/reporting solution",
+                ].map((item) => (
+                  <span key={item} className="rounded-full bg-white px-3 py-1 border border-zinc-200 shadow-sm">
+                    {item}
+                  </span>
+                ))}
+              </div>
             </div>
             <ShareProjectCallout />
             <LayoutGroup>
@@ -155,27 +210,33 @@ function ShareProjectCallout() {
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white/90 px-4 py-3 shadow-sm">
       <div className="space-y-1">
         <p className="text-sm text-zinc-600">
-          Have something cool to share? Post a project so others can follow along.
+          If you built something in response to friction — whether self-initiated or requested — it belongs here.
+        </p>
+        <p className="text-xs text-zinc-500">
+          Garden isn&apos;t about who had the idea — it&apos;s about preserving how the problem was solved.
+        </p>
+        <p className="text-xs text-zinc-500">
+          Rough drafts are welcome. Two quick answers is enough.
         </p>
       </div>
       <div className="flex items-center gap-2">
         <Authenticated>
           <Link href="/submit">
             <Button size="sm" className="whitespace-nowrap">
-              Submit a project
+              Share something you built
             </Button>
           </Link>
         </Authenticated>
         <Unauthenticated>
             <Button size="sm" className="whitespace-nowrap" asChild>
               <Link href="/sign-in" prefetch={false}>
-                Submit a project
+                Share something you built
               </Link>
             </Button>
         </Unauthenticated>
         <AuthLoading>
           <Button size="sm" className="whitespace-nowrap" disabled>
-            Submit a project
+            Share something you built
           </Button>
         </AuthLoading>
       </div>
@@ -207,13 +268,15 @@ function ProjectRow({
     router.push(`/project/${project._id}#discussion`);
   };
 
+  const smc = parseSmcSummary(project.summary);
+
   return (
     <div
       className="grid gap-3 pb-4 pt-4 cursor-pointer hover:bg-zinc-100 rounded-lg transition-colors px-4 -mx-4 sm:grid-cols-[minmax(0,1fr)_auto]"
       onClick={handleProjectClick}
     >
       <div className="min-w-0 space-y-3">
-        <div className="min-w-0">
+        <div className="min-w-0 space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-xl font-semibold text-zinc-900">{project.name}</h3>
             <ReadinessBadge status={project.readinessStatus} />
@@ -221,6 +284,34 @@ function ProjectRow({
           {project.headline && (
             <p className="mt-1 text-sm text-zinc-500 break-words">
               {project.headline}
+            </p>
+          )}
+          {smc.problem && smc.built ? (
+            <div className="space-y-1 text-sm text-zinc-600">
+              <p className="line-clamp-1">
+                <span className="font-medium text-zinc-700">Problem:</span>{" "}
+                {smc.problem}
+              </p>
+              <p className="line-clamp-1">
+                <span className="font-medium text-zinc-700">Built:</span>{" "}
+                {smc.built}
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-zinc-600 line-clamp-2 break-words">
+              {project.summary}
+            </p>
+          )}
+          {(project.origin || project.painScope) && (
+            <p className="text-xs text-zinc-500">
+              {project.origin ? `Origin: ${getOriginLabel(project.origin)}` : null}
+              {project.origin && project.painScope ? " • " : null}
+              {project.painScope ? `Pain felt by: ${getPainScopeLabel(project.painScope)}` : null}
+            </p>
+          )}
+          {project.readinessStatus !== "ready_to_use" && (
+            <p className="text-xs text-zinc-500">
+              Rough cut — sharing early.
             </p>
           )}
         </div>
@@ -297,8 +388,19 @@ function ProjectRow({
 
 function EmptyState() {
   return (
-    <div className="rounded-3xl bg-zinc-100/60 p-6 text-center text-sm text-zinc-500">
-      <p className="font-medium text-zinc-900">No projects match your search.</p>
+    <div className="rounded-3xl bg-zinc-100/60 p-6 text-center text-sm text-zinc-500 space-y-3">
+      <p className="font-medium text-zinc-900">Nothing here yet.</p>
+      <p className="text-zinc-600">
+        It doesn&apos;t matter whether this was self-initiated or requested — if it solved real friction, it belongs here.
+      </p>
+      <p className="text-zinc-600">
+        Rough and unfinished is welcome — share early, iterate later.
+      </p>
+      <Link href="/submit">
+        <Button size="sm" className="whitespace-nowrap">
+          Share something you built
+        </Button>
+      </Link>
     </div>
   );
 }

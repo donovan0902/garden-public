@@ -21,7 +21,7 @@ interface SimilarProject {
 
 interface SimilarProjectsPreviewProps {
   name: string;
-  headline: string;
+  headline?: string;
   description: string;
 }
 
@@ -40,7 +40,7 @@ export function SimilarProjectsPreview({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedInputs({ name, headline, description });
-    }, 500);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [name, headline, description]);
@@ -48,8 +48,11 @@ export function SimilarProjectsPreview({
   // Perform search when debounced inputs change
   useEffect(() => {
     const performSearch = async () => {
-      // Don't search if inputs are too short
-      if (debouncedInputs.name.trim().length < 2 || debouncedInputs.description.trim().length < 200) {
+      // Don't search if both inputs are too short
+      if (
+        debouncedInputs.name.trim().length < 2 &&
+        debouncedInputs.description.trim().length < 2
+      ) {
         setResults([]);
         setIsLoading(false);
         return;
@@ -74,7 +77,8 @@ export function SimilarProjectsPreview({
     performSearch();
   }, [debouncedInputs, searchSimilarProjects]);
 
-  const inputsTooShort = name.trim().length < 2 || description.trim().length < 200;
+  const inputsTooShort =
+    name.trim().length < 2 && description.trim().length < 2;
 
   return (
     <div className="space-y-3">
@@ -83,7 +87,7 @@ export function SimilarProjectsPreview({
       <div className="space-y-4">
         {inputsTooShort ? (
           <p className="text-sm text-zinc-500">
-            Start typing to see similar projects.
+            Start typing a short name or a quick description to see similar projects.
           </p>
         ) : isLoading ? (
           <>

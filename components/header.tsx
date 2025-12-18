@@ -54,7 +54,7 @@ export function Header() {
             </Link>
             <Link href="/submit">
               <Button size="sm" variant="default">
-                Submit Project
+                Share something you built
               </Button>
             </Link>
             {/* User greeting */}

@@ -42,6 +42,19 @@ export default function OnboardingPage() {
     }
   };
 
+  const handleSkip = async () => {
+    setIsSubmitting(true);
+    try {
+      await completeOnboarding({
+        focusAreaIds: [],
+      });
+      router.push('/');
+    } catch (error) {
+      console.error('Failed to skip onboarding:', error);
+      setIsSubmitting(false);
+    }
+  };
+
   if (authLoading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -54,9 +67,13 @@ export default function OnboardingPage() {
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white flex items-center justify-center px-4 py-12">
       <Card className="w-full max-w-3xl border border-zinc-200">
         <CardHeader className="border-b border-zinc-100">
-          <CardTitle className="text-2xl text-zinc-900">Choose your focus areas</CardTitle>
-          <CardDescription className="mt-2 text-base">
-            To personalize your garden, pick at least one domain that best represents the problems you&apos;re interested in.
+          <CardTitle className="text-2xl text-zinc-900">Welcome to Garden</CardTitle>
+          <CardDescription className="mt-2 text-base space-y-1">
+            <p>If you built something in response to friction — personal, team, or department — it belongs here.</p>
+            <p className="text-sm text-zinc-600">It doesn&apos;t matter whether this was self-initiated or requested — if it solved real friction, it belongs here.</p>
+            <p className="text-sm text-zinc-600">Rough, unfinished, and hacky is welcome — share early, iterate later.</p>
+            <p className="text-sm text-zinc-600">Things that belong: a script you wrote for yourself, a tool your manager asked you to build, a department dashboard, a deadline workaround, a prototype that never shipped, or a compliance/reporting solution.</p>
+            <p className="pt-2">Pick a few focus areas so we can point you to relevant projects (or skip for now).</p>
           </CardDescription>
         </CardHeader>
 
@@ -74,7 +91,10 @@ export default function OnboardingPage() {
           )}
         </CardContent>
 
-        <CardFooter className="justify-end border-t border-zinc-100">
+        <CardFooter className="flex flex-wrap gap-3 justify-end border-t border-zinc-100">
+          <Button variant="ghost" onClick={handleSkip} disabled={isSubmitting}>
+            {isSubmitting ? 'Loading...' : 'Skip for now'}
+          </Button>
           <Button onClick={handleComplete} disabled={isSubmitting || !canProceed}>
             {isSubmitting ? 'Completing...' : 'Complete setup'}
           </Button>
@@ -83,4 +103,3 @@ export default function OnboardingPage() {
     </div>
   );
 }
-

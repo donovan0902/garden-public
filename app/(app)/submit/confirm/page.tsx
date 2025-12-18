@@ -121,10 +121,10 @@ function ConfirmSubmissionContent() {
         <section className="mx-auto w-full max-w-3xl space-y-8">
           <div>
             <h2 className="text-3xl font-semibold tracking-tight">
-              Review your submission
+              Post your share
             </h2>
             <p className="mt-2 text-sm text-zinc-500">
-              We found similar projects that might interest you
+              Rough/early posts are welcome. If this was self-initiated or requested, it belongs here if it solved real friction.
             </p>
           </div>
 
@@ -180,8 +180,7 @@ function ConfirmSubmissionContent() {
                   Similar projects found
                 </h3>
                 <p className="mt-1 text-sm text-zinc-500">
-                  Consider reaching out to collaborate instead of starting from
-                  scratch
+                  Consider reaching out to collaborate or share context with them.
                 </p>
               </div>
             </div>
@@ -210,7 +209,7 @@ function ConfirmSubmissionContent() {
               disabled={isProcessing}
               className="flex-1 whitespace-nowrap"
             >
-              {isProcessing ? "Processing..." : "Confirm & Post Project"}
+              {isProcessing ? "Processing..." : "Post anyway"}
             </Button>
             <Button
               variant="outline"
@@ -218,12 +217,12 @@ function ConfirmSubmissionContent() {
               disabled={isProcessing}
               className="flex-1 whitespace-nowrap"
             >
-              Cancel Submission
+              Post later
             </Button>
           </div>
 
           <p className="text-center text-xs text-zinc-400">
-            Canceling will remove your project from our system
+            Posting rough work is encouraged. You can always edit later.
           </p>
         </section>
       </main>
@@ -298,4 +297,3 @@ function SimilarProjectCard({ project }: { project: Project }) {
     </div>
   );
 }
-

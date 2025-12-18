@@ -44,15 +44,21 @@ export default function MyProjectsPage() {
           </div>
         ) : projects.length === 0 ? (
           <div className="rounded-3xl bg-zinc-100/60 p-12 text-center">
-            <p className="text-lg font-medium text-zinc-900">No projects yet</p>
+            <p className="text-lg font-medium text-zinc-900">No posts yet</p>
             <p className="mt-2 text-sm text-zinc-500">
-              Get started by submitting your first project
+              If you built something in response to friction — whether self-initiated or requested — it belongs here.
+            </p>
+            <p className="mt-2 text-sm text-zinc-500">
+              Rough and unfinished is welcome — you can always edit later.
+            </p>
+            <p className="mt-2 text-sm text-zinc-500">
+              Things that belong: a script you wrote for yourself, a tool your manager asked you to build, a department dashboard, a deadline workaround, or a compliance/reporting solution.
             </p>
             <Button
               onClick={() => router.push("/submit")}
               className="mt-6"
             >
-              Submit Project
+              Share something you built
             </Button>
           </div>
         ) : (
