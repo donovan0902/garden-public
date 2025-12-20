@@ -16,21 +16,18 @@ interface SimilarProject {
   upvotes: number;
   creatorName: string;
   creatorAvatar: string;
-  headline?: string;
 }
 
 interface SimilarProjectsPreviewProps {
   name: string;
-  headline?: string;
   description: string;
 }
 
 export function SimilarProjectsPreview({
   name,
-  headline,
   description,
 }: SimilarProjectsPreviewProps) {
-  const [debouncedInputs, setDebouncedInputs] = useState({ name, headline, description });
+  const [debouncedInputs, setDebouncedInputs] = useState({ name, description });
   const [results, setResults] = useState<SimilarProject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,11 +36,11 @@ export function SimilarProjectsPreview({
   // Debounce the inputs
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedInputs({ name, headline, description });
+      setDebouncedInputs({ name, description });
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [name, headline, description]);
+  }, [name, description]);
 
   // Perform search when debounced inputs change
   useEffect(() => {
@@ -62,7 +59,6 @@ export function SimilarProjectsPreview({
       try {
         const searchResults = await searchSimilarProjects({
           name: debouncedInputs.name,
-          headline: debouncedInputs.headline || undefined,
           summary: debouncedInputs.description,
         });
         setResults(searchResults);
@@ -116,11 +112,6 @@ export function SimilarProjectsPreview({
                       </h4>
                       <ArrowUpRight className="h-4 w-4 text-zinc-400 flex-shrink-0" />
                     </div>
-                    {project.headline && (
-                      <p className="text-sm text-zinc-600 line-clamp-1">
-                        {project.headline}
-                      </p>
-                    )}
                     <p className="text-sm text-zinc-500 line-clamp-2">
                       {project.summary}
                     </p>

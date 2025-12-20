@@ -13,7 +13,6 @@ type Project = {
   _id: Id<"projects">;
   name: string;
   summary: string;
-  headline?: string;
   team: string;
   upvotes: number;
   status?: "pending" | "active";
@@ -138,11 +137,6 @@ function ConfirmSubmissionContent() {
                 <h3 className="text-xl font-semibold text-zinc-900">
                   {project.name}
                 </h3>
-                {project.headline && (
-                  <p className="mt-1 text-sm text-zinc-500">
-                    {project.headline}
-                  </p>
-                )}
               </div>
               <div className="flex flex-wrap items-center gap-4 text-sm text-zinc-500">
                 <span className="flex items-center gap-2">
@@ -254,11 +248,6 @@ function SimilarProjectCard({ project }: { project: Project }) {
           <h4 className="text-base font-semibold text-zinc-900">
             {project.name}
           </h4>
-          {project.headline && (
-            <p className="mt-1 text-sm text-zinc-600">
-              {project.headline}
-            </p>
-          )}
           <p className="mt-1 text-sm text-zinc-500">
             {project.summary}
           </p>

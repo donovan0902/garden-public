@@ -10,7 +10,6 @@ export default defineSchema({
     entryId: v.optional(v.string()),
     status: v.union(v.literal("pending"), v.literal("active")),
     userId: v.id("users"),
-    headline: v.optional(v.string()),
     allFields: v.optional(v.string()),
     link: v.optional(v.string()),
     focusAreaIds: v.array(v.id("focusAreas")),

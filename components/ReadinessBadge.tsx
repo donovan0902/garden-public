@@ -41,5 +41,5 @@ export function getReadinessStatusDescription(status: ReadinessStatus | undefine
   if (effectiveStatus === "ready_to_use") {
     return "This project is stable and usable today.";
   }
-  return "This project is still being built. Sharing early to help others and gather feedback.";
+  return "Rough cut — sharing early. Expect rough edges. Feedback and questions are welcome.";
 }

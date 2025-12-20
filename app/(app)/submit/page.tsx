@@ -38,7 +38,6 @@ export default function SubmitProject() {
     problem: "",
     solution: "",
     workingTitle: "",
-    headline: "",
     link: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,8 +67,6 @@ export default function SubmitProject() {
   const deriveName = () => {
     const title = formData.workingTitle.trim();
     if (title) return title;
-    const headline = formData.headline.trim();
-    if (headline) return headline;
     const solution = formData.solution.trim();
     if (solution) return solution.length > 60 ? `${solution.slice(0, 60)}...` : solution;
     const problem = formData.problem.trim();
@@ -100,7 +97,6 @@ export default function SubmitProject() {
       const result = await createProject({
         name,
         summary,
-        headline: formData.headline.trim() || undefined,
         link: formData.link.trim() || undefined,
         focusAreaIds: selectedFocusAreas,
         readinessStatus: selectedReadinessStatus,
@@ -245,30 +241,6 @@ export default function SubmitProject() {
                       value={formData.workingTitle}
                       onChange={(e) => setFormData({ ...formData, workingTitle: e.target.value })}
                       placeholder="Example: Approver Nudge Bot"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <label htmlFor="headline" className="text-sm font-medium text-zinc-900">
-                        One-liner <span className="text-xs text-zinc-500">(optional)</span>
-                      </label>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Info className="h-4 w-4 text-zinc-400 cursor-help" />
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs">
-                          <p className="text-xs">
-                            A quick one-liner helps people decide if they should click in, but it&apos;s totally optional.
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                    <Input
-                      id="headline"
-                      value={formData.headline}
-                      onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
-                      placeholder="Example: Slack pings the right deploy approver instantly."
                     />
                   </div>
 
@@ -428,7 +400,6 @@ export default function SubmitProject() {
           <section className="w-full lg:sticky lg:top-10 lg:self-start">
             <SimilarProjectsPreview
               name={deriveName()}
-              headline={formData.headline}
               description={summaryForPreview}
             />
           </section>

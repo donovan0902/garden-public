@@ -91,7 +91,6 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
 
   const [formData, setFormData] = useState({
     name: "",
-    headline: "",
     description: "",
     link: "",
   });
@@ -133,7 +132,6 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
     if (project) {
       setFormData({
         name: project.name,
-        headline: project.headline || "",
         description: project.summary,
         link: project.link || "",
       });
@@ -153,7 +151,6 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
         projectId,
         name: formData.name,
         summary: formData.description,
-        headline: formData.headline || undefined,
         link: formData.link || undefined,
         focusAreaIds: selectedFocusAreas,
         readinessStatus: selectedReadinessStatus,
@@ -239,30 +236,6 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Atlas Deploy Hub"
                 required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <label htmlFor="headline" className="text-sm font-medium text-zinc-900">
-                  Headline <span className="text-xs text-zinc-500">(optional)</span>
-                </label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-zinc-400 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p className="text-xs">
-                      People often decide in seconds whether they&apos;re interested. A great headline helps them understand your project at a glance and keeps them reading.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <Input
-                id="headline"
-                value={formData.headline}
-                onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
-                placeholder="Your project one-liner"
               />
             </div>
 

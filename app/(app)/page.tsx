@@ -26,7 +26,6 @@ type Project = {
   _id: Id<"projects">;
   name: string;
   summary: string;
-  headline?: string;
   team?: string;
   upvotes: number;
   commentCount: number;
@@ -37,23 +36,9 @@ type Project = {
   readinessStatus?: "in_progress" | "ready_to_use";
 };
 
-function parseSmcSummary(summary: string): { problem?: string; built?: string } {
-  const normalized = (summary ?? "").trim();
-  if (!normalized) return {};
-
-  const parts = normalized.split(/\n\s*\n+/).map((p) => p.trim()).filter(Boolean);
-  if (parts.length < 2) return {};
-
-  const problem = parts[0].replace(/\s+/g, " ");
-  const built = parts.slice(1).join("\n\n").trim().replace(/\s+/g, " ");
-  if (!problem || !built) return {};
-  return { problem, built };
-}
-
 type NewestProject = {
   _id: Id<"projects">;
   name: string;
-  headline?: string;
   team: string;
   upvotes: number;
   creatorName: string;
@@ -229,8 +214,6 @@ function ProjectRow({
     router.push(`/project/${project._id}#discussion`);
   };
 
-  const smc = parseSmcSummary(project.summary);
-
   return (
     <div
       className="grid gap-3 pb-4 pt-4 cursor-pointer hover:bg-zinc-100 rounded-lg transition-colors px-4 -mx-4 sm:grid-cols-[minmax(0,1fr)_auto]"
@@ -242,27 +225,9 @@ function ProjectRow({
             <h3 className="text-xl font-semibold text-zinc-900">{project.name}</h3>
             <ReadinessBadge status={project.readinessStatus} />
           </div>
-          {project.headline && (
-            <p className="mt-1 text-sm text-zinc-500 break-words">
-              {project.headline}
-            </p>
-          )}
-          {smc.problem && smc.built ? (
-            <div className="space-y-1 text-sm text-zinc-600">
-              <p className="line-clamp-1">
-                <span className="font-medium text-zinc-700">Problem:</span>{" "}
-                {smc.problem}
-              </p>
-              <p className="line-clamp-1">
-                <span className="font-medium text-zinc-700">Built:</span>{" "}
-                {smc.built}
-              </p>
-            </div>
-          ) : (
-            <p className="text-sm text-zinc-600 line-clamp-2 break-words">
-              {project.summary}
-            </p>
-          )}
+          <p className="text-sm text-zinc-600 line-clamp-2 break-words">
+            {project.summary}
+          </p>
           {project.readinessStatus !== "ready_to_use" && (
             <p className="text-xs text-zinc-500">
               Rough cut — sharing early.
@@ -407,13 +372,6 @@ function NewestProjectCard({ project }: { project: NewestProject }) {
           {getRelativeTime(project._creationTime)}
         </span>
       </div>
-
-      {/* Headline (if available) */}
-      {project.headline && (
-        <p className="text-xs text-zinc-600 line-clamp-2">
-          {project.headline}
-        </p>
-      )}
 
       {/* Metadata: Team, Upvotes */}
       <div className="flex items-center gap-2 text-xs text-zinc-500">

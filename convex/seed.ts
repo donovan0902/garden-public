@@ -87,7 +87,6 @@ export const seed = internalMutation({
       {
         name: "Project 1",
         summary: "This is a sample project for testing.",
-        headline: "Sample project 1",
         userId: userIds[0],
         teamId: teamIds[0],
         focusAreaIds: [focusAreaIds[0], focusAreaIds[1]],
@@ -98,7 +97,6 @@ export const seed = internalMutation({
       {
         name: "Project 2",
         summary: "Another sample project for testing.",
-        headline: "Sample project 2",
         userId: userIds[1],
         teamId: teamIds[0],
         focusAreaIds: [focusAreaIds[2]],
@@ -142,7 +140,6 @@ export const seed = internalMutation({
       const id = await ctx.db.insert("projects", {
         name: project.name,
         summary: project.summary,
-        headline: project.headline,
         userId: project.userId,
         teamId: project.teamId,
         focusAreaIds: project.focusAreaIds,

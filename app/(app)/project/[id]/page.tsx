@@ -136,19 +136,6 @@ function formatProjectLink(link?: string | null): {
   }
 }
 
-function parseSmcSummary(summary: string): { problem?: string; built?: string; raw: string } {
-  const normalized = (summary ?? "").trim();
-  const parts = normalized.split(/\n\s*\n+/).map((p) => p.trim()).filter(Boolean);
-  if (parts.length >= 2) {
-    return {
-      raw: normalized,
-      problem: parts[0],
-      built: parts.slice(1).join("\n\n").trim(),
-    };
-  }
-  return { raw: normalized };
-}
-
 export default function ProjectPage({
   params,
 }: {
@@ -209,7 +196,6 @@ export default function ProjectPage({
   }
 
   const projectLink = formatProjectLink(project.link);
-  const smc = parseSmcSummary(project.summary);
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -233,9 +219,6 @@ export default function ProjectPage({
                 </h1>
                 <ReadinessBadge status={project.readinessStatus} />
               </div>
-              {project.headline && (
-                <p className="mt-2 text-lg text-zinc-600">{project.headline}</p>
-              )}
               {(projectLink || (project.focusAreas && project.focusAreas.length > 0)) && (
                 <div className="mt-4 flex flex-wrap items-center gap-4">
                   {projectLink && (
@@ -318,42 +301,11 @@ export default function ProjectPage({
             )}
           </div>
 
-          {project.readinessStatus !== "ready_to_use" && (
-            <div className="rounded-2xl border border-zinc-200 bg-white/80 p-4 text-sm text-zinc-600">
-              <p className="font-medium text-zinc-900">Rough cut — sharing early.</p>
-              <p className="mt-1">
-                Expect rough edges. Feedback and questions are welcome.
-              </p>
-            </div>
-          )}
-
-          {smc.problem && smc.built ? (
-            <div className="space-y-6">
-              <section className="rounded-2xl border border-zinc-200 bg-white/80 p-5">
-                <h2 className="text-sm font-semibold text-zinc-900">
-                  What was bugging you?
-                </h2>
-                <p className="mt-2 whitespace-pre-wrap text-base leading-relaxed text-zinc-700">
-                  {smc.problem}
-                </p>
-              </section>
-              <section className="rounded-2xl border border-zinc-200 bg-white/80 p-5">
-                <h2 className="text-sm font-semibold text-zinc-900">
-                  What I built
-                </h2>
-                <p className="mt-2 whitespace-pre-wrap text-base leading-relaxed text-zinc-700">
-                  {smc.built}
-                </p>
-              </section>
-            </div>
-          ) : (
-            <div className="rounded-2xl border border-zinc-200 bg-white/80 p-5">
-              <h2 className="text-sm font-semibold text-zinc-900">Notes</h2>
-              <p className="mt-2 whitespace-pre-wrap text-base leading-relaxed text-zinc-700">
-                {project.summary}
-              </p>
-            </div>
-          )}
+          <div className="space-y-3">
+            <p className="whitespace-pre-wrap text-lg leading-relaxed text-zinc-700">
+              {project.summary}
+            </p>
+          </div>
 
           {projectMedia && projectMedia.length > 0 && (
             <div className="my-8">
@@ -361,18 +313,15 @@ export default function ProjectPage({
             </div>
           )}
 
-          <div id="discussion">
+          <div id="discussion" className="space-y-6">
             <div className="space-y-4">
-              <div className="rounded-2xl border border-zinc-200 bg-white/80 p-4 text-sm text-zinc-600">
-                Ask a question, offer help, or share a similar workaround.
-              </div>
               <CommentForm projectId={projectId} />
               {comments === undefined ? (
                 <div className="py-8 text-center text-sm text-zinc-500">
                   Loading comments...
                 </div>
               ) : topLevelComments.length === 0 ? (
-                <div className="rounded-lg border border-zinc-200 bg-zinc-50 py-12 text-center">
+                <div className="py-12 text-center">
                   <p className="text-sm text-zinc-500">
                     No comments yet. Be the first to start the discussion!
                   </p>

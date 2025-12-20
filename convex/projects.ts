@@ -133,7 +133,6 @@ export const create = action({
   args: {
     name: v.string(),
     summary: v.string(),
-    headline: v.optional(v.string()),
     link: v.optional(v.string()),
     focusAreaIds: v.array(v.id("focusAreas")),
     readinessStatus: v.union(v.literal("in_progress"), v.literal("ready_to_use")),
@@ -160,7 +159,6 @@ export const create = action({
       {
         name: args.name,
         summary: args.summary,
-        headline: args.headline,
         link: args.link,
         focusAreaIds: args.focusAreaIds,
         readinessStatus: args.readinessStatus,
@@ -170,9 +168,7 @@ export const create = action({
     );
 
     // Embed the project content
-    const text = args.headline 
-      ? `${args.name}\n${args.headline}\n\n${args.summary}`
-      : `${args.name}\n\n${args.summary}`;
+    const text = `${args.name}\n\n${args.summary}`;
     const { entryId } = await rag.add(ctx, {
       namespace: "projects",
       text,
@@ -218,7 +214,6 @@ export const createProject = internalMutation({
     summary: v.string(),
     status: v.union(v.literal("pending"), v.literal("active")),
     userId: v.id("users"),
-    headline: v.optional(v.string()),
     link: v.optional(v.string()),
     focusAreaIds: v.array(v.id("focusAreas")),
     readinessStatus: v.union(v.literal("in_progress"), v.literal("ready_to_use")),
@@ -239,7 +234,6 @@ export const createProject = internalMutation({
       upvotes: 0,
       status: args.status,
       userId: args.userId,
-      headline: args.headline,
       link: args.link,
       focusAreaIds: args.focusAreaIds,
       readinessStatus: args.readinessStatus,
@@ -308,7 +302,6 @@ export const populateProjectDetails = internalQuery({
         status: v.union(v.literal("pending"), v.literal("active")),
         userId: v.id("users"),
         _creationTime: v.number(),
-        headline: v.optional(v.string()),
         allFields: v.optional(v.string()),
         link: v.optional(v.string()),
         focusAreaIds: v.array(v.id("focusAreas")),
@@ -386,7 +379,6 @@ export const updateProjectFields = internalMutation({
     projectId: v.id("projects"),
     name: v.string(),
     summary: v.string(),
-    headline: v.optional(v.string()),
     link: v.optional(v.string()),
     focusAreaIds: v.array(v.id("focusAreas")),
     readinessStatus: v.union(v.literal("in_progress"), v.literal("ready_to_use")),
@@ -395,7 +387,6 @@ export const updateProjectFields = internalMutation({
     await ctx.db.patch(args.projectId, {
       name: args.name,
       summary: args.summary,
-      headline: args.headline,
       link: args.link,
       focusAreaIds: args.focusAreaIds,
       readinessStatus: args.readinessStatus,
@@ -408,7 +399,6 @@ export const updateProject = action({
     projectId: v.id("projects"),
     name: v.string(),
     summary: v.string(),
-    headline: v.optional(v.string()),
     link: v.optional(v.string()),
     focusAreaIds: v.array(v.id("focusAreas")),
     readinessStatus: v.union(v.literal("in_progress"), v.literal("ready_to_use")),
@@ -435,16 +425,13 @@ export const updateProject = action({
       projectId: args.projectId,
       name: args.name,
       summary: args.summary,
-      headline: args.headline,
       link: args.link,
       focusAreaIds: args.focusAreaIds,
       readinessStatus: args.readinessStatus,
     });
 
     // Update the RAG index
-    const text = args.headline
-      ? `${args.name}\n${args.headline}\n\n${args.summary}`
-      : `${args.name}\n\n${args.summary}`;
+    const text = `${args.name}\n\n${args.summary}`;
 
     const { entryId } = await rag.add(ctx, {
       namespace: "projects",
@@ -505,9 +492,7 @@ export const backfillProject = action({
       return { message: "Project already has an embedding", entryId: project.entryId };
     }
 
-    const text = project.headline 
-      ? `${project.name}\n${project.headline}\n\n${project.summary}`
-      : `${project.name}\n\n${project.summary}`;
+    const text = `${project.name}\n\n${project.summary}`;
     const { entryId } = await rag.add(ctx, {
       namespace: "projects",
       text,
@@ -706,7 +691,6 @@ export const getNewestProjects = query({
         return {
           _id: project._id,
           name: project.name,
-          headline: project.headline,
           team: teamName,
           upvotes: upvotes.length,
           creatorName: creator?.name ?? "Unknown User",
@@ -797,7 +781,6 @@ export const searchProjects = action({
     Array<{
       _id: Id<"projects">;
       name: string;
-      headline?: string;
     }>
   > => {
     // Don't search if query is too short
@@ -853,13 +836,11 @@ export const searchProjects = action({
     return projects.map((p) => ({
       _id: p._id,
       name: p.name,
-      headline: p.headline,
     }));
   },
 });
 
-// semantic search for similar projects (used for similar projects section). Can't use hybrid search because the full text search component expressions are limited to 16 terms (words), and we our rag expressions use all fields of a project. 
-// We could potentially do a hybrid search with the full text component expression being the project's title and headline, prolly marginally better results. Not a priority for now.
+// semantic search for similar projects (used for similar projects section). Can't use hybrid search because the full text search component expressions are limited to 16 terms (words), and our rag expressions use all fields of a project.
 export const getSimilarProjects = action({
   args: {
     projectId: v.id("projects"),
@@ -886,9 +867,7 @@ export const getSimilarProjects = action({
       return [];
     }
 
-    const text = project.headline
-      ? `${project.name}\n${project.headline}\n\n${project.summary}`
-      : `${project.name}\n\n${project.summary}`;
+    const text = `${project.name}\n\n${project.summary}`;
     const { entries } = await rag.search(ctx, {
       namespace: "projects",
       query: text,
@@ -918,7 +897,6 @@ export const getSimilarProjects = action({
 export const searchSimilarProjectsByText = action({
   args: {
     name: v.string(),
-    headline: v.optional(v.string()),
     summary: v.string(),
   },
   handler: async (
@@ -933,7 +911,6 @@ export const searchSimilarProjectsByText = action({
       upvotes: number;
       creatorName: string;
       creatorAvatar: string;
-      headline?: string;
     }>
   > => {
     // Don't search if inputs are too short
@@ -941,9 +918,7 @@ export const searchSimilarProjectsByText = action({
       return [];
     }
 
-    const text = args.headline
-      ? `${args.name}\n${args.headline}\n\n${args.summary}`
-      : `${args.name}\n\n${args.summary}`;
+    const text = `${args.name}\n\n${args.summary}`;
 
     const { entries } = await rag.search(ctx, {
       namespace: "projects",
@@ -966,10 +941,7 @@ export const searchSimilarProjectsByText = action({
       { projects: similarProjects }
     );
 
-    return projectsWithCounts.map((p) => ({
-      ...p,
-      headline: similarProjects.find((sp) => sp._id === p._id)?.headline,
-    }));
+    return projectsWithCounts;
   },
 });
 
