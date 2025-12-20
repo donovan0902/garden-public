@@ -9,6 +9,16 @@ import { Id } from '@/convex/_generated/dataModel';
 import { FocusAreaPicker } from '@/components/FocusAreaPicker';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
+const thingsThatBelong = [
+  'a script you wrote for yourself',
+  'a tool your manager asked you to build',
+  'a department dashboard',
+  'a deadline workaround',
+  'a prototype that never shipped',
+  'a compliance/reporting solution',
+];
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -72,7 +82,20 @@ export default function OnboardingPage() {
             <p>If you built something in response to friction — personal, team, or department — it belongs here.</p>
             <p className="text-sm text-zinc-600">It doesn&apos;t matter whether this was self-initiated or requested — if it solved real friction, it belongs here.</p>
             <p className="text-sm text-zinc-600">Rough, unfinished, and hacky is welcome — share early, iterate later.</p>
-            <p className="text-sm text-zinc-600">Things that belong: a script you wrote for yourself, a tool your manager asked you to build, a department dashboard, a deadline workaround, a prototype that never shipped, or a compliance/reporting solution.</p>
+            <Accordion type="single" collapsible className="pt-1">
+              <AccordionItem value="things" className="border-b-0">
+                <AccordionTrigger className="py-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Things that belong
+                </AccordionTrigger>
+                <AccordionContent className="pt-2">
+                  <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-600">
+                    {thingsThatBelong.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
             <p className="pt-2">Pick a few focus areas so we can point you to relevant projects (or skip for now).</p>
           </CardDescription>
         </CardHeader>
