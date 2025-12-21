@@ -145,6 +145,8 @@ function MediaSlide({
               playsInline
               onEnded={handleVideoEnded}
               onClick={handleVideoClick}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
             />
             <div
               className={`absolute inset-0 flex items-center justify-center transition-opacity ${
