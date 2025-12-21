@@ -34,7 +34,7 @@ async function enrichProjects(
   // Enrich each project with computed data
   return Promise.all(
     projects.map(async (project) => {
-      const [upvotes, comments, creator, team, mediaFiles] = await Promise.all([
+      const [upvotes, comments, creator, team, mediaFiles, adoptions] = await Promise.all([
         ctx.db
           .query("upvotes")
           .withIndex("by_project", (q) => q.eq("projectId", project._id))
@@ -50,6 +50,11 @@ async function enrichProjects(
           .query("mediaFiles")
           .withIndex("by_project_ordered", (q) => q.eq("projectId", project._id))
           .order("asc")
+          .collect(),
+        ctx.db
+          .query("adoptions")
+          .withIndex("by_project", (q) => q.eq("projectId", project._id))
+          .order("desc")
           .collect(),
       ]);
 
@@ -71,6 +76,18 @@ async function enrichProjects(
           group: fa.group,
         }));
 
+      // Get top 4 adopters with user info for facepile
+      const adoptersWithInfo = await Promise.all(
+        adoptions.slice(0, 4).map(async (adoption) => {
+          const user = await ctx.db.get(adoption.userId);
+          return {
+            _id: adoption.userId,
+            name: user?.name ?? "Unknown User",
+            avatarUrl: user?.avatarUrlId ?? "",
+          };
+        })
+      );
+
       return {
         ...project,
         team: team?.name ?? "",
@@ -81,6 +98,9 @@ async function enrichProjects(
         creatorAvatar: creator?.avatarUrlId ?? "",
         focusAreas,
         previewMedia,
+        adoptionCount: adoptions.length,
+        adopters: adoptersWithInfo,
+        hasAdopted: userId ? adoptions.some((a) => a.userId === userId) : false,
       };
     })
   );
@@ -900,9 +920,17 @@ export const getById = query({
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .collect();
 
-    // Check if current user has upvoted
+    // Get adoption data
+    const adoptions = await ctx.db
+      .query("adoptions")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .order("desc")
+      .collect();
+
+    // Check if current user has upvoted and adopted
     const currentUser = await getCurrentUser(ctx);
     let hasUpvoted = false;
+    let hasAdopted = false;
     if (currentUser) {
       const userUpvote = await ctx.db
         .query("upvotes")
@@ -911,6 +939,7 @@ export const getById = query({
         )
         .first();
       hasUpvoted = !!userUpvote;
+      hasAdopted = adoptions.some((a) => a.userId === currentUser._id);
     }
 
     // Get creator information
@@ -934,6 +963,18 @@ export const getById = query({
         group: fa.group,
       }));
 
+    // Get top 6 adopters with user info
+    const adoptersWithInfo = await Promise.all(
+      adoptions.slice(0, 6).map(async (adoption) => {
+        const user = await ctx.db.get(adoption.userId);
+        return {
+          _id: adoption.userId,
+          name: user?.name ?? "Unknown User",
+          avatarUrl: user?.avatarUrlId ?? "",
+        };
+      })
+    );
+
     return {
       ...project,
       team: teamName,
@@ -942,6 +983,9 @@ export const getById = query({
       creatorName: creator?.name ?? "Unknown User",
       creatorAvatar: creator?.avatarUrlId ?? "",
       focusAreas,
+      adoptionCount: adoptions.length,
+      adopters: adoptersWithInfo,
+      hasAdopted,
     };
   },
 });
@@ -1177,6 +1221,42 @@ export const toggleUpvote = mutation({
       await ctx.db.patch(args.projectId, {
         engagementScore: (project.engagementScore ?? 0) + 1,
       });
+    }
+  },
+});
+
+export const toggleAdoption = mutation({
+  args: {
+    projectId: v.id("projects"),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+
+    // Check if user has already adopted
+    const existingAdoption = await ctx.db
+      .query("adoptions")
+      .withIndex("by_project_and_user", (q) =>
+        q.eq("projectId", args.projectId).eq("userId", user._id)
+      )
+      .first();
+
+    const project = await ctx.db.get(args.projectId);
+    if (!project) {
+      throw new Error("Project not found");
+    }
+
+    if (existingAdoption) {
+      // User has adopted - remove it
+      await ctx.db.delete(existingAdoption._id);
+      return { adopted: false };
+    } else {
+      // User hasn't adopted - add it
+      await ctx.db.insert("adoptions", {
+        projectId: args.projectId,
+        userId: user._id,
+        createdAt: Date.now(),
+      });
+      return { adopted: true };
     }
   },
 });

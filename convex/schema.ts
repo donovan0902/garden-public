@@ -40,6 +40,14 @@ export default defineSchema({
   })
     .index("by_project", ["projectId"])
     .index("by_project_and_user", ["projectId", "userId"]),
+  adoptions: defineTable({
+    projectId: v.id("projects"),
+    userId: v.id("users"),
+    createdAt: v.number(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_project_and_user", ["projectId", "userId"])
+    .index("by_user", ["userId"]),
   comments: defineTable({
     projectId: v.id("projects"),
     userId: v.id("users"),

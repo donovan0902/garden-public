@@ -132,7 +132,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
     if (project) {
       setFormData({
         name: project.name,
-        description: project.summary,
+        description: project.summary || "",
         link: project.link || "",
       });
       setSelectedFocusAreas(project.focusAreaIds);
