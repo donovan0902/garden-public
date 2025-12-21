@@ -19,18 +19,20 @@ export default function OnboardingPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [focusAreaIds, setFocusAreaIds] = useState<Id<'focusAreas'>[]>([]);
   const [userIntent, setUserIntent] = useState<'looking' | 'sharing' | 'both' | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize state with user's existing values when user data loads
   useEffect(() => {
-    if (user && focusAreaIds.length === 0 && !userIntent) {
+    if (user && !isInitialized) {
       if (user.focusAreaIds && user.focusAreaIds.length > 0) {
         setFocusAreaIds(user.focusAreaIds);
       }
       if (user.userIntent) {
         setUserIntent(user.userIntent);
       }
+      setIsInitialized(true);
     }
-  }, [user, focusAreaIds.length, userIntent]);
+  }, [user, isInitialized]);
 
   useEffect(() => {
     if (user?.onboardingCompleted) {
