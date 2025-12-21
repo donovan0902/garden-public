@@ -7,6 +7,7 @@ import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { motion, LayoutGroup } from "motion/react";
+import React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,6 +16,7 @@ import { MessageCircle, Flame } from "lucide-react";
 import { ProjectMediaCarousel } from "@/components/ProjectMediaCarousel";
 import { FocusAreaBadges } from "@/components/FocusAreaBadges";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
+import { Separator } from "@/components/ui/separator";
 
 type FocusArea = {
   _id: Id<"focusAreas">;
@@ -24,6 +26,7 @@ type FocusArea = {
 
 type Project = {
   _id: Id<"projects">;
+  _creationTime: number;
   name: string;
   summary: string;
   team?: string;
@@ -109,18 +112,20 @@ export default function Home() {
                     Loading projects...
                   </div>
                 ) : filteredProjects.length ? (
-                  filteredProjects.map((project) => (
-                    <motion.div
-                      key={project._id}
-                      layout
-                      layoutId={project._id}
-                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                    >
-                      <ProjectRow
-                        project={project}
-                        onUpvote={handleUpvote}
-                      />
-                    </motion.div>
+                  filteredProjects.map((project, index) => (
+                    <React.Fragment key={project._id}>
+                      {index > 0 && <Separator className="bg-zinc-200" />}
+                      <motion.div
+                        layout
+                        layoutId={project._id}
+                        transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                      >
+                        <ProjectRow
+                          project={project}
+                          onUpvote={handleUpvote}
+                        />
+                      </motion.div>
+                    </React.Fragment>
                   ))
                 ) : (
                   <EmptyState />
@@ -218,6 +223,10 @@ function ProjectRow({
             <span className="whitespace-nowrap text-zinc-500">{project.team}</span>
           </>
         )}
+        <span className="text-zinc-300">•</span>
+        <span className="whitespace-nowrap text-zinc-500">
+          {getRelativeTime(project._creationTime)}
+        </span>
       </div>
 
       {/* Title */}
