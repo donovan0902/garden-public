@@ -1,6 +1,6 @@
-import { Badge } from "@/components/ui/badge";
 import type { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
+import { Tag } from "lucide-react";
 
 type FocusArea = {
   _id: Id<"focusAreas">;
@@ -20,23 +20,22 @@ export function FocusAreaBadges({
   }
 
   return (
-    <div
+    <span
       className={cn(
-        "flex flex-nowrap items-center gap-2 overflow-x-auto pr-1",
-        "[-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        "flex items-center gap-1.5 text-zinc-500",
         className
       )}
       aria-label="Project focus areas"
     >
-      {focusAreas.map((area) => (
-        <Badge
-          key={area._id}
-          variant="secondary"
-          className="border border-zinc-200 bg-white text-zinc-700 shrink-0"
-        >
-          {area.name}
-        </Badge>
-      ))}
-    </div>
+      <Tag className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+      <span className="inline">
+        {focusAreas.map((area, index) => (
+          <span key={area._id} className="inline-block whitespace-nowrap">
+            {index > 0 && " • "}
+            {area.name}
+          </span>
+        ))}
+      </span>
+    </span>
   );
 }

@@ -9,6 +9,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+const thingsThatBelong = [
+  "a script you wrote for yourself",
+  "a tool your manager asked you to build",
+  "a department dashboard",
+  "a deadline workaround",
+  "a prototype that never shipped",
+  "a compliance/reporting solution",
+];
+
 export default function SubmitProject() {
   const router = useRouter();
   const createProject = useAction(api.projects.create);
@@ -35,9 +45,8 @@ export default function SubmitProject() {
   const addMediaToProject = useMutation(api.projects.addMediaToProject);
   const focusAreasGrouped = useQuery(api.focusAreas.listActiveGrouped);
   const [formData, setFormData] = useState({
-    name: "",
-    headline: "",
-    description: "",
+    summary: "",
+    workingTitle: "",
     link: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,19 +72,44 @@ export default function SubmitProject() {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const deriveName = () => {
+    const title = formData.workingTitle.trim();
+    if (title) return title;
+    const summary = formData.summary.trim();
+    if (summary) return summary.length > 60 ? `${summary.slice(0, 60)}...` : summary;
+    return "Shared solution";
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+
+    const trimmedTitle = formData.workingTitle.trim();
+    const trimmedSummary = formData.summary.trim();
+
+    if (!trimmedTitle) {
+      alert("Please add a title.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!trimmedSummary) {
+      alert("Add a few words about what you built and why.");
+      setIsSubmitting(false);
+      return;
+    }
+
+    const summary = trimmedSummary;
+    const name = deriveName();
 
     let createdProjectId: Id<"projects"> | null = null;
 
     try {
       // Create project first
       const result = await createProject({
-        name: formData.name,
-        summary: formData.description,
-        headline: formData.headline || undefined,
-        link: formData.link || undefined,
+        name,
+        summary,
+        link: formData.link.trim() || undefined,
         focusAreaIds: selectedFocusAreas,
         readinessStatus: selectedReadinessStatus,
       });
@@ -129,146 +163,63 @@ export default function SubmitProject() {
         }
       }
       console.error("Failed to create project:", error);
-      alert("Failed to submit project. Please try again.");
+      alert("Failed to share. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const summaryForPreview = formData.summary.trim();
+
   return (
     <div className="min-h-screen bg-zinc-50">
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 pb-16 pt-10">
-        <div className="mb-2">
-          <h2 className="text-3xl font-semibold tracking-tight">Share a project</h2>
-          <p className="mt-2 text-sm text-zinc-500">
-            Let everyone know what you&apos;re working on
-          </p>
+        <div className="mb-2 space-y-2">
+          <h2 className="text-3xl font-semibold tracking-tight">Share something you built</h2>
+          <Accordion type="single" collapsible>
+            <AccordionItem value="things" className="border-b-0">
+              <AccordionTrigger className="py-1 text-sm font-medium text-zinc-700">
+                If you built something to make work easier, it belongs here, even if it&apos;s rough, unfinished, or hacky.
+              </AccordionTrigger>
+              <AccordionContent className="pt-2">
+                <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-600">
+                  {thingsThatBelong.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <section className="w-full">
-
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+            <section className="w-full space-y-4">
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium text-zinc-900">
-                Project name
+              <label htmlFor="workingTitle" className="text-sm font-medium text-zinc-900">
+                Title
               </label>
               <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Atlas Deploy Hub"
+                id="workingTitle"
+                value={formData.workingTitle}
+                onChange={(e) => setFormData({ ...formData, workingTitle: e.target.value })}
+                 placeholder="AI Prompt Template: Clear Email Reply"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <label htmlFor="headline" className="text-sm font-medium text-zinc-900">
-                  Headline <span className="text-xs text-zinc-500">(optional)</span>
-                </label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-zinc-400 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p className="text-xs">
-                      People often decide in seconds whether they&apos;re interested. A great headline helps them understand your project at a glance and keeps them reading.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <Input
-                id="headline"
-                value={formData.headline}
-                onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
-                placeholder="Your project one-liner"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium text-zinc-900">
-                Description
+              <label htmlFor="summary" className="text-sm font-medium text-zinc-900">
+                What did you build and why?
               </label>
               <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="What are you building? Who is it for? What problems does it solve?"
-                className="min-h-24"
-                minLength={200}
+                id="summary"
+                value={formData.summary}
+                onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
+                 placeholder="A copy-and-paste prompt I use with AI to turn a few bullet points into a clear, polite email response. It asks for the right details, includes next steps, and keeps the tone consistent."
+                className="min-h-28"
                 required
               />
-              <p className="text-xs text-zinc-500">
-                {formData.description.length}/200 characters minimum
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="link" className="text-sm font-medium text-zinc-900">
-                Link <span className="text-xs text-zinc-500">(optional)</span>
-              </label>
-              <Input
-                id="link"
-                type="url"
-                value={formData.link}
-                onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                placeholder="https://example.com"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-zinc-900">
-                  Focus Areas
-                </label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-zinc-400 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <p className="text-xs">
-                      These categories help organize the platform so people find projects relevant to their interests. Tag your project accurately so the right people discover it.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <FocusAreaPicker
-                focusAreasGrouped={focusAreasGrouped}
-                selectedFocusAreas={selectedFocusAreas}
-                onSelectionChange={setSelectedFocusAreas}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <label htmlFor="readinessStatus" className="text-sm font-medium text-zinc-900">
-                  Readiness Status
-                </label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-zinc-400 cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    <div className="space-y-2 text-xs">
-                      <p><strong>In Progress:</strong> This project is still being built. Nothing may be functional yet.</p>
-                      <p><strong>Ready to Use:</strong> This tool is stable and safe for others to use today.</p>
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-              <Select
-                value={selectedReadinessStatus}
-                onValueChange={(value: "in_progress" | "ready_to_use") => setSelectedReadinessStatus(value)}
-              >
-                <SelectTrigger id="readinessStatus" className="w-full">
-                  <SelectValue placeholder="Select readiness status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="ready_to_use">Ready to Use</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="space-y-2">
@@ -290,9 +241,9 @@ export default function SubmitProject() {
                     {isDragActive ? (
                       <span className="font-medium text-zinc-900">Drop files here</span>
                     ) : (
-                      <span className="text-zinc-500">
-                        Include media that helps viewers understand what your project is, what it does, and how it works.
-                      </span>
+                        <span className="text-zinc-500">
+                          Add Screenshots or short clips that show the problem and your fix in action.
+                        </span>
                     )}
                   </div>
                 </div>
@@ -307,9 +258,6 @@ export default function SubmitProject() {
 
               {selectedFiles.length > 0 && (
                 <div className="mt-4 space-y-2">
-                  <div className="text-sm font-medium text-zinc-900">
-                    Selected files ({selectedFiles.length})
-                  </div>
                   <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                     {selectedFiles.map((file, index) => (
                       <div key={index} className="relative group">
@@ -348,22 +296,93 @@ export default function SubmitProject() {
 
             <div className="flex items-center pt-4">
               <Button type="submit" className="whitespace-nowrap" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit Project"}
+                {isSubmitting ? "Sharing..." : "Share this"}
               </Button>
             </div>
-          </form>
-          </section>
+            </section>
 
-          <section className="w-full lg:sticky lg:top-10 lg:self-start">
-            <SimilarProjectsPreview
-              name={formData.name}
-              headline={formData.headline}
-              description={formData.description}
-            />
-          </section>
-        </div>
+            <section className="w-full lg:sticky lg:top-10 lg:self-start space-y-4">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="readinessStatus" className="text-sm font-medium text-zinc-900">
+                      How rough is it?
+                    </label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-zinc-400 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <div className="space-y-2 text-xs">
+                          <p><strong>In Progress:</strong> Early/rough, but useful. Sharing to get eyes and ideas.</p>
+                          <p><strong>Ready to Use:</strong> Works reliably. Someone else could pick it up and use it now.</p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <Select
+                    value={selectedReadinessStatus}
+                    onValueChange={(value: "in_progress" | "ready_to_use") => setSelectedReadinessStatus(value)}
+                  >
+                    <SelectTrigger id="readinessStatus" className="w-full">
+                      <SelectValue placeholder="Select readiness status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="in_progress">In progress</SelectItem>
+                      <SelectItem value="ready_to_use">Ready to use</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <label className="text-sm font-medium text-zinc-900">
+                      Focus Areas <span className="text-xs text-zinc-500">(optional)</span>
+                    </label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-zinc-400 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p className="text-xs">
+                          Tags make it easier for the right people to discover this later.
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <FocusAreaPicker
+                    focusAreasGrouped={focusAreasGrouped}
+                    selectedFocusAreas={selectedFocusAreas}
+                    onSelectionChange={setSelectedFocusAreas}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="link" className="text-sm font-medium text-zinc-900">
+                  Link <span className="text-xs text-zinc-500">(optional)</span>
+                </label>
+                <Input
+                  id="link"
+                  type="url"
+                  value={formData.link}
+                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                  placeholder="https://example.com"
+                />
+              </div>
+
+              <div className="border-t border-zinc-200 pt-4">
+                <SimilarProjectsPreview
+                  name={deriveName()}
+                  description={summaryForPreview}
+                />
+              </div>
+            </section>
+
+          </div>
+
+        </form>
       </main>
     </div>
   );
 }
-

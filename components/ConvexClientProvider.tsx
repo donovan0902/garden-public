@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useCallback, useRef } from 'react';
+import { ReactNode, useCallback, useEffect, useRef } from 'react';
 import { ConvexReactClient } from 'convex/react';
 import { ConvexProviderWithAuth } from 'convex/react';
 import { AuthKitProvider, useAuth, useAccessToken } from '@workos-inc/authkit-nextjs/components';
@@ -24,9 +24,11 @@ function useAuthFromAuthKit() {
   const authenticated = !!user && !!accessToken && !loading;
 
   const stableAccessToken = useRef<string | null>(null);
-  if (accessToken && !tokenError) {
-    stableAccessToken.current = accessToken;
-  }
+  useEffect(() => {
+    if (accessToken && !tokenError) {
+      stableAccessToken.current = accessToken;
+    }
+  }, [accessToken, tokenError]);
 
   const fetchAccessToken = useCallback(async () => {
     if (stableAccessToken.current && !tokenError) {

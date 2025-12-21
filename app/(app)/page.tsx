@@ -1,20 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { motion, LayoutGroup } from "motion/react";
+import React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { MessageCircle, Flame } from "lucide-react";
+import { ProjectMediaCarousel } from "@/components/ProjectMediaCarousel";
 import { FocusAreaBadges } from "@/components/FocusAreaBadges";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
+import { Separator } from "@/components/ui/separator";
 
 type FocusArea = {
   _id: Id<"focusAreas">;
@@ -24,9 +26,9 @@ type FocusArea = {
 
 type Project = {
   _id: Id<"projects">;
+  _creationTime: number;
   name: string;
   summary: string;
-  headline?: string;
   team?: string;
   upvotes: number;
   commentCount: number;
@@ -35,12 +37,17 @@ type Project = {
   creatorAvatar: string;
   focusAreas: FocusArea[];
   readinessStatus?: "in_progress" | "ready_to_use";
+  previewMedia: Array<{
+    _id: string;
+    storageId: string;
+    type: string;
+    url: string | null;
+  }>;
 };
 
 type NewestProject = {
   _id: Id<"projects">;
   name: string;
-  headline?: string;
   team: string;
   upvotes: number;
   creatorName: string;
@@ -69,28 +76,12 @@ function getRelativeTime(timestamp: number): string {
 }
 
 export default function Home() {
-  const [query, setQuery] = useState("");
   const projects = useQuery(api.projects.list);
   const toggleUpvote = useMutation(api.projects.toggleUpvote);
 
   const filteredProjects = useMemo(() => {
-    if (!projects) return [];
-    const q = query.trim().toLowerCase();
-    if (!q) return projects;
-    return projects.filter((project) => {
-      return (
-        project.name.toLowerCase().includes(q) ||
-        project.summary.toLowerCase().includes(q) ||
-        (project.headline && project.headline.toLowerCase().includes(q)) ||
-        (project.team && project.team.toLowerCase().includes(q)) ||
-        project.creatorName.toLowerCase().includes(q) ||
-        project.focusAreas.some((area) =>
-          area.name.toLowerCase().includes(q) ||
-          area.group.toLowerCase().includes(q)
-        )
-      );
-    });
-  }, [query, projects]);
+    return projects ?? [];
+  }, [projects]);
 
   const handleUpvote = async (projectId: Id<"projects">) => {
     try {
@@ -107,10 +98,11 @@ export default function Home() {
           <div className="space-y-6">
             <div>
               <h2 className="text-3xl font-semibold tracking-tight flex items-center gap-3">
-                What people at Honda are building
-                <Badge className="text-xs font-medium">For you</Badge>
+                Tools built inside Honda
               </h2>
-              <p className="mt-2 text-lg text-zinc-600">This week&apos;s most popular projects, based on your interests</p>
+              <p className="mt-2 text-lg text-zinc-600">
+                If it made work easier, it belongs here.
+              </p>
             </div>
             <ShareProjectCallout />
             <LayoutGroup>
@@ -120,18 +112,20 @@ export default function Home() {
                     Loading projects...
                   </div>
                 ) : filteredProjects.length ? (
-                  filteredProjects.map((project) => (
-                    <motion.div
-                      key={project._id}
-                      layout
-                      layoutId={project._id}
-                      transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                    >
-                      <ProjectRow
-                        project={project}
-                        onUpvote={handleUpvote}
-                      />
-                    </motion.div>
+                  filteredProjects.map((project, index) => (
+                    <React.Fragment key={project._id}>
+                      {index > 0 && <Separator className="bg-zinc-200" />}
+                      <motion.div
+                        layout
+                        layoutId={project._id}
+                        transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                      >
+                        <ProjectRow
+                          project={project}
+                          onUpvote={handleUpvote}
+                        />
+                      </motion.div>
+                    </React.Fragment>
                   ))
                 ) : (
                   <EmptyState />
@@ -155,27 +149,27 @@ function ShareProjectCallout() {
     <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white/90 px-4 py-3 shadow-sm">
       <div className="space-y-1">
         <p className="text-sm text-zinc-600">
-          Have something cool to share? Post a project so others can follow along.
+          Have one? Share it in two lines.
         </p>
       </div>
       <div className="flex items-center gap-2">
         <Authenticated>
           <Link href="/submit">
             <Button size="sm" className="whitespace-nowrap">
-              Submit a project
+              Share something you built
             </Button>
           </Link>
         </Authenticated>
         <Unauthenticated>
             <Button size="sm" className="whitespace-nowrap" asChild>
               <Link href="/sign-in" prefetch={false}>
-                Submit a project
+                Share something you built
               </Link>
             </Button>
         </Unauthenticated>
         <AuthLoading>
           <Button size="sm" className="whitespace-nowrap" disabled>
-            Submit a project
+            Share something you built
           </Button>
         </AuthLoading>
       </div>
@@ -207,88 +201,101 @@ function ProjectRow({
     router.push(`/project/${project._id}#discussion`);
   };
 
+  const hasMedia = project.previewMedia.length > 0;
+
   return (
     <div
-      className="grid gap-3 pb-4 pt-4 cursor-pointer hover:bg-zinc-100 rounded-lg transition-colors px-4 -mx-4 sm:grid-cols-[minmax(0,1fr)_auto]"
+      className="flex flex-col gap-3 pb-4 pt-4 cursor-pointer hover:bg-zinc-100 rounded-lg transition-colors px-4 -mx-4"
       onClick={handleProjectClick}
     >
-      <div className="min-w-0 space-y-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-xl font-semibold text-zinc-900">{project.name}</h3>
-            <ReadinessBadge status={project.readinessStatus} />
-          </div>
-          {project.headline && (
-            <p className="mt-1 text-sm text-zinc-500 break-words">
-              {project.headline}
-            </p>
-          )}
-        </div>
-      </div>
-      <div className="flex items-center justify-end gap-2">
-        <Button
-          variant="outline"
-          onClick={handleCommentClick}
-          className="flex h-11 w-12 flex-col items-center justify-center gap-0.5 rounded-xl border-zinc-200 px-2 py-2 text-xs font-semibold leading-tight hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
-          aria-label={`View ${project.commentCount} comments`}
-        >
-          <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
-          <span className="text-xs font-semibold">{project.commentCount}</span>
-        </Button>
-        <div>
-          {isAuthenticated ? (
-            <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
-              <Button
-                variant={project.hasUpvoted ? "default" : "outline"}
-                onClick={handleUpvoteClick}
-                className={`flex h-11 w-12 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-2 text-xs font-semibold leading-tight hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all ${project.hasUpvoted ? "hover:!bg-primary hover:!text-primary-foreground" : "hover:!bg-background hover:!text-foreground"}`}
-              >
-                <span aria-hidden="true" className="text-inherit">↑</span>
-                <span className="text-xs font-semibold text-inherit">{project.upvotes}</span>
-              </Button>
-            </motion.div>
-          ) : (
-            <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
-                <Button
-                  variant="outline"
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex h-11 w-12 flex-col items-center justify-center gap-0.5 rounded-xl border-zinc-200 px-2 py-2 text-xs font-semibold leading-tight hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
-                >
-                  <Link href="/sign-in" prefetch={false}>
-                    <span aria-hidden="true" className="text-inherit">↑</span>
-                    <span className="text-xs font-semibold text-inherit">{project.upvotes}</span>
-                  </Link>
-                </Button>
-            </motion.div>
-          )}
-        </div>
-      </div>
-      <div className="sm:col-span-2 flex flex-wrap items-center gap-3 text-sm text-zinc-500 sm:flex-nowrap">
+      {/* Header: Creator info, team */}
+      <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-500">
         <span className="flex items-center gap-2 whitespace-nowrap">
-          <Avatar className="h-9 w-9 bg-zinc-100 text-sm font-semibold text-zinc-600">
+          <Avatar className="h-6 w-6 bg-zinc-100 text-xs font-semibold text-zinc-600">
             <AvatarImage src={project.creatorAvatar} alt={project.creatorName || "User"} />
             <AvatarFallback>{(project.creatorName || "U").slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <span>
-            By <span className="font-medium text-zinc-900">{project.creatorName || "Unknown User"}</span>
-          </span>
+          <span className="font-medium text-zinc-700">{project.creatorName || "Unknown User"}</span>
         </span>
         {project.team && (
           <>
             <span className="text-zinc-300">•</span>
-            <span className="whitespace-nowrap">
-              Team <span className="font-medium text-zinc-900">{project.team}</span>
-            </span>
+            <span className="whitespace-nowrap text-zinc-500">{project.team}</span>
           </>
         )}
+        <span className="text-zinc-300">•</span>
+        <span className="whitespace-nowrap text-zinc-500">
+          {getRelativeTime(project._creationTime)}
+        </span>
+      </div>
+
+      {/* Title */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <h3 className="text-xl font-semibold text-zinc-900">{project.name}</h3>
+        <ReadinessBadge status={project.readinessStatus} />
+      </div>
+
+      {/* Media carousel OR summary - not both */}
+      {hasMedia ? (
+        <div className="w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+          <ProjectMediaCarousel media={project.previewMedia} />
+        </div>
+      ) : (
+        <p className="text-sm text-zinc-600 line-clamp-2 break-words">
+          {project.summary}
+        </p>
+      )}
+
+      {/* Action buttons */}
+      <div className="flex items-center gap-2">
+        {isAuthenticated ? (
+          <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
+            <Button
+              variant={project.hasUpvoted ? "default" : "outline"}
+              size="sm"
+              onClick={handleUpvoteClick}
+              className={`flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all ${project.hasUpvoted ? "hover:!bg-primary hover:!text-primary-foreground" : "hover:!bg-background hover:!text-foreground"}`}
+            >
+              <span aria-hidden="true">↑</span>
+              <span>{project.upvotes}</span>
+            </Button>
+          </motion.div>
+        ) : (
+          <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
+              asChild
+            >
+              <Link href="/sign-in" prefetch={false}>
+                <span aria-hidden="true">↑</span>
+                <span>{project.upvotes}</span>
+              </Link>
+            </Button>
+          </motion.div>
+        )}
+        <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCommentClick}
+            className="flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
+            aria-label={`View ${project.commentCount} comments`}
+          >
+            <MessageCircle className="h-4 w-4" aria-hidden="true" />
+            <span>{project.commentCount}</span>
+          </Button>
+        </motion.div>
+
         {project.focusAreas.length > 0 && (
-          <>
-            <span className="text-zinc-300">•</span>
+          <div className="ml-auto">
             <FocusAreaBadges
               focusAreas={project.focusAreas}
-              className="min-w-0 flex-1 text-xs"
+              className="text-xs"
             />
-          </>
+          </div>
         )}
       </div>
     </div>
@@ -297,8 +304,16 @@ function ProjectRow({
 
 function EmptyState() {
   return (
-    <div className="rounded-3xl bg-zinc-100/60 p-6 text-center text-sm text-zinc-500">
-      <p className="font-medium text-zinc-900">No projects match your search.</p>
+    <div className="rounded-3xl bg-zinc-100/60 p-6 text-center text-sm text-zinc-500 space-y-3">
+      <p className="font-medium text-zinc-900">Nothing here yet.</p>
+      <p className="text-zinc-600">
+        Be the first to share a workaround that made work easier.
+      </p>
+      <Link href="/submit">
+        <Button size="sm" className="whitespace-nowrap">
+          Share something you built
+        </Button>
+      </Link>
     </div>
   );
 }
@@ -351,13 +366,6 @@ function NewestProjectCard({ project }: { project: NewestProject }) {
           {getRelativeTime(project._creationTime)}
         </span>
       </div>
-
-      {/* Headline (if available) */}
-      {project.headline && (
-        <p className="text-xs text-zinc-600 line-clamp-2">
-          {project.headline}
-        </p>
-      )}
 
       {/* Metadata: Team, Upvotes */}
       <div className="flex items-center gap-2 text-xs text-zinc-500">

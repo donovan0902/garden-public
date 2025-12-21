@@ -16,21 +16,18 @@ interface SimilarProject {
   upvotes: number;
   creatorName: string;
   creatorAvatar: string;
-  headline?: string;
 }
 
 interface SimilarProjectsPreviewProps {
   name: string;
-  headline: string;
   description: string;
 }
 
 export function SimilarProjectsPreview({
   name,
-  headline,
   description,
 }: SimilarProjectsPreviewProps) {
-  const [debouncedInputs, setDebouncedInputs] = useState({ name, headline, description });
+  const [debouncedInputs, setDebouncedInputs] = useState({ name, description });
   const [results, setResults] = useState<SimilarProject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -39,17 +36,20 @@ export function SimilarProjectsPreview({
   // Debounce the inputs
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedInputs({ name, headline, description });
-    }, 500);
+      setDebouncedInputs({ name, description });
+    }, 400);
 
     return () => clearTimeout(timer);
-  }, [name, headline, description]);
+  }, [name, description]);
 
   // Perform search when debounced inputs change
   useEffect(() => {
     const performSearch = async () => {
-      // Don't search if inputs are too short
-      if (debouncedInputs.name.trim().length < 2 || debouncedInputs.description.trim().length < 200) {
+      // Don't search if both inputs are too short
+      if (
+        debouncedInputs.name.trim().length < 2 &&
+        debouncedInputs.description.trim().length < 2
+      ) {
         setResults([]);
         setIsLoading(false);
         return;
@@ -59,7 +59,6 @@ export function SimilarProjectsPreview({
       try {
         const searchResults = await searchSimilarProjects({
           name: debouncedInputs.name,
-          headline: debouncedInputs.headline || undefined,
           summary: debouncedInputs.description,
         });
         setResults(searchResults);
@@ -74,7 +73,8 @@ export function SimilarProjectsPreview({
     performSearch();
   }, [debouncedInputs, searchSimilarProjects]);
 
-  const inputsTooShort = name.trim().length < 2 || description.trim().length < 200;
+  const inputsTooShort =
+    name.trim().length < 2 && description.trim().length < 2;
 
   return (
     <div className="space-y-3">
@@ -83,15 +83,14 @@ export function SimilarProjectsPreview({
       <div className="space-y-4">
         {inputsTooShort ? (
           <p className="text-sm text-zinc-500">
-            Start typing to see similar projects.
+            Start typing a short name or a quick description to see similar projects.
           </p>
         ) : isLoading ? (
           <>
-            {[...Array(3)].map((_, i) => (
+            {[...Array(2)].map((_, i) => (
               <div key={i} className="space-y-2">
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-3 w-5/6" />
               </div>
             ))}
           </>
@@ -112,11 +111,6 @@ export function SimilarProjectsPreview({
                       </h4>
                       <ArrowUpRight className="h-4 w-4 text-zinc-400 flex-shrink-0" />
                     </div>
-                    {project.headline && (
-                      <p className="text-sm text-zinc-600 line-clamp-1">
-                        {project.headline}
-                      </p>
-                    )}
                     <p className="text-sm text-zinc-500 line-clamp-2">
                       {project.summary}
                     </p>

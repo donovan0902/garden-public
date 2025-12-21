@@ -3,7 +3,6 @@
 import { use } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -12,101 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CommentForm } from "@/components/CommentForm";
 import { CommentThread } from "@/components/CommentThread";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { ProjectMediaCarousel } from "@/components/ProjectMediaCarousel";
 import { FocusAreaBadges } from "@/components/FocusAreaBadges";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
 import Link from "next/link";
 import { Pencil } from "lucide-react";
-
-function MediaCarousel({
-  mediaFiles,
-}: {
-  mediaFiles: Array<{
-    _id: Id<"mediaFiles">;
-    storageId: Id<"_storage">;
-    type: string;
-  }>;
-}) {
-  if (!mediaFiles || mediaFiles.length === 0) {
-    return null;
-  }
-
-  return (
-    <Carousel className="w-full">
-      <CarouselContent>
-        {mediaFiles.map((media) => (
-          <CarouselItem key={media._id}>
-            <MediaSlide media={media} />
-          </CarouselItem>
-        ))}
-      </CarouselContent>
-      {mediaFiles.length > 1 && (
-        <>
-          <CarouselPrevious />
-          <CarouselNext />
-        </>
-      )}
-    </Carousel>
-  );
-}
-
-function MediaSlide({
-  media,
-}: {
-  media: {
-    storageId: Id<"_storage">;
-    type: string;
-  };
-}) {
-  const mediaUrl = useQuery(api.projects.getMediaUrl, {
-    storageId: media.storageId,
-  });
-
-  if (!mediaUrl) {
-    return (
-      <div
-        className="flex items-center justify-center rounded-lg bg-zinc-100"
-        style={{ minHeight: "400px" }}
-      >
-        <div className="text-zinc-400">Loading...</div>
-      </div>
-    );
-  }
-
-  const isVideo = media.type === "video";
-
-  return (
-    <div className="px-2">
-      {isVideo ? (
-        <video
-          src={mediaUrl}
-          controls
-          className="mx-auto h-auto w-full max-h-[600px] rounded-lg"
-          style={{ objectFit: "contain" }}
-        />
-      ) : (
-        <div
-          className="relative mx-auto w-full"
-          style={{ minHeight: "400px", maxHeight: "600px" }}
-        >
-          <Image
-            src={mediaUrl}
-            alt="Project media"
-            fill
-            className="object-contain rounded-lg"
-            unoptimized
-          />
-        </div>
-      )}
-    </div>
-  );
-}
 
 function formatProjectLink(link?: string | null): {
   href: string;
@@ -219,11 +128,8 @@ export default function ProjectPage({
                 </h1>
                 <ReadinessBadge status={project.readinessStatus} />
               </div>
-              {project.headline && (
-                <p className="mt-2 text-lg text-zinc-600">{project.headline}</p>
-              )}
               {(projectLink || (project.focusAreas && project.focusAreas.length > 0)) && (
-                <div className="mt-4 flex flex-wrap items-center gap-4">
+                <div className="mt-1 flex flex-wrap items-center gap-4">
                   {projectLink && (
                     <Button
                       variant="link"
@@ -248,29 +154,31 @@ export default function ProjectPage({
                 </div>
               )}
             </div>
-            {isAuthenticated ? (
-              <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
-                <Button
-                  variant={project.hasUpvoted ? "default" : "outline"}
-                  onClick={handleUpvote}
-                  className={`rounded-full px-4 py-2.5 text-sm font-semibold hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all ${project.hasUpvoted ? "!text-primary-foreground hover:!bg-primary hover:!text-primary-foreground" : "!text-foreground hover:!bg-background hover:!text-foreground"}`}
-                >
-                  ↑ {project.upvotes}
-                </Button>
-              </motion.div>
-            ) : (
-              <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
+            <div className="flex flex-col items-end gap-3">
+              {isAuthenticated ? (
+                <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
                   <Button
-                    variant="outline"
-                    className="rounded-full border-zinc-200 px-4 py-2.5 text-sm font-semibold !text-foreground hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
-                    asChild
+                    variant={project.hasUpvoted ? "default" : "outline"}
+                    onClick={handleUpvote}
+                    className={`rounded-full px-4 py-2.5 text-sm font-semibold hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all ${project.hasUpvoted ? "!text-primary-foreground hover:!bg-primary hover:!text-primary-foreground" : "!text-foreground hover:!bg-background hover:!text-foreground"}`}
                   >
-                    <Link href="/sign-in" prefetch={false}>
                     ↑ {project.upvotes}
-                    </Link>
                   </Button>
-              </motion.div>
-            )}
+                </motion.div>
+              ) : (
+                <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
+                    <Button
+                      variant="outline"
+                      className="rounded-full border-zinc-200 px-4 py-2.5 text-sm font-semibold !text-foreground hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
+                      asChild
+                    >
+                      <Link href="/sign-in" prefetch={false}>
+                      ↑ {project.upvotes}
+                      </Link>
+                    </Button>
+                </motion.div>
+              )}
+            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 text-base sm:flex-nowrap">
@@ -304,19 +212,19 @@ export default function ProjectPage({
             )}
           </div>
 
-          <div>
-            <p className="text-base leading-relaxed whitespace-pre-line text-zinc-600">
+          <div className="space-y-3">
+            <p className="whitespace-pre-wrap text-base leading-relaxed text-zinc-600">
               {project.summary}
             </p>
           </div>
 
           {projectMedia && projectMedia.length > 0 && (
             <div className="my-8">
-              <MediaCarousel mediaFiles={projectMedia} />
+              <ProjectMediaCarousel media={projectMedia} variant="detail" />
             </div>
           )}
 
-          <div id="discussion">
+          <div id="discussion" className="space-y-6">
             <div className="space-y-4">
               <CommentForm projectId={projectId} />
               {comments === undefined ? (
@@ -324,7 +232,7 @@ export default function ProjectPage({
                   Loading comments...
                 </div>
               ) : topLevelComments.length === 0 ? (
-                <div className="rounded-lg border border-zinc-200 bg-zinc-50 py-12 text-center">
+                <div className="py-12 text-center">
                   <p className="text-sm text-zinc-500">
                     No comments yet. Be the first to start the discussion!
                   </p>

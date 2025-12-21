@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Pencil } from "lucide-react";
 
 type Project = {
@@ -21,6 +22,15 @@ type Project = {
   creatorAvatar: string;
   readinessStatus?: "in_progress" | "ready_to_use";
 };
+
+const thingsThatBelong = [
+  "a script you wrote for yourself",
+  "a tool your manager asked you to build",
+  "a department dashboard",
+  "a deadline workaround",
+  "a prototype that never shipped",
+  "a compliance/reporting solution",
+];
 
 export default function MyProjectsPage() {
   const router = useRouter();
@@ -44,15 +54,32 @@ export default function MyProjectsPage() {
           </div>
         ) : projects.length === 0 ? (
           <div className="rounded-3xl bg-zinc-100/60 p-12 text-center">
-            <p className="text-lg font-medium text-zinc-900">No projects yet</p>
+            <p className="text-lg font-medium text-zinc-900">No posts yet</p>
             <p className="mt-2 text-sm text-zinc-500">
-              Get started by submitting your first project
+              If you built something in response to friction, whether self-initiated or requested, it belongs here.
             </p>
+            <p className="mt-2 text-sm text-zinc-500">
+              Rough and unfinished is welcome, you can always edit later.
+            </p>
+            <Accordion type="single" collapsible className="mx-auto mt-4 max-w-xs">
+              <AccordionItem value="things" className="border-b-0">
+                <AccordionTrigger className="justify-center text-center py-1 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                  Things that belong
+                </AccordionTrigger>
+                <AccordionContent className="pt-2">
+                  <ul className="list-disc space-y-1 pl-5 text-left text-sm text-zinc-600">
+                    {thingsThatBelong.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
             <Button
               onClick={() => router.push("/submit")}
               className="mt-6"
             >
-              Submit Project
+              Share something you built
             </Button>
           </div>
         ) : (
