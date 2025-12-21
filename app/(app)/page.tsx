@@ -3,7 +3,7 @@
 import { useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery, useMutation, useConvexAuth, usePaginatedQuery } from "convex/react";
+import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { motion, LayoutGroup } from "motion/react";
@@ -18,7 +18,7 @@ import { FocusAreaBadges } from "@/components/FocusAreaBadges";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
 import { Separator } from "@/components/ui/separator";
 import { Facepile } from "@/components/Facepile";
-import { AdoptButton } from "@/components/AdoptButton";
+import { useCurrentUser } from "@/app/useCurrentUser";
 
 type FocusArea = {
   _id: Id<"focusAreas">;
@@ -90,8 +90,14 @@ export default function Home() {
     {},
     { initialNumItems: 15 }
   );
+  const { isAuthenticated, user } = useCurrentUser();
   const toggleUpvote = useMutation(api.projects.toggleUpvote);
   const toggleAdoption = useMutation(api.projects.toggleAdoption);
+
+  // Build current user object for Facepile
+  const currentUser = user
+    ? { _id: user._id, name: user.name, avatarUrl: user.avatarUrlId || "" }
+    : null;
 
   const isLoading = status === "LoadingFirstPage";
   const canLoadMore = status === "CanLoadMore";
@@ -172,6 +178,8 @@ export default function Home() {
                             project={project}
                             onUpvote={handleUpvote}
                             onAdopt={handleAdopt}
+                            currentUser={currentUser}
+                            isAuthenticated={isAuthenticated}
                           />
                         </motion.div>
                       </React.Fragment>
@@ -238,13 +246,16 @@ function ProjectRow({
   project,
   onUpvote,
   onAdopt,
+  currentUser,
+  isAuthenticated,
 }: {
   project: Project;
   onUpvote: (projectId: Id<"projects">) => void;
   onAdopt: (projectId: Id<"projects">) => void;
+  currentUser: { _id: Id<"users">; name: string; avatarUrl: string } | null;
+  isAuthenticated: boolean;
 }) {
   const router = useRouter();
-  const { isAuthenticated } = useConvexAuth();
 
   const handleProjectClick = () => {
     router.push(`/project/${project._id}`);
@@ -292,14 +303,16 @@ function ProjectRow({
             {getRelativeTime(project._creationTime)}
           </span>
         </div>
-        {project.adoptionCount > 0 && (
-          <Facepile
-            adopters={project.adopters}
-            totalCount={project.adoptionCount}
-            maxVisible={4}
-            size="sm"
-          />
-        )}
+        <Facepile
+          adopters={project.adopters}
+          totalCount={project.adoptionCount}
+          maxVisible={4}
+          size="sm"
+          hasAdopted={project.hasAdopted}
+          currentUser={currentUser}
+          isAuthenticated={isAuthenticated}
+          onToggle={handleAdoptClick}
+        />
       </div>
 
       {/* Title */}
@@ -361,11 +374,6 @@ function ProjectRow({
             <span>{project.commentCount}</span>
           </Button>
         </motion.div>
-        <AdoptButton
-          hasAdopted={project.hasAdopted}
-          isAuthenticated={isAuthenticated}
-          onToggle={handleAdoptClick}
-        />
 
         {project.focusAreas.length > 0 && (
           <div className="ml-auto">

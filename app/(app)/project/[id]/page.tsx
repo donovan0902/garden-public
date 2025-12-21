@@ -15,7 +15,6 @@ import { ProjectMediaCarousel } from "@/components/ProjectMediaCarousel";
 import { FocusAreaBadges } from "@/components/FocusAreaBadges";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
 import { Facepile } from "@/components/Facepile";
-import { AdoptButton } from "@/components/AdoptButton";
 import Link from "next/link";
 import { Pencil } from "lucide-react";
 
@@ -166,46 +165,38 @@ export default function ProjectPage({
               )}
             </div>
             <div className="flex flex-col items-end gap-3">
-              <div className="flex items-center gap-2">
-                {isAuthenticated ? (
-                  <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
+              <Facepile
+                adopters={project.adopters}
+                totalCount={project.adoptionCount}
+                maxVisible={6}
+                size="md"
+                hasAdopted={project.hasAdopted}
+                currentUser={user ? { _id: user._id, name: user.name, avatarUrl: user.avatarUrlId || "" } : null}
+                isAuthenticated={isAuthenticated}
+                onToggle={handleAdopt}
+              />
+              {isAuthenticated ? (
+                <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
+                  <Button
+                    variant={project.hasUpvoted ? "default" : "outline"}
+                    onClick={handleUpvote}
+                    className={`rounded-full px-4 py-2.5 text-sm font-semibold hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all ${project.hasUpvoted ? "!text-primary-foreground hover:!bg-primary hover:!text-primary-foreground" : "!text-foreground hover:!bg-background hover:!text-foreground"}`}
+                  >
+                    ↑ {project.upvotes}
+                  </Button>
+                </motion.div>
+              ) : (
+                <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
                     <Button
-                      variant={project.hasUpvoted ? "default" : "outline"}
-                      onClick={handleUpvote}
-                      className={`rounded-full px-4 py-2.5 text-sm font-semibold hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all ${project.hasUpvoted ? "!text-primary-foreground hover:!bg-primary hover:!text-primary-foreground" : "!text-foreground hover:!bg-background hover:!text-foreground"}`}
+                      variant="outline"
+                      className="rounded-full border-zinc-200 px-4 py-2.5 text-sm font-semibold !text-foreground hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
+                      asChild
                     >
+                      <Link href="/sign-in" prefetch={false}>
                       ↑ {project.upvotes}
+                      </Link>
                     </Button>
-                  </motion.div>
-                ) : (
-                  <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
-                      <Button
-                        variant="outline"
-                        className="rounded-full border-zinc-200 px-4 py-2.5 text-sm font-semibold !text-foreground hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
-                        asChild
-                      >
-                        <Link href="/sign-in" prefetch={false}>
-                        ↑ {project.upvotes}
-                        </Link>
-                      </Button>
-                  </motion.div>
-                )}
-                <AdoptButton
-                  hasAdopted={project.hasAdopted}
-                  isAuthenticated={isAuthenticated}
-                  onToggle={handleAdopt}
-                />
-              </div>
-              {project.adoptionCount > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-zinc-500">Used by</span>
-                  <Facepile
-                    adopters={project.adopters}
-                    totalCount={project.adoptionCount}
-                    maxVisible={6}
-                    size="md"
-                  />
-                </div>
+                </motion.div>
               )}
             </div>
           </div>
