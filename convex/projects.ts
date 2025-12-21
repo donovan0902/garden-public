@@ -970,12 +970,12 @@ export const searchProjects = action({
       rag.search(ctx, {
         namespace: "projects",
         query: args.query,
-        limit: 8,
+        limit: 15,
         vectorScoreThreshold: 0.3,
       }),
       ctx.runQuery(internal.projects.fullTextSearchProjects, {
         query: args.query,
-        limit: 8,
+        limit: 15,
       }),
     ]);
 
@@ -989,8 +989,9 @@ export const searchProjects = action({
     const hybridRankedEntryIds = hybridRank(
       [entryIds, fullTextEntryIds],
       {
-        k: 10,
+        k: 15,
         weights: [2, 1],
+        cutoffScore: 0.05,
       }
     );
 
