@@ -850,6 +850,104 @@ export const getUserProjects = query({
   },
 });
 
+export const getByUserId = query({
+  args: {
+    userId: v.id("users"),
+    includePending: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const viewer = await getCurrentUser(ctx);
+    if (!viewer) {
+      return [];
+    }
+
+    const includePending = args.includePending ?? false;
+    const canSeePending = includePending && viewer._id === args.userId;
+
+    let projectQuery = ctx.db
+      .query("projects")
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId));
+
+    if (!canSeePending) {
+      projectQuery = projectQuery.filter((q) => q.eq(q.field("status"), "active"));
+    }
+
+    const projects = await projectQuery.collect();
+
+    const projectsWithDetails = await Promise.all(
+      projects.map(async (project) => {
+        const [upvotes, team] = await Promise.all([
+          ctx.db
+            .query("upvotes")
+            .withIndex("by_project", (q) => q.eq("projectId", project._id))
+            .collect(),
+          project.teamId ? ctx.db.get(project.teamId) : Promise.resolve(null),
+        ]);
+
+        return {
+          ...project,
+          team: team?.name ?? "",
+          upvotes: upvotes.length,
+        };
+      })
+    );
+
+    return projectsWithDetails.sort((a, b) => b._creationTime - a._creationTime);
+  },
+});
+
+export const getAdoptedByUser = query({
+  args: {
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    const viewer = await getCurrentUser(ctx);
+    if (!viewer) {
+      return [];
+    }
+
+    const adoptions = await ctx.db
+      .query("adoptions")
+      .withIndex("by_user", (q) => q.eq("userId", args.userId))
+      .order("desc")
+      .collect();
+
+    const adoptedProjects = await Promise.all(
+      adoptions.map(async (adoption) => {
+        const project = await ctx.db.get(adoption.projectId);
+        if (!project || project.status !== "active") {
+          return null;
+        }
+
+        const [upvotes, team, creator] = await Promise.all([
+          ctx.db
+            .query("upvotes")
+            .withIndex("by_project", (q) => q.eq("projectId", project._id))
+            .collect(),
+          project.teamId ? ctx.db.get(project.teamId) : Promise.resolve(null),
+          ctx.db.get(project.userId),
+        ]);
+
+        return {
+          _id: project._id,
+          name: project.name,
+          summary: project.summary,
+          readinessStatus: project.readinessStatus,
+          team: team?.name ?? "",
+          upvotes: upvotes.length,
+          creatorName: creator?.name ?? "Unknown User",
+          creatorAvatar: creator?.avatarUrlId ?? "",
+          adoptedAt: adoption.createdAt,
+        };
+      })
+    );
+
+    return adoptedProjects.filter(
+      (project): project is NonNullable<typeof project> => project !== null
+    );
+  },
+});
+
 // Public query: Fetch the newest active projects for sidebar display
 // Returns minimal enriched data sorted by creation time descending
 export const getNewestProjects = query({

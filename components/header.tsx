@@ -7,6 +7,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { useAuth } from '@workos-inc/authkit-nextjs/components';
 import { signOut } from "@workos-inc/authkit-nextjs";
 import { LogOut } from "lucide-react";
+import { useCurrentUser } from "@/app/useCurrentUser";
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -20,6 +21,7 @@ import {
 
 export function Header() {
   const { user } = useAuth();
+  const { user: convexUser } = useCurrentUser();
   return (
     <header className="sticky top-0 z-50 w-full border-b border-zinc-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
@@ -67,6 +69,18 @@ export function Header() {
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <ul className="grid w-[200px] gap-2 p-2">
+                      {convexUser && (
+                        <li>
+                          <NavigationMenuLink asChild>
+                            <Link 
+                              href={`/profile/${convexUser._id}`} 
+                              className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                            >
+                              <div className="text-sm font-medium leading-none">Profile</div>
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      )}
                       <li>
                         <NavigationMenuLink asChild>
                           <Link 
