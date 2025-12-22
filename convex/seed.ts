@@ -116,7 +116,7 @@ export const seed = internalMutation({
         focusAreaIds: [focusAreaIds[1]],
         status: "active" as const,
         readinessStatus: "in_progress" as const,
-        upvotes: 2,
+        upvotes: 1,
         entryId: "entry_launch_compass",
         link: "https://example.com/launch-compass",
         pinned: false,
