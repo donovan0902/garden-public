@@ -192,7 +192,7 @@ export default function ProfilePage({
                 </Badge>
               </TabsTrigger>
               <TabsTrigger value="adopted" className="gap-2">
-                {`Tools ${profile.name.split(" ")[0]} Uses`}
+                {`Tools ${(profile.name || "").trim().split(" ")[0] || "User"} Uses`}
                 <Badge variant="secondary" className="bg-zinc-100">
                   {profile.adoptionCount}
                 </Badge>
