@@ -310,6 +310,11 @@ function ProjectRow({
           <span className="whitespace-nowrap text-zinc-500">
             {getRelativeTime(project._creationTime)}
           </span>
+          <span className="text-zinc-300">•</span>
+          <span className="flex items-center gap-1 whitespace-nowrap text-xs text-zinc-400">
+            <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+            {project.viewCount}
+          </span>
         </div>
         <Facepile
           adopters={project.adopters}
@@ -383,11 +388,6 @@ function ProjectRow({
             <span>{project.commentCount}</span>
           </Button>
         </motion.div>
-        <div className="flex items-center gap-1.5 rounded-full border border-zinc-200 px-3 h-8 text-sm text-zinc-600">
-          <Eye className="h-4 w-4" aria-hidden="true" />
-          <span>{project.viewCount}</span>
-        </div>
-
         {project.focusAreas.length > 0 && (
           <div className="ml-auto">
             <FocusAreaBadges

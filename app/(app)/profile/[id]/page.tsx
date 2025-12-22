@@ -15,7 +15,7 @@ import { FocusAreaBadges } from "@/components/FocusAreaBadges";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
-import { MessageCircle, Pencil, Target, Users } from "lucide-react";
+import { Eye, MessageCircle, Pencil, Target, Users } from "lucide-react";
 
 const intentLabels: Record<string, string> = {
   looking: "Looking for tools",
@@ -40,6 +40,7 @@ type Project = {
   summary?: string;
   team: string;
   upvotes: number;
+  viewCount: number;
   commentCount: number;
   adoptionCount: number;
   status: "pending" | "active";
@@ -315,6 +316,9 @@ function ProjectCard({
                 <span className="text-zinc-300">•</span>
                 <Users className="h-4 w-4" aria-hidden="true" />
                 <span>{project.adoptionCount}</span>
+                <span className="text-zinc-300">•</span>
+                <Eye className="h-4 w-4" aria-hidden="true" />
+                <span>{project.viewCount}</span>
               </div>
             </div>
           </div>

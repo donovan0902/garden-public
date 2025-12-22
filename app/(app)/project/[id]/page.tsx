@@ -220,32 +220,34 @@ export default function ProjectPage({
                 onToggle={handleAdopt}
                 projectId={projectId}
               />
-              {isAuthenticated ? (
-                <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
-                  <Button
-                    variant={project.hasUpvoted ? "default" : "outline"}
-                    onClick={handleUpvote}
-                    className={`rounded-full px-4 py-2.5 text-sm font-semibold hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all ${project.hasUpvoted ? "!text-primary-foreground hover:!bg-primary hover:!text-primary-foreground" : "!text-foreground hover:!bg-background hover:!text-foreground"}`}
-                  >
-                    ↑ {project.upvotes}
-                  </Button>
-                </motion.div>
-              ) : (
-                <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
+              <div className="flex items-center gap-2">
+                <span className="flex items-center gap-1 text-xs text-zinc-400 whitespace-nowrap">
+                  <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                  {project.viewCount ?? 0} views
+                </span>
+                {isAuthenticated ? (
+                  <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
                     <Button
-                      variant="outline"
-                      className="rounded-full border-zinc-200 px-4 py-2.5 text-sm font-semibold !text-foreground hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
-                      asChild
+                      variant={project.hasUpvoted ? "default" : "outline"}
+                      onClick={handleUpvote}
+                      className={`rounded-full px-4 py-2.5 text-sm font-semibold hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all ${project.hasUpvoted ? "!text-primary-foreground hover:!bg-primary hover:!text-primary-foreground" : "!text-foreground hover:!bg-background hover:!text-foreground"}`}
                     >
-                      <Link href="/sign-in" prefetch={false}>
                       ↑ {project.upvotes}
-                      </Link>
                     </Button>
-                </motion.div>
-              )}
-              <div className="flex items-center gap-1 text-sm text-zinc-500">
-                <Eye className="h-4 w-4" aria-hidden="true" />
-                <span>{project.viewCount ?? 0} views</span>
+                  </motion.div>
+                ) : (
+                  <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
+                      <Button
+                        variant="outline"
+                        className="rounded-full border-zinc-200 px-4 py-2.5 text-sm font-semibold !text-foreground hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
+                        asChild
+                      >
+                        <Link href="/sign-in" prefetch={false}>
+                        ↑ {project.upvotes}
+                        </Link>
+                      </Button>
+                  </motion.div>
+                )}
               </div>
             </div>
           </div>
