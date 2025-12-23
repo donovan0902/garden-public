@@ -13,7 +13,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
-import { Eye, MessageCircle } from "lucide-react";
+import { Eye, MessageCircle, Play } from "lucide-react";
 import { ProjectMediaCarousel } from "@/components/ProjectMediaCarousel";
 import { FocusAreaBadges } from "@/components/FocusAreaBadges";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
@@ -515,70 +515,90 @@ function SpotlightProjectCard({
 }) {
   const router = useRouter();
   const hasMedia = project.previewMedia && project.previewMedia.length > 0;
-  const thumbnailUrl = hasMedia ? project.previewMedia[0].url : null;
+  const firstMedia = hasMedia ? project.previewMedia[0] : null;
+  const thumbnailUrl = firstMedia ? firstMedia.url : null;
+  const isVideo = firstMedia?.type === "video";
 
   return (
     <div
-      className="cursor-pointer space-y-2 rounded-lg p-3 transition-colors hover:bg-zinc-100"
+      className="cursor-pointer flex gap-4 rounded-lg p-3 transition-colors hover:bg-zinc-100"
       onClick={() => router.push(`/project/${project._id}`)}
     >
-      {/* Header: Avatar | Creator Name | • | Time */}
-      <div className="flex items-center gap-2 text-xs text-zinc-500">
-        <Avatar className="h-5 w-5 bg-zinc-100 text-[10px] font-semibold text-zinc-600">
-          <AvatarImage
-            src={project.creatorAvatar}
-            alt={project.creatorName || "User"}
-          />
-          <AvatarFallback>
-            {(project.creatorName || "U").slice(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <span className="font-medium text-zinc-700 line-clamp-1">
-          {project.creatorName || "Unknown User"}
-        </span>
-        <span className="text-zinc-400">•</span>
-        <span className="whitespace-nowrap">
-          {getRelativeTime(project._creationTime)}
-        </span>
-      </div>
+      <div className="flex flex-col gap-2 flex-1 min-w-0">
+        {/* Header: Avatar | Creator Name | • | Time */}
+        <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <Avatar className="h-5 w-5 bg-zinc-100 text-[10px] font-semibold text-zinc-600">
+            <AvatarImage
+              src={project.creatorAvatar}
+              alt={project.creatorName || "User"}
+            />
+            <AvatarFallback>
+              {(project.creatorName || "U").slice(0, 2).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span className="font-medium text-zinc-700 line-clamp-1">
+            {project.creatorName || "Unknown User"}
+          </span>
+          <span className="text-zinc-400">•</span>
+          <span className="whitespace-nowrap">
+            {getRelativeTime(project._creationTime)}
+          </span>
+        </div>
 
-      {/* Body: Title (left) + Thumbnail (right) */}
-      <div className="flex items-start justify-between gap-4">
-        <h4 className="text-base font-semibold text-zinc-900 line-clamp-2 flex-1">
+        {/* Title */}
+        <h4 className="text-base font-semibold text-zinc-900 line-clamp-2">
           {project.name}
         </h4>
-        {thumbnailUrl && (
-          <div className="flex-shrink-0 relative w-24 h-16">
+
+        {/* Footer: X upvotes • Y comments • Focus Areas */}
+        <div className="flex items-center gap-2 text-xs text-zinc-500">
+          <span className="flex items-center gap-1 flex-shrink-0">
+            <span aria-hidden="true">↑</span>
+            <span>{project.upvotes}</span>
+          </span>
+          <span className="text-zinc-400 flex-shrink-0">•</span>
+          <span className="flex items-center gap-1 flex-shrink-0">
+            <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{project.commentCount}</span>
+          </span>
+          {focusAreas.length > 0 && (
+            <>
+              <span className="text-zinc-400 flex-shrink-0">•</span>
+              <div className="overflow-x-auto scrollbar-hide flex-1 min-w-0">
+                <FocusAreaBadges focusAreas={focusAreas} className="text-[11px]" />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Thumbnail Column */}
+      {thumbnailUrl && (
+        <div className="flex-shrink-0 relative w-24 h-20 self-start mt-1 group overflow-hidden rounded-md bg-zinc-100">
+          {isVideo ? (
+            <video
+              src={thumbnailUrl}
+              className="h-full w-full object-cover"
+              muted
+              playsInline
+            />
+          ) : (
             <Image
               src={thumbnailUrl}
               alt={project.name}
               fill
-              className="rounded-md object-cover bg-zinc-100"
+              className="object-cover"
             />
-          </div>
-        )}
-      </div>
-
-      {/* Footer: X upvotes • Y comments • Focus Areas */}
-      <div className="flex items-center gap-2 text-xs text-zinc-500">
-        <span className="flex items-center gap-1 flex-shrink-0">
-          <span aria-hidden="true">↑</span>
-          <span>{project.upvotes}</span>
-        </span>
-        <span className="text-zinc-400 flex-shrink-0">•</span>
-        <span className="flex items-center gap-1 flex-shrink-0">
-          <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
-          <span>{project.commentCount}</span>
-        </span>
-        {focusAreas.length > 0 && (
-          <>
-            <span className="text-zinc-400 flex-shrink-0">•</span>
-            <div className="overflow-x-auto scrollbar-hide flex-1 min-w-0">
-              <FocusAreaBadges focusAreas={focusAreas} className="text-[11px]" />
+          )}
+          {isVideo && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
+              <div className="rounded-full bg-black/50 p-1.5 backdrop-blur-sm">
+                <Play className="h-3 w-3 fill-white text-white" />
+              </div>
             </div>
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
