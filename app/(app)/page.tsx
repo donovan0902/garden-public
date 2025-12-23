@@ -528,11 +528,11 @@ function SpotlightProjectCard({
         {/* Title + Time */}
         <div className="flex flex-col gap-1">
           <div className="flex items-start gap-2">
-            <h4 className="text-lg font-semibold text-zinc-900 line-clamp-2 leading-snug">
+            <h4 className="text-base font-semibold text-zinc-900 line-clamp-2 leading-snug">
               {project.name}
             </h4>
-            <span className="text-zinc-300 mt-[6px] shrink-0">•</span>
-            <span className="text-xs text-zinc-500 whitespace-nowrap mt-[7px] shrink-0">
+            <span className="text-zinc-300 mt-[3px] shrink-0 text-xs">•</span>
+            <span className="text-xs text-zinc-500 whitespace-nowrap mt-[3px] shrink-0">
               {getRelativeTime(project._creationTime)}
             </span>
           </div>
