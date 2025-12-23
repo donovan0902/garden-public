@@ -1237,6 +1237,7 @@ export const searchProjects = action({
     return projects.map((p) => ({
       _id: p._id,
       name: p.name,
+      summary: p.summary,
     }));
   },
 });
