@@ -12,6 +12,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 interface SearchResult {
   _id: Id<"projects">;
   name: string;
+  summary?: string;
 }
 
 interface SearchBarProps {
@@ -115,6 +116,9 @@ export function SearchBar({ className }: SearchBarProps) {
                   className="block px-4 py-3 hover:bg-zinc-50 transition-colors"
                 >
                   <div className="font-medium text-zinc-900">{result.name}</div>
+                  {result.summary && (
+                    <div className="text-sm text-zinc-500 line-clamp-2">{result.summary}</div>
+                  )}
                 </Link>
               ))}
             </div>
