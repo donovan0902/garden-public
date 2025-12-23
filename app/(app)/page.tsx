@@ -525,51 +525,27 @@ function SpotlightProjectCard({
       onClick={() => router.push(`/project/${project._id}`)}
     >
       <div className="flex flex-col gap-3 flex-1 min-w-0">
-        {/* Header: Avatar | Creator Name | • | Time */}
-        <div className="flex items-center gap-2 text-xs text-zinc-500">
-          <Avatar className="h-5 w-5 bg-zinc-100 text-[10px] font-semibold text-zinc-600">
-            <AvatarImage
-              src={project.creatorAvatar}
-              alt={project.creatorName || "User"}
-            />
-            <AvatarFallback>
-              {(project.creatorName || "U").slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <span className="font-medium text-zinc-700 line-clamp-1">
-            {project.creatorName || "Unknown User"}
-          </span>
-          <span className="text-zinc-400">•</span>
-          <span className="whitespace-nowrap">
-            {getRelativeTime(project._creationTime)}
-          </span>
+        {/* Title + Time */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-start gap-2">
+            <h4 className="text-lg font-semibold text-zinc-900 line-clamp-2 leading-snug">
+              {project.name}
+            </h4>
+            <span className="text-zinc-300 mt-[6px] shrink-0">•</span>
+            <span className="text-xs text-zinc-500 whitespace-nowrap mt-[7px] shrink-0">
+              {getRelativeTime(project._creationTime)}
+            </span>
+          </div>
         </div>
 
-        {/* Title */}
-        <h4 className="text-lg font-semibold text-zinc-900 line-clamp-2 leading-snug">
-          {project.name}
-        </h4>
-
-        {/* Footer: X upvotes • Y comments • Focus Areas */}
-        <div className="flex items-center gap-3 text-xs text-zinc-500 mt-1">
-          <span className="flex items-center gap-1.5 flex-shrink-0">
-            <span aria-hidden="true" className="text-sm">↑</span>
-            <span>{project.upvotes}</span>
-          </span>
-          <span className="text-zinc-300 flex-shrink-0">|</span>
-          <span className="flex items-center gap-1.5 flex-shrink-0">
-            <MessageCircle className="h-4 w-4" aria-hidden="true" />
-            <span>{project.commentCount}</span>
-          </span>
-          {focusAreas.length > 0 && (
-            <>
-              <span className="text-zinc-300 flex-shrink-0">|</span>
-              <div className="overflow-x-auto scrollbar-hide flex-1 min-w-0 flex items-center gap-1">
-                <FocusAreaBadges focusAreas={focusAreas} className="text-[11px]" />
-              </div>
-            </>
-          )}
-        </div>
+        {/* Footer: Focus Areas */}
+        {focusAreas.length > 0 && (
+          <div className="flex items-center gap-3 text-xs text-zinc-500">
+            <div className="overflow-x-auto scrollbar-hide flex-1 min-w-0 flex items-center gap-1">
+              <FocusAreaBadges focusAreas={focusAreas} className="text-[11px]" />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Thumbnail Column */}
