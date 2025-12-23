@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -12,7 +13,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
-import { Eye, MessageCircle, Flame } from "lucide-react";
+import { Eye, MessageCircle } from "lucide-react";
 import { ProjectMediaCarousel } from "@/components/ProjectMediaCarousel";
 import { FocusAreaBadges } from "@/components/FocusAreaBadges";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
@@ -64,15 +65,6 @@ type NewestProject = {
   creatorName: string;
   creatorAvatar: string;
   _creationTime: number;
-};
-
-type ActiveUser = {
-  _id: Id<"users">;
-  name: string;
-  avatarUrlId: string;
-  team: string;
-  score: number;
-  projectCount: number;
 };
 
 function getRelativeTime(timestamp: number): string {
@@ -149,7 +141,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-zinc-50">
       <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-6 pb-16 pt-10">
-        <section className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <section className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="space-y-6">
             <div>
               <h2 className="text-3xl font-semibold tracking-tight flex items-center gap-3">
@@ -202,7 +194,7 @@ export default function Home() {
           </div>
 
           <div className="flex flex-col gap-8">
-            <TopContributors />
+            <FocusAreaSpotlight projects={results} userId={user?._id ?? null} />
             <NewestProjects />
           </div>
         </section>
@@ -417,36 +409,6 @@ function EmptyState() {
   );
 }
 
-function ActiveUserCard({ user }: { user: ActiveUser }) {
-  return (
-    <Link
-      href={`/profile/${user._id}`}
-      className="rounded-lg p-3 transition-colors hover:bg-zinc-100"
-    >
-      <div className="flex items-center gap-2">
-        <Avatar className="h-8 w-8 bg-zinc-100">
-          <AvatarImage src={user.avatarUrlId} alt={user.name || "User"} />
-          <AvatarFallback className="text-xs font-semibold text-zinc-600">
-            {(user.name || "U").slice(0, 2).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <h4 className="font-semibold text-zinc-900 text-sm line-clamp-1">
-            {user.name}
-          </h4>
-          {user.team && (
-            <p className="text-xs text-zinc-500 line-clamp-1">{user.team}</p>
-          )}
-        </div>
-        <div className="flex items-center gap-1">
-          <Flame className="h-4 w-4 text-orange-500" />
-          <span className="text-lg font-semibold text-zinc-900">{user.score}</span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 function NewestProjectCard({ project }: { project: NewestProject }) {
   const router = useRouter();
 
@@ -486,33 +448,137 @@ function NewestProjectCard({ project }: { project: NewestProject }) {
   );
 }
 
-function TopContributors() {
-  const topUsers = useQuery(api.users.getActiveUsers, { limit: 4 });
+function FocusAreaSpotlight({
+  projects,
+  userId,
+}: {
+  projects: Project[];
+  userId: Id<"users"> | null;
+}) {
+  const focusAreas = useQuery(
+    api.users.getUserFocusAreas,
+    userId ? { userId } : "skip"
+  ) as FocusArea[] | undefined;
+
+  if (!userId) {
+    return null;
+  }
+
+  if (!focusAreas || focusAreas.length === 0) {
+    return null;
+  }
+
+  const focusAreaIds = new Set(focusAreas.map((area) => area._id));
+  const spotlightProjects = projects
+    .filter((project) =>
+      project.focusAreas.some((area) => focusAreaIds.has(area._id))
+    )
+    .slice(0, 4);
+
+  if (spotlightProjects.length === 0) {
+    return null;
+  }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2 px-3">
-        <h3 className="text-2xl font-semibold text-zinc-900">Top contributors</h3>
+    <div className="flex flex-col gap-4 bg-zinc-100 p-4 rounded-xl">
+      <div className="flex flex-col gap-2">
+        <h3 className="text-2xl font-semibold text-zinc-900">
+          Focus area spotlight
+        </h3>
+      </div>
+      <div className="flex flex-col gap-0">
+        {spotlightProjects.map((project, index) => {
+          const matchingFocusAreas = project.focusAreas.filter((area) =>
+            focusAreaIds.has(area._id)
+          );
+          return (
+            <React.Fragment key={project._id}>
+              {index > 0 && <Separator className="bg-zinc-200" />}
+              <SpotlightProjectCard
+                project={project}
+                focusAreas={matchingFocusAreas}
+              />
+            </React.Fragment>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function SpotlightProjectCard({
+  project,
+  focusAreas,
+}: {
+  project: Project;
+  focusAreas: FocusArea[];
+}) {
+  const router = useRouter();
+  const hasMedia = project.previewMedia && project.previewMedia.length > 0;
+  const thumbnailUrl = hasMedia ? project.previewMedia[0].url : null;
+
+  return (
+    <div
+      className="cursor-pointer space-y-2 rounded-lg p-3 transition-colors hover:bg-zinc-100"
+      onClick={() => router.push(`/project/${project._id}`)}
+    >
+      {/* Header: Avatar | Creator Name | • | Time */}
+      <div className="flex items-center gap-2 text-xs text-zinc-500">
+        <Avatar className="h-5 w-5 bg-zinc-100 text-[10px] font-semibold text-zinc-600">
+          <AvatarImage
+            src={project.creatorAvatar}
+            alt={project.creatorName || "User"}
+          />
+          <AvatarFallback>
+            {(project.creatorName || "U").slice(0, 2).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <span className="font-medium text-zinc-700 line-clamp-1">
+          {project.creatorName || "Unknown User"}
+        </span>
+        <span className="text-zinc-400">•</span>
+        <span className="whitespace-nowrap">
+          {getRelativeTime(project._creationTime)}
+        </span>
       </div>
 
-      {!topUsers ? (
-        <div className="space-y-3 px-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="animate-pulse space-y-2">
-              <div className="h-4 bg-zinc-200 rounded w-3/4"></div>
-              <div className="h-3 bg-zinc-200 rounded w-full"></div>
+      {/* Body: Title (left) + Thumbnail (right) */}
+      <div className="flex items-start justify-between gap-4">
+        <h4 className="text-base font-semibold text-zinc-900 line-clamp-2 flex-1">
+          {project.name}
+        </h4>
+        {thumbnailUrl && (
+          <div className="flex-shrink-0 relative w-24 h-16">
+            <Image
+              src={thumbnailUrl}
+              alt={project.name}
+              fill
+              className="rounded-md object-cover bg-zinc-100"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Footer: X upvotes • Y comments • Focus Areas */}
+      <div className="flex items-center gap-2 text-xs text-zinc-500">
+        <span className="flex items-center gap-1 flex-shrink-0">
+          <span aria-hidden="true">↑</span>
+          <span>{project.upvotes}</span>
+        </span>
+        <span className="text-zinc-400 flex-shrink-0">•</span>
+        <span className="flex items-center gap-1 flex-shrink-0">
+          <MessageCircle className="h-3.5 w-3.5" aria-hidden="true" />
+          <span>{project.commentCount}</span>
+        </span>
+        {focusAreas.length > 0 && (
+          <>
+            <span className="text-zinc-400 flex-shrink-0">•</span>
+            <div className="overflow-x-auto scrollbar-hide flex-1 min-w-0">
+              <FocusAreaBadges focusAreas={focusAreas} className="text-[11px]" />
             </div>
-          ))}
-        </div>
-      ) : topUsers.length === 0 ? (
-        <p className="text-sm text-zinc-500 px-3">No active contributors yet.</p>
-      ) : (
-        <div className="flex flex-col gap-0">
-          {topUsers.map((user) => (
-            <ActiveUserCard key={user._id} user={user} />
-          ))}
-        </div>
-      )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
