@@ -100,7 +100,8 @@ export default defineSchema({
     .index("by_recipient_project_type", ["recipientUserId", "projectId", "type"]),
   users: defineTable({
     name: v.string(),
-    tokenIdentifier: v.string(),
+    tokenIdentifier: v.optional(v.string()),
+    email: v.string(),
     avatarUrlId: v.optional(v.string()),
     teamId: v.optional(v.id("teams")),
     // this is the user id from workos for easier linking to workos (eg. for workos widgets that need to know the user id)
@@ -110,7 +111,8 @@ export default defineSchema({
   })
     .index("by_tokenIdentifier", ["tokenIdentifier"])
     .index("by_teamId", ["teamId"])
-    .index("by_userIntent", ["userIntent"]),
+    .index("by_userIntent", ["userIntent"])
+    .index("by_workosUserId", ["workosUserId"]),
   userFocusAreas: defineTable({
     userId: v.id("users"),
     focusAreaId: v.id("focusAreas"),
