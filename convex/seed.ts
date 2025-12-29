@@ -57,7 +57,7 @@ export const seed = internalMutation({
       const user = users[i];
       const id = await ctx.db.insert("users", {
         name: user.name,
-        tokenIdentifier: `https://preview-workos.com/oauth/user_${String(i + 1).padStart(2, "0")}`,
+        email: `preview_user_${String(i + 1).padStart(2, "0")}@example.com`,
         workosUserId: `user_preview_${String(i + 1).padStart(2, "0")}`,
         avatarUrlId: i % 2 === 0 ? `avatar_${i + 1}` : undefined,
         onboardingCompleted: true,
