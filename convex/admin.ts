@@ -101,3 +101,104 @@ export const removeTokenIdentifierFromUsers = internalMutation({
     return { updated, total: users.length };
   },
 });
+
+// Internal mutation to upsert a user from WorkOS
+export const upsertUserFromWorkOS = internalMutation({
+  args: {
+    workosUserId: v.string(),
+    email: v.string(),
+    name: v.string(),
+    avatarUrlId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // Check if user already exists
+    const existing = await ctx.db
+      .query("users")
+      .withIndex("by_workosUserId", (q) => q.eq("workosUserId", args.workosUserId))
+      .unique();
+
+    if (existing) {
+      // Update existing user
+      await ctx.db.patch(existing._id, {
+        email: args.email,
+        name: args.name,
+        avatarUrlId: args.avatarUrlId,
+      });
+      console.log(`Updated user: ${args.name} (${args.workosUserId})`);
+      return { action: "updated", userId: existing._id };
+    }
+
+    // Create new user
+    const userId = await ctx.db.insert("users", {
+      workosUserId: args.workosUserId,
+      email: args.email,
+      name: args.name,
+      avatarUrlId: args.avatarUrlId,
+      onboardingCompleted: false,
+    });
+    console.log(`Created user: ${args.name} (${args.workosUserId})`);
+    return { action: "created", userId };
+  },
+});
+
+// Seed users from WorkOS User Management
+export const seedUsersFromWorkOS = internalAction({
+  args: {},
+  handler: async (ctx) => {
+    console.log("Fetching users from WorkOS...");
+
+    const { data: users } = await authKit.workos.userManagement.listUsers();
+
+    console.log(`Found ${users.length} users in WorkOS`);
+
+    let created = 0;
+    let updated = 0;
+
+    for (const user of users) {
+      const name = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Unknown User";
+
+      const result = await ctx.runMutation(internal.admin.upsertUserFromWorkOS, {
+        workosUserId: user.id,
+        email: user.email,
+        name,
+        avatarUrlId: user.profilePictureUrl ?? undefined,
+      });
+
+      if (result.action === "created") {
+        created++;
+      } else {
+        updated++;
+      }
+    }
+
+    console.log(`Seeding complete. Created ${created}, updated ${updated} users.`);
+
+    return {
+      success: true,
+      usersProcessed: users.length,
+      created,
+      updated,
+    };
+  },
+});
+
+// Seed both users and allowed domains from WorkOS (convenience function)
+export const seedFromWorkOS = internalAction({
+  args: {},
+  handler: async (ctx): Promise<{
+    success: boolean;
+    users: { success: boolean; usersProcessed: number; created: number; updated: number };
+    domains: { success: boolean; organizationsProcessed: number; domainsInserted: number };
+  }> => {
+    console.log("Seeding from WorkOS...");
+
+    const usersResult = await ctx.runAction(internal.admin.seedUsersFromWorkOS, {});
+    const domainsResult = await ctx.runAction(internal.admin.seedAllowedDomains, {});
+
+    return {
+      success: true,
+      users: usersResult,
+      domains: domainsResult,
+    };
+  },
+});
