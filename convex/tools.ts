@@ -20,7 +20,7 @@ export const searchProjects = createTool({
         namespace: "projects",
         query: query,
         limit: 15,
-        vectorScoreThreshold: 0.3,
+        vectorScoreThreshold: 0.2,
       }),
       ctx.runQuery(internal.projects.fullTextSearchProjects, {
         query: query,
@@ -42,7 +42,7 @@ export const searchProjects = createTool({
       {
         k: 15,
         weights: [2, 1],
-        cutoffScore: 0.05,
+        cutoffScore: 0.01,
       }
     );
 

@@ -16,6 +16,7 @@ export const projectAgent = new Agent(components.agent, {
     2. If they ask for projects, use 'searchProjects' to find them.
     3. Analyze the search results.
     4. If you find good matches, use 'showProjects' to display them.
+    5. Once you have displayed the projects(s), do not follow up with any more questions or comments.
   `,
   tools: { searchProjects, showProjects },
   languageModel: bedrock("us.anthropic.claude-haiku-4-5-20251001-v1:0"),
