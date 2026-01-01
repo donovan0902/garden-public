@@ -9,10 +9,9 @@ import {
   useQuery,
 } from "convex/react";
 import { Button } from "@/components/ui/button";
-import { SearchBar } from "@/components/SearchBar";
 import { useAuth } from '@workos-inc/authkit-nextjs/components';
 import { signOut } from "@workos-inc/authkit-nextjs";
-import { Bell, LogOut, User, MessageSquare } from "lucide-react";
+import { Bell, LogOut, User, Sparkles } from "lucide-react";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { api } from "@/convex/_generated/api";
 import { ChatInterface } from "./ChatInterface";
@@ -99,17 +98,32 @@ export function Header() {
           </Link>
         </div>
 
-        {/* Center: Search Bar */}
-        <Authenticated>
-          <div className="hidden md:flex flex-1 max-w-md mx-8 justify-center">
-            <SearchBar className="w-full" />
-          </div>
-        </Authenticated>
-
         {/* Right: Navigation Menu & Auth Buttons */}
         <div className="flex items-center gap-3">
           <NavigationMenu className="hidden md:block">
             <NavigationMenuList>
+              <Authenticated>
+                <NavigationMenuItem>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <button
+                        className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 px-3.5 py-1.5 text-sm font-medium text-white shadow-sm hover:from-violet-600 hover:to-indigo-600 transition-all"
+                        aria-label="Find Tools"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        <span>Find Tools</span>
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="p-0 border-0 bg-transparent shadow-none sm:max-w-3xl w-[90vw]">
+                      <VisuallyHidden>
+                        <DialogTitle>Find Tools</DialogTitle>
+                      </VisuallyHidden>
+                      <ChatInterface />
+                    </DialogContent>
+                  </Dialog>
+                </NavigationMenuItem>
+              </Authenticated>
+
               <NavigationMenuItem>
                 <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
                   <Link href="/about" prefetch={false}>
@@ -117,27 +131,6 @@ export function Header() {
                   </Link>
                 </NavigationMenuLink>
               </NavigationMenuItem>
-
-              <Authenticated>
-                <NavigationMenuItem>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <button
-                        className={`${navigationMenuTriggerStyle()} relative w-9 px-0`}
-                        aria-label="Open chat"
-                      >
-                        <MessageSquare className="h-5 w-5" />
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="p-0 border-0 bg-transparent shadow-none sm:max-w-3xl w-[90vw]">
-                      <VisuallyHidden>
-                        <DialogTitle>Project Assistant Chat</DialogTitle>
-                      </VisuallyHidden>
-                      <ChatInterface />
-                    </DialogContent>
-                  </Dialog>
-                </NavigationMenuItem>
-              </Authenticated>
 
               <Authenticated>
                 <NavigationMenuItem>
@@ -269,13 +262,6 @@ export function Header() {
           </AuthLoading>
         </div>
       </div>
-
-      {/* Mobile Search Bar - show only if authenticated */}
-      <Authenticated>
-        <div className="md:hidden border-t border-zinc-200 px-4 py-3 bg-white">
-          <SearchBar className="w-full" />
-        </div>
-      </Authenticated>
     </header>
   );
 }

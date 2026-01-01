@@ -5,8 +5,13 @@ import { useAction, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageSquare } from "lucide-react";
 import { MessageList } from "./MessageList";
+
+const EXAMPLE_PROMPTS = [
+  "Power Automate flows for approvals",
+  "Scripts to clean up Excel data",
+  "Copilot prompts for writing emails",
+];
 
 export function ChatInterface() {
   const [threadId, setThreadId] = useState<string | null>(null);
@@ -37,25 +42,34 @@ export function ChatInterface() {
     }
   };
 
+  const handleExampleClick = (prompt: string) => {
+    setInputValue(prompt);
+  };
+
   return (
     <div className="flex flex-col h-[70vh] max-h-[700px] border rounded-xl overflow-hidden bg-background shadow-sm">
-      <div className="p-4 border-b flex items-center justify-between bg-muted/20">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="w-4 h-4 text-primary" />
-          <span className="font-medium text-sm">Project Assistant</span>
-        </div>
-        {threadId && (
-          <div className="text-xs text-muted-foreground">
-            Thread: {threadId.slice(0, 8)}...
-          </div>
-        )}
-      </div>
-
       {threadId ? (
         <MessageList threadId={threadId} />
       ) : (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm">
-          Start a conversation...
+        <div className="flex-1 flex flex-col items-center justify-center p-6 gap-6">
+          <div className="text-center space-y-2">
+            <h3 className="text-lg font-medium text-foreground">What are you trying to do?</h3>
+            <p className="text-sm text-muted-foreground">
+              Describe your problem and I&apos;ll help you find tools
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {EXAMPLE_PROMPTS.map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => handleExampleClick(prompt)}
+                className="px-3 py-1.5 text-sm rounded-full border bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -63,7 +77,7 @@ export function ChatInterface() {
         <form className="flex gap-2" onSubmit={handleSendMessage}>
           <Input
             className="flex-1"
-            placeholder="Type a message..."
+            placeholder="e.g., Power Automate flows for approvals..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
