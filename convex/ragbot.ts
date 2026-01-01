@@ -1,4 +1,4 @@
-import { Agent } from "@convex-dev/agent";
+import { Agent, vStreamArgs } from "@convex-dev/agent";
 import { searchProjects, showProjects } from "./tools";
 import { components } from "./_generated/api";
 import { bedrock } from "@ai-sdk/amazon-bedrock";
@@ -50,8 +50,11 @@ export const sendMessageToAgent = action({
     const { thread } = await projectAgent.continueThread(ctx, {
       threadId: args.threadId,
     });
-    const result = await thread.generateText({ prompt: args.prompt });
-    return result.text;
+    const result = await thread.streamText(
+      { prompt: args.prompt },
+      { saveStreamDeltas: true }
+    );
+    await result.consumeStream();
   },
 });
 
@@ -59,6 +62,7 @@ export const listThreadMessages = query({
   args: {
     threadId: v.string(),
     paginationOpts: paginationOptsValidator,
+    streamArgs: vStreamArgs
   },
   handler: async (ctx, args) => {
     // check if currently authenticated user is the owner of the thread
@@ -74,6 +78,13 @@ export const listThreadMessages = query({
        throw new Error("Unauthorized: User does not own this thread");
     }
 
-    return await projectAgent.listMessages(ctx, { threadId: args.threadId, paginationOpts: args.paginationOpts });
+    const paginated = await projectAgent.listMessages(ctx, { threadId: args.threadId, paginationOpts: args.paginationOpts });
+
+    const streams = await projectAgent.syncStreams(ctx, { threadId: args.threadId, streamArgs: args.streamArgs });
+
+    return {
+      ...paginated,
+      streams,
+    }
   },
 });

@@ -14,7 +14,6 @@ export function ChatInterface() {
 
   const sendMessageToAgent = useAction(api.ragbot.sendMessageToAgent);
   const [inputValue, setInputValue] = useState("");
-  const [isSending, setIsSending] = useState(false);
 
   const handleStartChat = async () => {
     try {
@@ -31,14 +30,11 @@ export function ChatInterface() {
 
     const userMessage = inputValue.trim();
     setInputValue("");
-    setIsSending(true);
 
     try {
       await sendMessageToAgent({ threadId, prompt: userMessage });
     } catch (error) {
       console.error("Failed to send message:", error);
-    } finally {
-      setIsSending(false);
     }
   };
 
@@ -62,7 +58,7 @@ export function ChatInterface() {
   }
 
   return (
-    <div className="flex flex-col h-[500px] border rounded-xl overflow-hidden bg-background shadow-sm">
+    <div className="flex flex-col h-[70vh] max-h-[700px] border rounded-xl overflow-hidden bg-background shadow-sm">
       <div className="p-4 border-b flex items-center justify-between bg-muted/20">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-4 h-4 text-primary" />
@@ -73,18 +69,17 @@ export function ChatInterface() {
         </div>
       </div>
       
-      <MessageList threadId={threadId} isSending={isSending} />
+      <MessageList threadId={threadId} />
 
       <div className="p-4 border-t bg-muted/10">
         <form className="flex gap-2" onSubmit={handleSendMessage}>
-          <Input 
+          <Input
             className="flex-1"
             placeholder="Type a message..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            disabled={isSending}
           />
-          <Button type="submit" size="sm" disabled={isSending || !inputValue.trim()}>
+          <Button type="submit" size="sm" disabled={!inputValue.trim()}>
             Send
           </Button>
         </form>

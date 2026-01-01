@@ -129,7 +129,7 @@ export function Header() {
                         <MessageSquare className="h-5 w-5" />
                       </button>
                     </DialogTrigger>
-                    <DialogContent className="p-0 border-0 bg-transparent shadow-none max-w-md">
+                    <DialogContent className="p-0 border-0 bg-transparent shadow-none sm:max-w-3xl w-[90vw]">
                       <VisuallyHidden>
                         <DialogTitle>Project Assistant Chat</DialogTitle>
                       </VisuallyHidden>

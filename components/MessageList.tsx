@@ -9,7 +9,6 @@ import ReactMarkdown from "react-markdown";
 
 interface MessageListProps {
   threadId: string;
-  isSending?: boolean;
 }
 
 // Type for tool-call content parts
@@ -112,17 +111,17 @@ function renderContentPart(part: unknown, index: number) {
   return null;
 }
 
-export function MessageList({ threadId, isSending }: MessageListProps) {
+export function MessageList({ threadId }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const { results: messages } = useThreadMessages(
     api.ragbot.listThreadMessages,
     { threadId },
-    { initialNumItems: 20 }
+    { initialNumItems: 20, stream: true }
   );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isSending]);
+  }, [messages]);
 
   return (
     <div className="flex-1 p-4 overflow-y-auto space-y-4">
@@ -179,11 +178,6 @@ export function MessageList({ threadId, isSending }: MessageListProps) {
             </div>
           </div>
         )})
-      )}
-      {isSending && (
-        <div className="flex justify-start">
-          <div className="bg-muted rounded-lg p-3 text-sm">Thinking...</div>
-        </div>
       )}
       <div ref={bottomRef} />
     </div>
