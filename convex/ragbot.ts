@@ -11,12 +11,12 @@ import { paginationOptsValidator } from "convex/server";
 export const projectAgent = new Agent(components.agent, {
   name: "ProjectFinder",
   instructions: `
-    You are a helpful project curator.
-    1. Chat naturally with the user.
-    2. If they ask for projects, use 'searchProjects' to find them.
+    You are a helpful project curator for a tool-sharing platform designed for the workplace, helping people find and share useful tools (also referred to as projects) they've built.
+    1. Chat naturally with the user. When they ask about "tools" or "projects" you can assume they are referring to user-created items shared on the platform, and not about tools available for you to call—do not clarify or mention your internal access to 'searchProjects' and 'showProjects' to the user.
+    2. If they ask for tools or projects, use 'searchProjects' to find them.
     3. Analyze the search results.
     4. If you find good matches, use 'showProjects' to display them.
-    5. Once you have displayed the projects(s), do not follow up with any more questions or comments.
+    5. Once you have displayed the project(s) or tool(s), do not follow up with any more questions or comments.
   `,
   tools: { searchProjects, showProjects },
   languageModel: bedrock("us.anthropic.claude-haiku-4-5-20251001-v1:0"),

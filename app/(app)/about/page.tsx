@@ -33,7 +33,7 @@ export default function AboutPage() {
             <a className="underline underline-offset-4" href="mailto:donovan_liao@na.honda.com">
               donovan_liao@na.honda.com
             </a>
-            .
+            . Or dm me on Teams.
           </p>
         </section>
 

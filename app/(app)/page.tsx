@@ -147,7 +147,7 @@ export default function Home() {
     <div className="min-h-screen bg-zinc-50">
       <main className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 px-6 pb-16 pt-10">
         <section className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_400px]">
-          <div className="space-y-6">
+          <div className="space-y-2">
             <div>
               <h2 className="text-3xl font-semibold tracking-tight flex items-center gap-3">
                 Tools built inside Honda
@@ -210,8 +210,8 @@ export default function Home() {
 
 function ShareProjectCallout() {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-zinc-200 bg-white/90 px-4 py-3 shadow-sm">
-      <div className="space-y-1">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-zinc-200 bg-white/90 px-3 py-2 shadow-sm">
+      <div>
         <p className="text-sm text-zinc-600">
           Have one? Share it in two lines.
         </p>
@@ -606,7 +606,7 @@ function NewestProjects() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center gap-2 px-3">
-        <h3 className="text-2xl font-semibold text-zinc-900">Newest projects</h3>
+        <h3 className="text-2xl font-semibold text-zinc-900">Newest tools</h3>
       </div>
 
       {!newestProjects ? (
@@ -621,7 +621,7 @@ function NewestProjects() {
         </div>
       ) : newestProjects.length === 0 ? (
         // Empty state
-        <p className="text-sm text-zinc-500 px-3">No projects yet.</p>
+        <p className="text-sm text-zinc-500 px-3">No tools yet.</p>
       ) : (
         // Projects list
         <div className="flex flex-col gap-3">
