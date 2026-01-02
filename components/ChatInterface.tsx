@@ -48,6 +48,9 @@ export function ChatInterface() {
 
   return (
     <div className="flex flex-col h-[70vh] max-h-[700px] border rounded-xl overflow-hidden bg-background shadow-sm">
+      <div className="px-4 py-3 border-b bg-white">
+        <h2 className="text-sm font-semibold text-zinc-900">Find Tools on Garden</h2>
+      </div>
       {threadId ? (
         <MessageList threadId={threadId} />
       ) : (
@@ -73,10 +76,10 @@ export function ChatInterface() {
         </div>
       )}
 
-      <div className="p-4 border-t bg-muted/10">
+      <div className="p-4 border-t bg-zinc-50">
         <form className="flex gap-2" onSubmit={handleSendMessage}>
           <Input
-            className="flex-1"
+            className="flex-1 bg-white"
             placeholder="e.g., Power Automate flows for approvals..."
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}

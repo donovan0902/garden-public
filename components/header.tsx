@@ -107,7 +107,7 @@ export function Header() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <button
-                        className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 px-3.5 py-1.5 text-sm font-medium text-white shadow-sm hover:from-violet-600 hover:to-indigo-600 transition-all"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500 px-3.5 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-emerald-600 transition-all"
                         aria-label="Find Tools"
                       >
                         <Sparkles className="h-4 w-4" />

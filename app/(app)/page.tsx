@@ -13,11 +13,16 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
-import { Eye, MessageCircle, Play } from "lucide-react";
+import { Eye, Info, MessageCircle, Play } from "lucide-react";
 import { ProjectMediaCarousel } from "@/components/ProjectMediaCarousel";
 import { FocusAreaBadges } from "@/components/FocusAreaBadges";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
 import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Facepile } from "@/components/Facepile";
 import { useCurrentUser } from "@/app/useCurrentUser";
 
@@ -482,9 +487,27 @@ function FocusAreaSpotlight({
   return (
     <div className="flex flex-col gap-4 bg-zinc-100 p-4 rounded-xl">
       <div className="flex flex-col gap-2">
-        <h3 className="text-2xl font-semibold text-zinc-900">
-          Focus area spotlight
-        </h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-2xl font-semibold text-zinc-900">
+            Focus area spotlight
+          </h3>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-full text-zinc-500 transition hover:text-zinc-700"
+                aria-label="About focus area spotlight"
+              >
+                <Info className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">
+              <p className="text-xs">
+                Projects matched to your selected focus areas.
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </div>
       <div className="flex flex-col gap-0">
         {spotlightProjects.map((project, index) => {
@@ -524,7 +547,7 @@ function SpotlightProjectCard({
       className="cursor-pointer flex gap-5 rounded-xl p-4 transition-colors hover:bg-zinc-100"
       onClick={() => router.push(`/project/${project._id}`)}
     >
-      <div className="flex flex-col gap-3 flex-1 min-w-0">
+      <div className="flex flex-col flex-1 min-w-0">
         {/* Title + Time */}
         <div className="flex flex-col gap-1">
           <div className="flex items-start gap-2">
@@ -538,9 +561,9 @@ function SpotlightProjectCard({
           </div>
         </div>
 
-        {/* Footer: Focus Areas */}
+        {/* Footer: Focus Areas - aligned to bottom */}
         {focusAreas.length > 0 && (
-          <div className="overflow-x-auto overflow-y-hidden scrollbar-hide -mx-1 px-1">
+          <div className="overflow-x-auto overflow-y-hidden scrollbar-hide -mx-1 px-1 mt-auto pt-3">
             <FocusAreaBadges focusAreas={focusAreas} className="text-[11px]" />
           </div>
         )}
