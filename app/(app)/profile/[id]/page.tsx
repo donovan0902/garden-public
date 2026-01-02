@@ -153,22 +153,39 @@ export default function ProfilePage({
     <div className="min-h-screen bg-zinc-50">
       <main className="mx-auto w-full max-w-5xl space-y-8 px-6 pb-16 pt-10">
         <div className="relative flex flex-col items-center gap-6 pr-12 text-center md:items-start md:text-left">
-          {!isOwner && teamsChatLink && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-10 w-10"
-              asChild
-            >
-              <a
-                href={teamsChatLink}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={`Chat with ${profile.name} in Teams`}
+          {!isOwner && email && (
+            <div className="absolute right-0 top-0 flex gap-1">
+              {teamsChatLink && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10"
+                  asChild
+                >
+                  <a
+                    href={teamsChatLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Chat with ${profile.name} in Teams`}
+                  >
+                    <i className="bi bi-microsoft-teams text-xl text-zinc-600" aria-hidden="true" />
+                  </a>
+                </Button>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10"
+                asChild
               >
-                <MessageSquare className="h-5 w-5 text-zinc-600" aria-hidden="true" />
-              </a>
-            </Button>
+                <a
+                  href={`mailto:${email}`}
+                  aria-label={`Send email to ${profile.name}`}
+                >
+                  <i className="bi bi-envelope text-xl text-zinc-600" aria-hidden="true" />
+                </a>
+              </Button>
+            </div>
           )}
           <div className="flex flex-col items-center gap-4 md:flex-row md:items-center">
             <Avatar className="h-16 w-16 border border-white shadow-sm">
