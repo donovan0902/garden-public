@@ -1559,3 +1559,29 @@ export const refreshHotScores = internalMutation({
     return { updated: projects.length };
   },
 });
+
+// Public query: Fetch projects by entryIds for chat display (minimal data)
+export const getProjectsByEntryIdsPublic = query({
+  args: {
+    entryIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const projects = await Promise.all(
+      args.entryIds.map(async (entryId) => {
+        return await ctx.db
+          .query("projects")
+          .withIndex("by_entryId", (q) => q.eq("entryId", entryId))
+          .filter((q) => q.eq(q.field("status"), "active"))
+          .first();
+      })
+    );
+
+    return projects
+      .filter((p): p is NonNullable<typeof p> => p !== null)
+      .map((p) => ({
+        _id: p._id,
+        name: p.name,
+        summary: p.summary,
+      }));
+  },
+});
