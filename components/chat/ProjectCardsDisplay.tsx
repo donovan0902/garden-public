@@ -4,6 +4,8 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import Image from "next/image";
+import { Play } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -17,13 +19,25 @@ interface ProjectCardsDisplayProps {
   summary: string;
 }
 
+type ProjectCardProject = {
+  _id: string;
+  name: string;
+  summary?: string;
+  previewMedia?: Array<{
+    _id: string;
+    storageId: string;
+    type: string;
+    url: string | null;
+  }>;
+};
+
 export function ProjectCardsDisplay({
   projectIds,
   summary,
 }: ProjectCardsDisplayProps) {
   const projects = useQuery(api.projects.getProjectsByEntryIdsPublic, {
     entryIds: projectIds,
-  });
+  }) as ProjectCardProject[] | undefined;
 
   const isLoading = projects === undefined;
 
@@ -37,37 +51,83 @@ export function ProjectCardsDisplay({
         {isLoading ? (
           <>
             {[...Array(Math.min(projectIds.length, 4))].map((_, i) => (
-              <Card key={i} className="py-3">
-                <CardHeader className="px-3 py-0">
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-3 w-full mt-2" />
-                  <Skeleton className="h-3 w-2/3 mt-1" />
-                </CardHeader>
+              <Card key={i} className="h-full overflow-hidden">
+                <div className="flex h-full flex-col gap-2 p-3">
+                  <div className="aspect-[16/9] w-full rounded-md bg-muted">
+                    <Skeleton className="h-full w-full" />
+                  </div>
+                  <CardHeader className="space-y-2 p-0">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-2/3" />
+                  </CardHeader>
+                </div>
               </Card>
             ))}
           </>
         ) : projects.length > 0 ? (
-          projects.map((project) => (
-            <Link
-              key={project._id}
-              href={`/project/${project._id}`}
-              target="_blank"
-            >
-              <Card className="py-3 hover:bg-muted/50 transition-colors cursor-pointer h-full">
-                <CardHeader className="px-3 py-0">
-                  <CardTitle className="text-sm font-medium flex items-center gap-1">
-                    <span className="truncate">{project.name}</span>
-                    <ArrowUpRight className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
-                  </CardTitle>
-                  {project.summary && (
-                    <CardDescription className="text-xs line-clamp-2">
-                      {project.summary}
-                    </CardDescription>
-                  )}
-                </CardHeader>
-              </Card>
-            </Link>
-          ))
+          projects.map((project) => {
+            const firstMedia = project.previewMedia?.[0];
+            const isVideo = firstMedia?.type === "video";
+            const hasValidUrl = firstMedia?.url != null;
+
+            return (
+              <Link
+                key={project._id}
+                href={`/project/${project._id}`}
+                target="_blank"
+              >
+                <Card className="h-full cursor-pointer overflow-hidden transition-colors hover:bg-muted/50">
+                  <div className="flex h-full flex-col gap-2 p-3">
+                    <div className="group relative aspect-[16/9] w-full overflow-hidden rounded-md bg-muted">
+                      {firstMedia && hasValidUrl ? (
+                        isVideo ? (
+                          <>
+                            <video
+                              src={firstMedia.url!}
+                              className="h-full w-full object-cover"
+                              muted
+                              playsInline
+                              preload="metadata"
+                              aria-label={`${project.name} preview video`}
+                            />
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/10">
+                              <div className="rounded-full bg-black/50 p-1.5 backdrop-blur-sm">
+                                <Play aria-hidden="true" className="h-4 w-4 fill-white text-white" />
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <Image
+                            src={firstMedia.url!}
+                            alt={project.name}
+                            fill
+                            className="object-cover"
+                            sizes="(max-width: 768px) 50vw, 33vw"
+                          />
+                        )
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
+                          No preview available
+                        </div>
+                      )}
+                    </div>
+                    <CardHeader className="space-y-1 p-0">
+                      <CardTitle className="flex items-center gap-1 text-sm font-medium">
+                        <span className="truncate">{project.name}</span>
+                        <ArrowUpRight className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
+                      </CardTitle>
+                      {project.summary && (
+                        <CardDescription className="text-xs line-clamp-2">
+                          {project.summary}
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+                  </div>
+                </Card>
+              </Link>
+            );
+          })
         ) : (
           <p className="text-sm text-muted-foreground col-span-2">
             No projects found.
