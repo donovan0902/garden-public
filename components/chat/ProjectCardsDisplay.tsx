@@ -102,6 +102,7 @@ export function ProjectCardsDisplay({
                             alt={project.name}
                             fill
                             className="object-cover"
+                            sizes="(max-width: 768px) 50vw, 33vw"
                           />
                         )
                       ) : (
