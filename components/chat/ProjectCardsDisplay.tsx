@@ -84,7 +84,7 @@ export function ProjectCardsDisplay({
                         isVideo ? (
                           <>
                             <video
-                              src={firstMedia.url}
+                              src={firstMedia.url!}
                               className="h-full w-full object-cover"
                               muted
                               playsInline
@@ -99,7 +99,7 @@ export function ProjectCardsDisplay({
                           </>
                         ) : (
                           <Image
-                            src={firstMedia.url}
+                            src={firstMedia.url!}
                             alt={project.name}
                             fill
                             className="object-cover"
