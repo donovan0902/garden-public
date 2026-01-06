@@ -258,6 +258,47 @@ export const getProjectMedia = query({
   },
 });
 
+export const reorderProjectMedia = mutation({
+  args: {
+    projectId: v.id("projects"),
+    orderedMediaIds: v.array(v.id("mediaFiles")),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    const project = await ctx.db.get(args.projectId);
+
+    if (!project) {
+      throw new Error("Project not found");
+    }
+
+    if (project.userId !== user._id) {
+      throw new Error("You can only edit your own projects");
+    }
+
+    const mediaFiles = await ctx.db
+      .query("mediaFiles")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .collect();
+
+    if (mediaFiles.length !== args.orderedMediaIds.length) {
+      throw new Error("Ordered media list does not match existing media count");
+    }
+
+    const mediaIds = new Set(mediaFiles.map((media) => media._id));
+    for (const mediaId of args.orderedMediaIds) {
+      if (!mediaIds.has(mediaId)) {
+        throw new Error("Invalid media id in order list");
+      }
+    }
+
+    await Promise.all(
+      args.orderedMediaIds.map((mediaId, index) =>
+        ctx.db.patch(mediaId, { order: index })
+      )
+    );
+  },
+});
+
 export const create = action({
   args: {
     name: v.string(),

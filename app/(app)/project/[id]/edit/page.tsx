@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Id } from "@/convex/_generated/dataModel";
 import { useDropzone } from "react-dropzone";
-import { Upload, Info } from "lucide-react";
+import { Upload, Info, GripVertical } from "lucide-react";
 import { FocusAreaPicker } from "@/components/FocusAreaPicker";
 import {
   Select,
@@ -24,19 +24,49 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  arrayMove,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-function ExistingMediaThumbnail({
+type ProjectMediaItem = {
+  _id: Id<"mediaFiles">;
+  storageId: Id<"_storage">;
+  type: string;
+  url?: string | null;
+};
+
+function SortableMediaThumbnail({
   media,
   onDelete,
+  isReordering,
 }: {
-  media: {
-    _id: Id<"mediaFiles">;
-    storageId: Id<"_storage">;
-    type: string;
-  };
+  media: ProjectMediaItem;
   onDelete: () => void;
+  isReordering: boolean;
 }) {
   const mediaUrl = useQuery(api.projects.getMediaUrl, { storageId: media.storageId });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: media._id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : "auto",
+    opacity: isDragging ? 0.9 : 1,
+  };
 
   if (!mediaUrl) {
     return (
@@ -49,7 +79,17 @@ function ExistingMediaThumbnail({
   const isVideo = media.type === 'video';
 
   return (
-    <div className="relative group">
+    <div className="relative group" ref={setNodeRef} style={style}>
+      <button
+        type="button"
+        className="absolute left-2 top-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border border-zinc-200 bg-white/80 text-zinc-600 shadow-sm transition hover:bg-white"
+        aria-label="Drag to reorder"
+        disabled={!isReordering}
+        {...listeners}
+        {...attributes}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
       <div className="aspect-square rounded-lg border border-zinc-200 bg-zinc-100 overflow-hidden">
         {isVideo ? (
           <div className="flex h-full w-full items-center justify-center">
@@ -87,6 +127,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
   const generateUploadUrl = useMutation(api.projects.generateUploadUrl);
   const deleteMediaFromProject = useMutation(api.projects.deleteMediaFromProject);
   const addMediaToProject = useMutation(api.projects.addMediaToProject);
+  const reorderProjectMedia = useMutation(api.projects.reorderProjectMedia);
   const focusAreasGrouped = useQuery(api.focusAreas.listActiveGrouped);
 
   const [formData, setFormData] = useState({
@@ -99,6 +140,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<Id<"focusAreas">[]>([]);
   const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"in_progress" | "ready_to_use">("in_progress");
+  const [orderedMedia, setOrderedMedia] = useState<ProjectMediaItem[]>([]);
 
   const { getRootProps, getInputProps, fileRejections, isDragActive } = useDropzone({
     accept: {
@@ -121,6 +163,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
   const removeExistingFile = async (mediaId: Id<"mediaFiles">) => {
     try {
       await deleteMediaFromProject({ projectId, mediaId });
+      setOrderedMedia((items) => items.filter((item) => item._id !== mediaId));
     } catch (error) {
       console.error("Failed to delete media:", error);
       alert("Failed to delete media. Please try again.");
@@ -140,6 +183,53 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
       setIsLoading(false);
     }
   }, [project]);
+
+  useEffect(() => {
+    if (projectMedia) {
+      setOrderedMedia(projectMedia);
+    }
+  }, [projectMedia]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  );
+
+  const persistOrder = async (
+    previous: ProjectMediaItem[],
+    next: ProjectMediaItem[]
+  ) => {
+    try {
+      await reorderProjectMedia({
+        projectId,
+        orderedMediaIds: next.map((media) => media._id),
+      });
+    } catch (error) {
+      console.error("Failed to reorder media:", error);
+      alert("Failed to reorder media. Please try again.");
+      setOrderedMedia(previous);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    setOrderedMedia((items) => {
+      const oldIndex = items.findIndex((item) => item._id === active.id);
+      const newIndex = items.findIndex((item) => item._id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return items;
+
+      const previous = items;
+      const reordered = arrayMove(items, oldIndex, newIndex);
+      void persistOrder(previous, reordered);
+      return reordered;
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -278,20 +368,33 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
                   Media <span className="text-xs text-zinc-500">(optional)</span>
                 </label>
 
-                {projectMedia && projectMedia.length > 0 && (
+                {orderedMedia.length > 0 && (
                   <div className="mb-4 space-y-2">
-                    <div className="text-sm font-medium text-zinc-700">
-                      Current media ({projectMedia.length})
+                    <div className="flex items-center justify-between text-sm font-medium text-zinc-700">
+                      <span>Current media ({orderedMedia.length})</span>
+                      <span className="text-xs font-normal text-zinc-500">Drag to reorder (powered by @dnd-kit)</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                      {projectMedia.map((media) => (
-                        <ExistingMediaThumbnail
-                          key={media._id}
-                          media={media}
-                          onDelete={() => removeExistingFile(media._id)}
-                        />
-                      ))}
-                    </div>
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={orderedMedia.map((media) => media._id)}
+                        strategy={rectSortingStrategy}
+                      >
+                        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                          {orderedMedia.map((media) => (
+                            <SortableMediaThumbnail
+                              key={media._id}
+                              media={media}
+                              onDelete={() => removeExistingFile(media._id)}
+                              isReordering
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
                   </div>
                 )}
 
