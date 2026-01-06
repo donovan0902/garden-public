@@ -30,6 +30,7 @@ export function ProjectMediaCarousel({
 }: ProjectMediaCarouselProps) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
+  const [baseAspectRatio, setBaseAspectRatio] = useState<number | null>(null);
 
   useEffect(() => {
     if (!api) return;
@@ -55,7 +56,14 @@ export function ProjectMediaCarousel({
         <CarouselContent>
           {media.map((item) => (
             <CarouselItem key={item._id}>
-              <MediaSlide media={item} variant={variant} />
+              <MediaSlide
+                media={item}
+                variant={variant}
+                aspectRatio={baseAspectRatio}
+                onAspectRatio={(ratio) => {
+                  setBaseAspectRatio((prev) => prev ?? ratio);
+                }}
+              />
             </CarouselItem>
           ))}
         </CarouselContent>
@@ -92,9 +100,13 @@ export function ProjectMediaCarousel({
 function MediaSlide({
   media,
   variant,
+  aspectRatio,
+  onAspectRatio,
 }: {
   media: MediaItem;
   variant: "preview" | "detail";
+  aspectRatio: number | null;
+  onAspectRatio: (ratio: number) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -102,6 +114,8 @@ function MediaSlide({
   if (!media.url) return null;
   const isVideo = media.type === "video";
   const isDetail = variant === "detail";
+
+  const aspectRatioValue = aspectRatio ?? 16 / 9;
 
   const handleVideoClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -123,8 +137,9 @@ function MediaSlide({
   return (
     <div
       className={`relative w-full rounded-lg overflow-hidden bg-zinc-100 ${
-        isDetail ? "min-h-[400px] max-h-[600px]" : "aspect-video"
+        isDetail ? "min-h-[400px] max-h-[600px]" : ""
       }`}
+      style={{ aspectRatio: aspectRatioValue }}
     >
       {isVideo ? (
         isDetail ? (
@@ -133,6 +148,11 @@ function MediaSlide({
             src={media.url}
             controls
             className="mx-auto h-full w-full max-h-[600px] object-contain"
+            onLoadedMetadata={(event) => {
+              if (event.currentTarget.videoWidth && event.currentTarget.videoHeight) {
+                onAspectRatio(event.currentTarget.videoWidth / event.currentTarget.videoHeight);
+              }
+            }}
           />
         ) : (
           // Preview: click to play/pause
@@ -147,6 +167,11 @@ function MediaSlide({
               onClick={handleVideoClick}
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
+              onLoadedMetadata={(event) => {
+                if (event.currentTarget.videoWidth && event.currentTarget.videoHeight) {
+                  onAspectRatio(event.currentTarget.videoWidth / event.currentTarget.videoHeight);
+                }
+              }}
             />
             <div
               className={`absolute inset-0 flex items-center justify-center transition-opacity ${
@@ -171,6 +196,11 @@ function MediaSlide({
           fill
           className={isDetail ? "object-contain" : "object-cover"}
           unoptimized
+          onLoadingComplete={({ naturalWidth, naturalHeight }) => {
+            if (naturalWidth && naturalHeight) {
+              onAspectRatio(naturalWidth / naturalHeight);
+            }
+          }}
           sizes={isDetail ? "(max-width: 768px) 100vw, 896px" : "(max-width: 768px) 100vw, 672px"}
         />
       )}
