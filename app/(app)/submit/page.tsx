@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useDropzone } from "react-dropzone";
-import { Upload, Info } from "lucide-react";
+import { Upload, Info, GripVertical } from "lucide-react";
 import { SimilarProjectsPreview } from "@/components/SimilarProjectsPreview";
 import { FocusAreaPicker } from "@/components/FocusAreaPicker";
 import {
@@ -26,6 +26,21 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  arrayMove,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const thingsThatBelong = [
   "a script you wrote for yourself",
@@ -35,6 +50,66 @@ const thingsThatBelong = [
   "a prototype that never shipped",
   "a compliance/reporting solution",
 ];
+
+function SortableSelectedFile({
+  item,
+  onRemove,
+}: {
+  item: { file: File; id: string };
+  onRemove: () => void;
+}) {
+  const { file, id } = item;
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : "auto",
+    opacity: isDragging ? 0.9 : 1,
+  };
+
+  const isImage = file.type.startsWith("image/");
+
+  return (
+    <div className="relative group" ref={setNodeRef} style={style}>
+      <button
+        type="button"
+        className="absolute left-2 top-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border border-zinc-200 bg-white/80 text-zinc-600 shadow-sm transition hover:bg-white"
+        aria-label="Drag to reorder"
+        {...listeners}
+        {...attributes}
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <div className="aspect-square rounded-lg border border-zinc-200 bg-zinc-100 overflow-hidden">
+        {isImage ? (
+          <Image
+            src={URL.createObjectURL(file)}
+            alt={file.name}
+            width={200}
+            height={200}
+            className="h-full w-full object-cover"
+            unoptimized
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="text-4xl">🎥</div>
+          </div>
+        )}
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition-colors"
+      >
+        ×
+      </button>
+      <div className="mt-1 text-xs text-zinc-500 truncate">{file.name}</div>
+    </div>
+  );
+}
 
 export default function SubmitProject() {
   const router = useRouter();
@@ -50,9 +125,14 @@ export default function SubmitProject() {
     link: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<Array<{ file: File; id: string }>>([]);
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<Id<"focusAreas">[]>([]);
   const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"in_progress" | "ready_to_use">("in_progress");
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    })
+  );
 
   const { getRootProps, getInputProps, fileRejections, isDragActive } = useDropzone({
     accept: {
@@ -64,12 +144,32 @@ export default function SubmitProject() {
       'video/webm': ['.webm'],
     },
     onDrop: (acceptedFiles) => {
-      setSelectedFiles(prev => [...prev, ...acceptedFiles]);
+      setSelectedFiles((prev) => [
+        ...prev,
+        ...acceptedFiles.map((file) => ({
+          file,
+          id:
+            (globalThis.crypto?.randomUUID?.() as string | undefined) ??
+            `${file.name}-${file.lastModified}-${file.size}-${Math.random()}`,
+        })),
+      ]);
     },
   });
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setSelectedFiles((items) => {
+      const oldIndex = items.findIndex((item) => item.id === active.id);
+      const newIndex = items.findIndex((item) => item.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return items;
+      return arrayMove(items, oldIndex, newIndex);
+    });
   };
 
   const deriveName = () => {
@@ -112,7 +212,7 @@ export default function SubmitProject() {
       // Upload and add media files if any are selected
       if (selectedFiles.length > 0) {
         await Promise.all(
-          selectedFiles.map(async (file) => {
+          selectedFiles.map(async ({ file }) => {
             // Generate upload URL
             const uploadUrl = await generateUploadUrl();
 
@@ -263,38 +363,26 @@ export default function SubmitProject() {
 
               {selectedFiles.length > 0 && (
                 <div className="mt-4 space-y-2">
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                    {selectedFiles.map((file, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-square rounded-lg border border-zinc-200 bg-zinc-100 overflow-hidden">
-                          {file.type.startsWith('image/') ? (
-                            <Image
-                              src={URL.createObjectURL(file)}
-                              alt={file.name}
-                              width={200}
-                              height={200}
-                              className="h-full w-full object-cover"
-                              unoptimized
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center">
-                              <div className="text-4xl">🎥</div>
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition-colors"
-                        >
-                          ×
-                        </button>
-                        <div className="mt-1 text-xs text-zinc-500 truncate">
-                          {file.name}
-                        </div>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={selectedFiles.map((item) => item.id)}
+                      strategy={rectSortingStrategy}
+                    >
+                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                        {selectedFiles.map((item, index) => (
+                          <SortableSelectedFile
+                            key={item.id}
+                            item={item}
+                            onRemove={() => removeFile(index)}
+                          />
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
                 </div>
               )}
             </div>
