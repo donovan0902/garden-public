@@ -118,6 +118,7 @@ function MediaSlide({
   const isDetail = variant === "detail";
 
   const aspectRatioValue = aspectRatio ?? 16 / 9;
+  const maxHeight = isDetail ? 600 : 400;
 
   const handleVideoClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -138,10 +139,13 @@ function MediaSlide({
 
   return (
     <div
-      className={`relative w-full rounded-lg overflow-hidden bg-zinc-100 ${
-        isDetail ? "min-h-[400px] max-h-[600px]" : "max-h-[300px]"
+      className={`relative w-full rounded-lg overflow-hidden bg-zinc-100 mx-auto ${
+        isDetail ? "min-h-[400px] max-h-[600px]" : "max-h-[400px]"
       }`}
-      style={{ aspectRatio: aspectRatioValue }}
+      style={{
+        aspectRatio: aspectRatioValue,
+        maxWidth: `${maxHeight * aspectRatioValue}px`,
+      }}
     >
       {isVideo ? (
         isDetail ? (
