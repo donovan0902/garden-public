@@ -205,7 +205,7 @@ export function MediaUploadField({
       const newItems = acceptedFiles.map((file) => ({
         file,
         id:
-          (globalThis.crypto?.randomUUID?.() as string | undefined) ??
+          globalThis.crypto?.randomUUID?.() ??
           `${file.name}-${file.lastModified}-${file.size}-${Math.random()}`,
       }));
       onNewFilesChange([...newFiles, ...newItems]);
