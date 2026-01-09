@@ -61,8 +61,8 @@ export function ProjectMediaCarousel({
                 variant={variant}
                 aspectRatio={baseAspectRatio}
                 onAspectRatio={(ratio) => {
-                  if (index === 0) {
-                    setBaseAspectRatio((prev) => prev ?? ratio);
+                  if (index === 0 && baseAspectRatio === null) {
+                    setBaseAspectRatio(ratio);
                   }
                 }}
               />
