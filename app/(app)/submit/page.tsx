@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useMutation, useAction, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -17,10 +16,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useDropzone } from "react-dropzone";
-import { Upload, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { SimilarProjectsPreview } from "@/components/SimilarProjectsPreview";
 import { FocusAreaPicker } from "@/components/FocusAreaPicker";
+import { MediaUploadField, type NewFileItem } from "@/components/MediaUploadField";
 import {
   Tooltip,
   TooltipContent,
@@ -50,27 +49,9 @@ export default function SubmitProject() {
     link: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<NewFileItem[]>([]);
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<Id<"focusAreas">[]>([]);
   const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"in_progress" | "ready_to_use">("in_progress");
-
-  const { getRootProps, getInputProps, fileRejections, isDragActive } = useDropzone({
-    accept: {
-      'image/png': ['.png'],
-      'image/jpeg': ['.jpg', '.jpeg'],
-      'image/gif': ['.gif'],
-      'image/webp': ['.webp'],
-      'video/mp4': ['.mp4'],
-      'video/webm': ['.webm'],
-    },
-    onDrop: (acceptedFiles) => {
-      setSelectedFiles(prev => [...prev, ...acceptedFiles]);
-    },
-  });
-
-  const removeFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  };
 
   const deriveName = () => {
     const title = formData.workingTitle.trim();
@@ -112,7 +93,7 @@ export default function SubmitProject() {
       // Upload and add media files if any are selected
       if (selectedFiles.length > 0) {
         await Promise.all(
-          selectedFiles.map(async (file) => {
+          selectedFiles.map(async ({ file }) => {
             // Generate upload URL
             const uploadUrl = await generateUploadUrl();
 
@@ -227,77 +208,11 @@ export default function SubmitProject() {
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-zinc-900">
-                Media <span className="text-xs text-zinc-500">(optional)</span>
-              </label>
-              <div
-                {...getRootProps()}
-                className={`rounded-lg border-2 border-dashed p-8 text-center transition-colors cursor-pointer ${
-                  isDragActive
-                    ? 'border-zinc-900 bg-zinc-100'
-                    : 'border-zinc-300 bg-zinc-50 hover:border-zinc-400'
-                }`}
-              >
-                <input {...getInputProps()} />
-                <div className="space-y-2">
-                  <Upload className="mx-auto h-10 w-10 text-zinc-400" />
-                  <div className="text-sm text-zinc-600">
-                    {isDragActive ? (
-                      <span className="font-medium text-zinc-900">Drop files here</span>
-                    ) : (
-                        <span className="text-zinc-500">
-                          Add Screenshots or short clips that show the problem and your fix in action.
-                        </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {fileRejections.length > 0 && (
-                <div className="text-sm text-red-600 mt-2">
-                  Invalid file type(s): {fileRejections.map(({ file }) => file.name).join(', ')}.
-                  Please upload images or videos only.
-                </div>
-              )}
-
-              {selectedFiles.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                    {selectedFiles.map((file, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-square rounded-lg border border-zinc-200 bg-zinc-100 overflow-hidden">
-                          {file.type.startsWith('image/') ? (
-                            <Image
-                              src={URL.createObjectURL(file)}
-                              alt={file.name}
-                              width={200}
-                              height={200}
-                              className="h-full w-full object-cover"
-                              unoptimized
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center">
-                              <div className="text-4xl">🎥</div>
-                            </div>
-                          )}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition-colors"
-                        >
-                          ×
-                        </button>
-                        <div className="mt-1 text-xs text-zinc-500 truncate">
-                          {file.name}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            <MediaUploadField
+              newFiles={selectedFiles}
+              onNewFilesChange={setSelectedFiles}
+              disabled={isSubmitting}
+            />
 
             <div className="flex items-center pt-4">
               <Button type="submit" className="whitespace-nowrap" disabled={isSubmitting}>

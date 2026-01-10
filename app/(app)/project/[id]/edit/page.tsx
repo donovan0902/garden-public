@@ -2,16 +2,15 @@
 
 import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { useAction, useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Id } from "@/convex/_generated/dataModel";
-import { useDropzone } from "react-dropzone";
-import { Upload, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { FocusAreaPicker } from "@/components/FocusAreaPicker";
+import { MediaUploadField, type ExistingMediaItem, type NewFileItem } from "@/components/MediaUploadField";
 import {
   Select,
   SelectContent,
@@ -25,58 +24,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-function ExistingMediaThumbnail({
-  media,
-  onDelete,
-}: {
-  media: {
-    _id: Id<"mediaFiles">;
-    storageId: Id<"_storage">;
-    type: string;
-  };
-  onDelete: () => void;
-}) {
-  const mediaUrl = useQuery(api.projects.getMediaUrl, { storageId: media.storageId });
-
-  if (!mediaUrl) {
-    return (
-      <div className="aspect-square rounded-lg border border-zinc-200 bg-zinc-100 overflow-hidden flex items-center justify-center">
-        <div className="text-xs text-zinc-400">Loading...</div>
-      </div>
-    );
-  }
-
-  const isVideo = media.type === 'video';
-
-  return (
-    <div className="relative group">
-      <div className="aspect-square rounded-lg border border-zinc-200 bg-zinc-100 overflow-hidden">
-        {isVideo ? (
-          <div className="flex h-full w-full items-center justify-center">
-            <div className="text-4xl">🎥</div>
-          </div>
-        ) : (
-          <Image
-            src={mediaUrl}
-            alt="Project media"
-            width={200}
-            height={200}
-            className="h-full w-full object-cover"
-            unoptimized
-          />
-        )}
-      </div>
-      <button
-        type="button"
-        onClick={onDelete}
-        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition-colors"
-      >
-        ×
-      </button>
-    </div>
-  );
-}
-
 export default function EditProject({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
@@ -87,6 +34,17 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
   const generateUploadUrl = useMutation(api.projects.generateUploadUrl);
   const deleteMediaFromProject = useMutation(api.projects.deleteMediaFromProject);
   const addMediaToProject = useMutation(api.projects.addMediaToProject);
+  const reorderProjectMedia = useMutation(api.projects.reorderProjectMedia)
+    .withOptimisticUpdate((localStore, args) => {
+      const existing = localStore.getQuery(api.projects.getProjectMedia, { projectId: args.projectId });
+      if (existing) {
+        // Reorder in the local cache immediately based on the new order
+        const reordered = args.orderedMediaIds
+          .map(id => existing.find(m => m._id === id))
+          .filter((m): m is NonNullable<typeof m> => m !== undefined);
+        localStore.setQuery(api.projects.getProjectMedia, { projectId: args.projectId }, reordered);
+      }
+    });
   const focusAreasGrouped = useQuery(api.focusAreas.listActiveGrouped);
 
   const [formData, setFormData] = useState({
@@ -96,29 +54,24 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<NewFileItem[]>([]);
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<Id<"focusAreas">[]>([]);
   const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"in_progress" | "ready_to_use">("in_progress");
 
-  const { getRootProps, getInputProps, fileRejections, isDragActive } = useDropzone({
-    accept: {
-      'image/png': ['.png'],
-      'image/jpeg': ['.jpg', '.jpeg'],
-      'image/gif': ['.gif'],
-      'image/webp': ['.webp'],
-      'video/mp4': ['.mp4'],
-      'video/webm': ['.webm'],
-    },
-    onDrop: (acceptedFiles) => {
-      setSelectedFiles(prev => [...prev, ...acceptedFiles]);
-    },
-  });
-
-  const removeNewFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  const handleExistingMediaReorder = async (reorderedMedia: ExistingMediaItem[]) => {
+    try {
+      await reorderProjectMedia({
+        projectId,
+        orderedMediaIds: reorderedMedia.map((media) => media._id),
+      });
+    } catch (error) {
+      console.error("Failed to reorder media:", error);
+      alert("Failed to reorder media. Please try again.");
+      // No manual rollback needed - Convex optimistic update handles this
+    }
   };
 
-  const removeExistingFile = async (mediaId: Id<"mediaFiles">) => {
+  const handleExistingMediaDelete = async (mediaId: Id<"mediaFiles">) => {
     try {
       await deleteMediaFromProject({ projectId, mediaId });
     } catch (error) {
@@ -168,7 +121,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
       // Upload and add new media files if any are selected
       if (selectedFiles.length > 0) {
         await Promise.all(
-          selectedFiles.map(async (file) => {
+          selectedFiles.map(async ({ file }) => {
             // Generate upload URL
             const uploadUrl = await generateUploadUrl();
 
@@ -273,95 +226,14 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-900">
-                  Media <span className="text-xs text-zinc-500">(optional)</span>
-                </label>
-
-                {projectMedia && projectMedia.length > 0 && (
-                  <div className="mb-4 space-y-2">
-                    <div className="text-sm font-medium text-zinc-700">
-                      Current media ({projectMedia.length})
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                      {projectMedia.map((media) => (
-                        <ExistingMediaThumbnail
-                          key={media._id}
-                          media={media}
-                          onDelete={() => removeExistingFile(media._id)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div
-                  {...getRootProps()}
-                  className={`rounded-lg border-2 border-dashed p-8 text-center transition-colors cursor-pointer ${
-                    isDragActive
-                      ? 'border-zinc-900 bg-zinc-100'
-                      : 'border-zinc-300 bg-zinc-50 hover:border-zinc-400'
-                  }`}
-                >
-                  <input {...getInputProps()} />
-                  <div className="space-y-2">
-                    <Upload className="mx-auto h-10 w-10 text-zinc-400" />
-                    <div className="text-sm text-zinc-600">
-                      {isDragActive ? (
-                        <span className="font-medium text-zinc-900">Drop files here</span>
-                      ) : (
-                        <span className="text-zinc-500">
-                          Add Screenshots or short clips that show the problem and your fix in action.
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {fileRejections.length > 0 && (
-                  <div className="text-sm text-red-600 mt-2">
-                    Invalid file type(s): {fileRejections.map(({ file }) => file.name).join(', ')}.
-                    Please upload images or videos only.
-                  </div>
-                )}
-
-                {selectedFiles.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-                      {selectedFiles.map((file, index) => (
-                        <div key={index} className="relative group">
-                          <div className="aspect-square rounded-lg border border-zinc-200 bg-zinc-100 overflow-hidden">
-                            {file.type.startsWith('image/') ? (
-                              <Image
-                                src={URL.createObjectURL(file)}
-                                alt={file.name}
-                                width={200}
-                                height={200}
-                                className="h-full w-full object-cover"
-                                unoptimized
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center">
-                                <div className="text-4xl">🎥</div>
-                              </div>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeNewFile(index)}
-                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white text-xs font-bold hover:bg-red-600 transition-colors"
-                          >
-                            ×
-                          </button>
-                          <div className="mt-1 text-xs text-zinc-500 truncate">
-                            {file.name}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <MediaUploadField
+                existingMedia={projectMedia}
+                onExistingMediaReorder={handleExistingMediaReorder}
+                onExistingMediaDelete={handleExistingMediaDelete}
+                newFiles={selectedFiles}
+                onNewFilesChange={setSelectedFiles}
+                disabled={isSubmitting}
+              />
 
               <div className="flex items-center gap-3 pt-4">
                 <Button type="submit" className="whitespace-nowrap" disabled={isSubmitting}>
