@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Play, Pause, Expand, X } from "lucide-react";
+import { Play, Pause, X } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -27,7 +27,6 @@ type ProjectMediaCarouselProps = {
 export function ProjectMediaCarousel({ media }: ProjectMediaCarouselProps) {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
-  const [baseAspectRatio, setBaseAspectRatio] = useState<number | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedApi, setExpandedApi] = useState<CarouselApi>();
   const [expandedCurrent, setExpandedCurrent] = useState(0);
@@ -85,25 +84,15 @@ export function ProjectMediaCarousel({ media }: ProjectMediaCarouselProps) {
 
   return (
     <>
-      <div
-        className="relative"
-        style={{
-          maxWidth: baseAspectRatio ? `${400 * baseAspectRatio}px` : undefined,
-        }}
-      >
+      <div className="relative w-full max-w-2xl">
         <Carousel setApi={setApi} className="w-full">
           <CarouselContent>
-            {media.map((item, index) => (
+            {media.map((item) => (
               <CarouselItem key={item._id}>
                 <MediaSlide
                   media={item}
-                  aspectRatio={baseAspectRatio}
-                  onAspectRatio={(ratio) => {
-                    if (index === 0 && baseAspectRatio === null) {
-                      setBaseAspectRatio(ratio);
-                    }
-                  }}
                   onExpand={handleExpand}
+                  isSingleItem={media.length === 1}
                 />
               </CarouselItem>
             ))}
@@ -193,22 +182,18 @@ export function ProjectMediaCarousel({ media }: ProjectMediaCarouselProps) {
 
 function MediaSlide({
   media,
-  aspectRatio,
-  onAspectRatio,
   onExpand,
+  isSingleItem,
 }: {
   media: MediaItem;
-  aspectRatio: number | null;
-  onAspectRatio: (ratio: number) => void;
   onExpand: () => void;
+  isSingleItem: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
   if (!media.url) return null;
   const isVideo = media.type === "video";
-
-  const aspectRatioValue = aspectRatio ?? 16 / 9;
 
   const handleVideoClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -227,49 +212,33 @@ function MediaSlide({
     setIsPlaying(false);
   };
 
-  const handleExpandClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onExpand();
-  };
-
   return (
     <div
-      className="relative w-full rounded-lg overflow-hidden bg-zinc-100 max-h-[400px]"
-      style={{
-        aspectRatio: aspectRatioValue,
-      }}
+      className={`relative w-full rounded-lg overflow-hidden cursor-pointer ${isVideo ? "bg-black" : "bg-zinc-100"}`}
+      onClick={onExpand}
     >
       {isVideo ? (
         <>
           <video
             ref={videoRef}
             src={media.url}
-            className="w-full h-full object-cover"
+            className="w-full h-auto max-h-[500px] object-contain"
             preload="metadata"
             playsInline
             onEnded={handleVideoEnded}
-            onClick={handleVideoClick}
             onPlay={() => setIsPlaying(true)}
             onPause={() => setIsPlaying(false)}
-            onLoadedMetadata={(event) => {
-              if (
-                event.currentTarget.videoWidth &&
-                event.currentTarget.videoHeight
-              ) {
-                onAspectRatio(
-                  event.currentTarget.videoWidth /
-                    event.currentTarget.videoHeight
-                );
-              }
-            }}
           />
           <div
-            className={`absolute inset-0 flex items-center justify-center transition-opacity ${
+            className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-opacity ${
               isPlaying ? "opacity-0 hover:opacity-100" : "opacity-100"
             }`}
-            onClick={handleVideoClick}
           >
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-white/90 shadow-lg cursor-pointer">
+            <button
+              className="pointer-events-auto flex items-center justify-center w-12 h-12 rounded-full bg-white/90 shadow-lg cursor-pointer"
+              onClick={handleVideoClick}
+              aria-label={isPlaying ? "Pause video" : "Play video"}
+            >
               {isPlaying ? (
                 <Pause className="w-5 h-5 text-zinc-900" fill="currentColor" />
               ) : (
@@ -278,34 +247,36 @@ function MediaSlide({
                   fill="currentColor"
                 />
               )}
-            </div>
+            </button>
           </div>
         </>
-      ) : (
-        <Image
+      ) : isSingleItem ? (
+        <img
           src={media.url}
           alt="Project media"
-          fill
-          className="object-cover"
-          unoptimized
-          onLoad={(e) => {
-            const img = e.currentTarget as HTMLImageElement;
-            if (img.naturalWidth && img.naturalHeight) {
-              onAspectRatio(img.naturalWidth / img.naturalHeight);
-            }
-          }}
-          sizes="(max-width: 768px) 100vw, 672px"
+          className="w-full h-auto max-h-[500px] object-contain"
         />
+      ) : (
+        <div className="relative w-full h-[500px] overflow-hidden">
+          {/* Blurred background for letterboxing */}
+          <Image
+            src={media.url}
+            alt=""
+            fill
+            className="object-cover blur-2xl scale-125 opacity-60"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority={false}
+          />
+          {/* Main image */}
+          <Image
+            src={media.url}
+            alt="Project media"
+            fill
+            className="object-contain relative z-10"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          />
+        </div>
       )}
-
-      {/* Expand button */}
-      <button
-        onClick={handleExpandClick}
-        className="absolute top-2 right-2 p-1.5 rounded-md bg-black/30 hover:bg-black/40 text-white transition-colors"
-        aria-label="Expand media"
-      >
-        <Expand className="w-4 h-4" />
-      </button>
     </div>
   );
 }
