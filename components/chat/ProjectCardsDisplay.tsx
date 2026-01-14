@@ -52,11 +52,11 @@ export function ProjectCardsDisplay({
           <>
             {[...Array(Math.min(projectIds.length, 4))].map((_, i) => (
               <Card key={i} className="h-full overflow-hidden">
-                <div className="flex h-full flex-col gap-2 p-3">
-                  <div className="aspect-[16/9] w-full rounded-md bg-muted">
+                <div className="flex h-full flex-col">
+                  <div className="aspect-[16/9] w-full bg-muted">
                     <Skeleton className="h-full w-full" />
                   </div>
-                  <CardHeader className="space-y-2 p-0">
+                  <CardHeader className="space-y-2 px-3 pb-3 pt-2">
                     <Skeleton className="h-4 w-3/4" />
                     <Skeleton className="h-3 w-full" />
                     <Skeleton className="h-3 w-2/3" />
@@ -78,8 +78,8 @@ export function ProjectCardsDisplay({
                 target="_blank"
               >
                 <Card className="h-full cursor-pointer overflow-hidden transition-colors hover:bg-muted/50">
-                  <div className="flex h-full flex-col gap-2 p-3">
-                    <div className="group relative aspect-[16/9] w-full overflow-hidden rounded-md bg-muted">
+                  <div className="flex h-full flex-col">
+                    <div className="group relative aspect-[16/9] w-full overflow-hidden bg-muted">
                       {firstMedia && hasValidUrl ? (
                         isVideo ? (
                           <>
@@ -112,7 +112,7 @@ export function ProjectCardsDisplay({
                         </div>
                       )}
                     </div>
-                    <CardHeader className="space-y-1 p-0">
+                    <CardHeader className="space-y-1 px-3 pb-3 pt-2">
                       <CardTitle className="flex items-center gap-1 text-sm font-medium">
                         <span className="truncate">{project.name}</span>
                         <ArrowUpRight className="h-3 w-3 flex-shrink-0 text-muted-foreground" />
