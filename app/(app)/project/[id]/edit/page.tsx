@@ -264,25 +264,27 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
                 />
               </div>
 
-              <MediaUploadField
-                existingMedia={projectMedia}
-                onExistingMediaReorder={handleExistingMediaReorder}
-                onExistingMediaDelete={handleExistingMediaDelete}
-                newFiles={selectedFiles}
-                onNewFilesChange={setSelectedFiles}
-                disabled={isSubmitting}
-              />
+              <div className="grid gap-4 lg:grid-cols-2">
+                <MediaUploadField
+                  existingMedia={projectMedia}
+                  onExistingMediaReorder={handleExistingMediaReorder}
+                  onExistingMediaDelete={handleExistingMediaDelete}
+                  newFiles={selectedFiles}
+                  onNewFilesChange={setSelectedFiles}
+                  disabled={isSubmitting}
+                />
 
-              <ZipUploadField
-                selectedFile={selectedZipFile}
-                onFileChange={setSelectedZipFile}
-                existingFile={!deleteExistingZipFile && projectFile ? {
-                  filename: projectFile.filename,
-                  fileSize: projectFile.fileSize,
-                } : null}
-                onExistingFileDelete={handleExistingZipFileDelete}
-                disabled={isSubmitting}
-              />
+                <ZipUploadField
+                  selectedFile={selectedZipFile}
+                  onFileChange={setSelectedZipFile}
+                  existingFile={!deleteExistingZipFile && projectFile ? {
+                    filename: projectFile.filename,
+                    fileSize: projectFile.fileSize,
+                  } : null}
+                  onExistingFileDelete={handleExistingZipFileDelete}
+                  disabled={isSubmitting}
+                />
+              </div>
 
               <div className="flex items-center gap-3 pt-4">
                 <Button type="submit" className="whitespace-nowrap" disabled={isSubmitting}>
@@ -300,6 +302,19 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
             </section>
 
             <section className="w-full lg:sticky lg:top-10 lg:self-start space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="link" className="text-sm font-medium text-zinc-900">
+                  Link <span className="text-xs text-zinc-500">(optional)</span>
+                </label>
+                <Input
+                  id="link"
+                  type="url"
+                  value={formData.link}
+                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                  placeholder="https://example.com"
+                />
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -354,19 +369,6 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
                     onSelectionChange={setSelectedFocusAreas}
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="link" className="text-sm font-medium text-zinc-900">
-                  Link <span className="text-xs text-zinc-500">(optional)</span>
-                </label>
-                <Input
-                  id="link"
-                  type="url"
-                  value={formData.link}
-                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                  placeholder="https://example.com"
-                />
               </div>
 
             </section>

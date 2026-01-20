@@ -181,7 +181,7 @@ export default function SubmitProject() {
           <Accordion type="single" collapsible>
             <AccordionItem value="things" className="border-b-0">
               <AccordionTrigger className="py-1 text-sm font-medium text-zinc-700">
-                If you built something, it belongs here, even if it&apos;s rough, unfinished, or hacky.
+                If you built something, it belongs here, even if it&apos;s rough and unfinished.
               </AccordionTrigger>
               <AccordionContent className="pt-2">
                 <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-600">
@@ -235,17 +235,19 @@ export default function SubmitProject() {
               />
             </div>
 
-            <MediaUploadField
-              newFiles={selectedFiles}
-              onNewFilesChange={setSelectedFiles}
-              disabled={isSubmitting}
-            />
+            <div className="grid gap-4 lg:grid-cols-2">
+              <MediaUploadField
+                newFiles={selectedFiles}
+                onNewFilesChange={setSelectedFiles}
+                disabled={isSubmitting}
+              />
 
-            <ZipUploadField
-              selectedFile={selectedZipFile}
-              onFileChange={setSelectedZipFile}
-              disabled={isSubmitting}
-            />
+              <ZipUploadField
+                selectedFile={selectedZipFile}
+                onFileChange={setSelectedZipFile}
+                disabled={isSubmitting}
+              />
+            </div>
 
             <div className="flex items-center pt-4">
               <Button type="submit" className="whitespace-nowrap" disabled={isSubmitting}>
@@ -255,6 +257,19 @@ export default function SubmitProject() {
             </section>
 
             <section className="w-full lg:sticky lg:top-10 lg:self-start space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="link" className="text-sm font-medium text-zinc-900">
+                  Link <span className="text-xs text-zinc-500">(optional)</span>
+                </label>
+                <Input
+                  id="link"
+                  type="url"
+                  value={formData.link}
+                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                  placeholder="https://example.com"
+                />
+              </div>
+
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -309,19 +324,6 @@ export default function SubmitProject() {
                     onSelectionChange={setSelectedFocusAreas}
                   />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="link" className="text-sm font-medium text-zinc-900">
-                  Link <span className="text-xs text-zinc-500">(optional)</span>
-                </label>
-                <Input
-                  id="link"
-                  type="url"
-                  value={formData.link}
-                  onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                  placeholder="https://example.com"
-                />
               </div>
 
               <div className="border-t border-zinc-200 pt-4">

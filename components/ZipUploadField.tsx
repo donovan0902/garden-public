@@ -1,7 +1,7 @@
 "use client";
 
 import { useDropzone } from "react-dropzone";
-import { FileArchive, Upload, X } from "lucide-react";
+import { FileArchive, X } from "lucide-react";
 import { formatFileSize, MAX_ZIP_FILE_SIZE } from "@/lib/fileSize";
 
 interface ZipUploadFieldProps {
@@ -48,7 +48,8 @@ export function ZipUploadField({
   return (
     <div className="space-y-2">
       <label className="text-sm font-medium text-zinc-900">
-        Downloadable File <span className="text-xs text-zinc-500">(optional, .zip only, max 50MB)</span>
+        Downloadable file{" "}
+        <span className="text-xs text-zinc-500">(optional, .zip only, max 50MB)</span>
       </label>
 
       {/* Existing file display (edit page) */}
@@ -107,13 +108,13 @@ export function ZipUploadField({
         >
           <input {...getInputProps()} />
           <div className="space-y-2">
-            <Upload className="mx-auto h-8 w-8 text-zinc-400" />
+            <FileArchive className="mx-auto h-8 w-8 text-zinc-400" />
             <div className="text-sm text-zinc-600">
               {isDragActive ? (
                 <span className="font-medium text-zinc-900">Drop your zip file here</span>
               ) : (
                 <span className="text-zinc-500">
-                  Drag and drop a zip file, or click to select
+                  Upload a zip file containing your tool (source code, scripts, etc.)
                 </span>
               )}
             </div>

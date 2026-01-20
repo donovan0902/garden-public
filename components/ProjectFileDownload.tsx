@@ -1,6 +1,6 @@
 "use client";
 
-import { FileArchive, Download } from "lucide-react";
+import { FileArchive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatFileSize } from "@/lib/fileSize";
 
@@ -16,22 +16,16 @@ export function ProjectFileDownload({ filename, fileSize, url }: ProjectFileDown
   }
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <FileArchive className="h-8 w-8 text-zinc-500" />
-          <div>
-            <p className="text-sm font-medium text-zinc-900">{filename}</p>
-            <p className="text-xs text-zinc-500">{formatFileSize(fileSize)}</p>
-          </div>
-        </div>
-        <Button variant="outline" size="sm" asChild>
-          <a href={url} download={filename}>
-            <Download className="mr-2 h-4 w-4" />
-            Download
-          </a>
-        </Button>
-      </div>
+    <div>
+      <a
+        href={url}
+        download={filename}
+        className="inline-flex items-center gap-2 text-sm font-medium text-zinc-700 underline decoration-zinc-300 underline-offset-4 hover:text-zinc-900 hover:decoration-zinc-500"
+        aria-label={`Download ${filename}`}
+      >
+        <FileArchive className="h-4 w-4 text-zinc-400" aria-hidden="true" />
+        {filename}
+      </a>
     </div>
   );
 }
