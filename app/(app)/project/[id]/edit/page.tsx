@@ -11,6 +11,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { Info } from "lucide-react";
 import { FocusAreaPicker } from "@/components/FocusAreaPicker";
 import { MediaUploadField, type ExistingMediaItem, type NewFileItem } from "@/components/MediaUploadField";
+import { ZipUploadField } from "@/components/ZipUploadField";
 import {
   Select,
   SelectContent,
@@ -30,10 +31,13 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
   const projectId = id as Id<"projects">;
   const project = useQuery(api.projects.getById, { projectId });
   const projectMedia = useQuery(api.projects.getProjectMedia, { projectId });
+  const projectFile = useQuery(api.projects.getProjectFile, { projectId });
   const updateProject = useAction(api.projects.updateProject);
   const generateUploadUrl = useMutation(api.projects.generateUploadUrl);
   const deleteMediaFromProject = useMutation(api.projects.deleteMediaFromProject);
   const addMediaToProject = useMutation(api.projects.addMediaToProject);
+  const addFileToProject = useMutation(api.projects.addFileToProject);
+  const deleteFileFromProject = useMutation(api.projects.deleteFileFromProject);
   const reorderProjectMedia = useMutation(api.projects.reorderProjectMedia)
     .withOptimisticUpdate((localStore, args) => {
       const existing = localStore.getQuery(api.projects.getProjectMedia, { projectId: args.projectId });
@@ -55,6 +59,8 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState<NewFileItem[]>([]);
+  const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
+  const [deleteExistingZipFile, setDeleteExistingZipFile] = useState(false);
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<Id<"focusAreas">[]>([]);
   const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"in_progress" | "ready_to_use">("in_progress");
 
@@ -78,6 +84,10 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
       console.error("Failed to delete media:", error);
       alert("Failed to delete media. Please try again.");
     }
+  };
+
+  const handleExistingZipFileDelete = () => {
+    setDeleteExistingZipFile(true);
   };
 
   // Populate form when project data loads
@@ -147,6 +157,34 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
             });
           })
         );
+      }
+
+      // Handle zip file changes
+      if (deleteExistingZipFile && !selectedZipFile) {
+        // Delete existing file without replacement
+        await deleteFileFromProject({ projectId });
+      } else if (selectedZipFile) {
+        // Upload new zip file (will replace existing if any)
+        const uploadUrl = await generateUploadUrl();
+        const uploadResult = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": selectedZipFile.type },
+          body: selectedZipFile,
+        });
+
+        if (!uploadResult.ok) {
+          throw new Error(`Failed to upload ${selectedZipFile.name}`);
+        }
+
+        const { storageId } = await uploadResult.json();
+
+        await addFileToProject({
+          projectId,
+          storageId,
+          filename: selectedZipFile.name,
+          contentType: selectedZipFile.type,
+          fileSize: selectedZipFile.size,
+        });
       }
 
       router.push(`/project/${id}`);
@@ -232,6 +270,17 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
                 onExistingMediaDelete={handleExistingMediaDelete}
                 newFiles={selectedFiles}
                 onNewFilesChange={setSelectedFiles}
+                disabled={isSubmitting}
+              />
+
+              <ZipUploadField
+                selectedFile={selectedZipFile}
+                onFileChange={setSelectedZipFile}
+                existingFile={!deleteExistingZipFile && projectFile ? {
+                  filename: projectFile.filename,
+                  fileSize: projectFile.fileSize,
+                } : null}
+                onExistingFileDelete={handleExistingZipFileDelete}
                 disabled={isSubmitting}
               />
 

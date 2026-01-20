@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CommentForm } from "@/components/CommentForm";
 import { CommentThread } from "@/components/CommentThread";
 import { ProjectMediaCarousel } from "@/components/ProjectMediaCarousel";
+import { ProjectFileDownload } from "@/components/ProjectFileDownload";
 import { FocusAreaBadges } from "@/components/FocusAreaBadges";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
 import { Facepile } from "@/components/Facepile";
@@ -81,6 +82,7 @@ export default function ProjectPage({
   const projectId = id as Id<"projects">;
   const project = useQuery(api.projects.getById, { projectId });
   const projectMedia = useQuery(api.projects.getProjectMedia, { projectId });
+  const projectFile = useQuery(api.projects.getProjectFile, { projectId });
   const comments = useQuery(api.comments.getComments, { projectId });
   const toggleUpvote = useMutation(api.projects.toggleUpvote);
   const toggleAdoption = useMutation(api.projects.toggleAdoption);
@@ -297,6 +299,16 @@ export default function ProjectPage({
           {projectMedia && projectMedia.length > 0 && (
             <div className="my-8">
               <ProjectMediaCarousel media={projectMedia} />
+            </div>
+          )}
+
+          {projectFile && projectFile.url && (
+            <div className="my-6">
+              <ProjectFileDownload
+                filename={projectFile.filename}
+                fileSize={projectFile.fileSize}
+                url={projectFile.url}
+              />
             </div>
           )}
 

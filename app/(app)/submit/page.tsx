@@ -20,6 +20,7 @@ import { Info } from "lucide-react";
 import { SimilarProjectsPreview } from "@/components/SimilarProjectsPreview";
 import { FocusAreaPicker } from "@/components/FocusAreaPicker";
 import { MediaUploadField, type NewFileItem } from "@/components/MediaUploadField";
+import { ZipUploadField } from "@/components/ZipUploadField";
 import {
   Tooltip,
   TooltipContent,
@@ -42,6 +43,7 @@ export default function SubmitProject() {
   const confirmProject = useMutation(api.projects.confirmProject);
   const generateUploadUrl = useMutation(api.projects.generateUploadUrl);
   const addMediaToProject = useMutation(api.projects.addMediaToProject);
+  const addFileToProject = useMutation(api.projects.addFileToProject);
   const focusAreasGrouped = useQuery(api.focusAreas.listActiveGrouped);
   const [formData, setFormData] = useState({
     summary: "",
@@ -50,6 +52,7 @@ export default function SubmitProject() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<NewFileItem[]>([]);
+  const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
   const [selectedFocusAreas, setSelectedFocusAreas] = useState<Id<"focusAreas">[]>([]);
   const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"in_progress" | "ready_to_use">("in_progress");
 
@@ -119,6 +122,30 @@ export default function SubmitProject() {
             });
           })
         );
+      }
+
+      // Upload zip file if selected
+      if (selectedZipFile) {
+        const uploadUrl = await generateUploadUrl();
+        const uploadResult = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": selectedZipFile.type },
+          body: selectedZipFile,
+        });
+
+        if (!uploadResult.ok) {
+          throw new Error(`Failed to upload ${selectedZipFile.name}`);
+        }
+
+        const { storageId } = await uploadResult.json();
+
+        await addFileToProject({
+          projectId: result.projectId,
+          storageId,
+          filename: selectedZipFile.name,
+          contentType: selectedZipFile.type,
+          fileSize: selectedZipFile.size,
+        });
       }
 
       // If no similar projects found, auto-confirm and go home
@@ -211,6 +238,12 @@ export default function SubmitProject() {
             <MediaUploadField
               newFiles={selectedFiles}
               onNewFilesChange={setSelectedFiles}
+              disabled={isSubmitting}
+            />
+
+            <ZipUploadField
+              selectedFile={selectedZipFile}
+              onFileChange={setSelectedZipFile}
               disabled={isSubmitting}
             />
 
