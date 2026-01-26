@@ -53,7 +53,7 @@ export default function SubmitProject() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<NewFileItem[]>([]);
   const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
-  const [selectedFocusAreas, setSelectedFocusAreas] = useState<Id<"focusAreas">[]>([]);
+  const [selectedFocusArea, setSelectedFocusArea] = useState<Id<"focusAreas"> | null>(null);
   const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"in_progress" | "ready_to_use">("in_progress");
 
   const deriveName = () => {
@@ -88,7 +88,7 @@ export default function SubmitProject() {
         name,
         summary,
         link: formData.link.trim() || undefined,
-        focusAreaIds: selectedFocusAreas,
+        focusAreaId: selectedFocusArea ?? undefined,
         readinessStatus: selectedReadinessStatus,
       });
       createdProjectId = result.projectId;
@@ -320,8 +320,8 @@ export default function SubmitProject() {
                   </div>
                   <FocusAreaPicker
                     focusAreasGrouped={focusAreasGrouped}
-                    selectedFocusAreas={selectedFocusAreas}
-                    onSelectionChange={setSelectedFocusAreas}
+                    selectedFocusArea={selectedFocusArea}
+                    onSelectionChange={setSelectedFocusArea}
                   />
                 </div>
               </div>

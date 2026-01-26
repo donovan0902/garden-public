@@ -11,7 +11,8 @@
       "Bash(find:*)",
       "mcp__convex__status",
       "mcp__convex__tables",
-      "Bash(npx convex codegen:*)"
+      "Bash(npx convex codegen:*)",
+      "Bash(npx convex:*)"
     ]
   }
 }

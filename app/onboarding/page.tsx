@@ -6,7 +6,7 @@ import { useMutation, useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useConvexAuth } from 'convex/react';
 import { Id } from '@/convex/_generated/dataModel';
-import { FocusAreaPicker } from '@/components/FocusAreaPicker';
+import { UserFocusAreaPicker } from '@/components/UserFocusAreaPicker';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -110,7 +110,7 @@ export default function OnboardingPage() {
           {/* Focus Areas Section */}
           <div className="space-y-3">
             <h3 className="text-sm font-medium text-zinc-900">Select your focus areas</h3>
-            <FocusAreaPicker
+            <UserFocusAreaPicker
               focusAreasGrouped={focusAreasGrouped}
               selectedFocusAreas={focusAreaIds}
               onSelectionChange={setFocusAreaIds}

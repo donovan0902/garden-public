@@ -61,7 +61,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
   const [selectedFiles, setSelectedFiles] = useState<NewFileItem[]>([]);
   const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
   const [deleteExistingZipFile, setDeleteExistingZipFile] = useState(false);
-  const [selectedFocusAreas, setSelectedFocusAreas] = useState<Id<"focusAreas">[]>([]);
+  const [selectedFocusArea, setSelectedFocusArea] = useState<Id<"focusAreas"> | null>(null);
   const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"in_progress" | "ready_to_use">("in_progress");
 
   const handleExistingMediaReorder = async (reorderedMedia: ExistingMediaItem[]) => {
@@ -98,7 +98,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
         description: project.summary || "",
         link: project.link || "",
       });
-      setSelectedFocusAreas(project.focusAreaIds);
+      setSelectedFocusArea(project.focusAreaId ?? null);
       setSelectedReadinessStatus(project.readinessStatus ?? "in_progress");
       setIsLoading(false);
     }
@@ -124,7 +124,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
         name: trimmedName,
         summary: trimmedDescription || undefined,
         link: formData.link.trim() || undefined,
-        focusAreaIds: selectedFocusAreas,
+        focusAreaId: selectedFocusArea ?? undefined,
         readinessStatus: selectedReadinessStatus,
       });
 
@@ -365,8 +365,8 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
                   </div>
                   <FocusAreaPicker
                     focusAreasGrouped={focusAreasGrouped}
-                    selectedFocusAreas={selectedFocusAreas}
-                    onSelectionChange={setSelectedFocusAreas}
+                    selectedFocusArea={selectedFocusArea}
+                    onSelectionChange={setSelectedFocusArea}
                   />
                 </div>
               </div>

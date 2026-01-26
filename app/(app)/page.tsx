@@ -11,11 +11,10 @@ import { motion, LayoutGroup } from "motion/react";
 import React from "react";
 
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Authenticated, Unauthenticated, AuthLoading } from "convex/react";
-import { Eye, Info, MessageCircle, Play } from "lucide-react";
+import { Info, MessageCircle, Play } from "lucide-react";
 import { ProjectMediaCarousel } from "@/components/ProjectMediaCarousel";
-import { FocusAreaBadges } from "@/components/FocusAreaBadges";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -45,7 +44,7 @@ type Project = {
   userId: Id<"users">;
   creatorName: string;
   creatorAvatar: string;
-  focusAreas: FocusArea[];
+  focusArea: FocusArea | null;
   readinessStatus?: "in_progress" | "ready_to_use";
   previewMedia: Array<{
     _id: string;
@@ -278,35 +277,23 @@ function ProjectRow({
 
   return (
     <div
-      className="flex flex-col gap-3 pb-4 pt-4 cursor-pointer hover:bg-zinc-100 rounded-lg transition-colors px-4 -mx-4"
+      className="flex flex-col gap-2 pb-3 pt-3 cursor-pointer hover:bg-zinc-100 rounded-lg transition-colors px-4 -mx-4"
       onClick={handleProjectClick}
     >
-      {/* Header: Creator info, team, facepile */}
-      <div className="flex items-center justify-between gap-2 text-[13px] text-zinc-500">
+      {/* Header: Focus area, time, views, facepile */}
+      <div className="flex items-center justify-between gap-2 text-xs text-zinc-500">
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href={`/profile/${project.userId}`}
-            onClick={(event) => event.stopPropagation()}
-            className="flex items-center gap-2 whitespace-nowrap"
+            className="font-medium text-zinc-600 transition-colors hover:text-green-600"
+            onClick={(e) => e.stopPropagation()}
           >
-            <Avatar className="h-6 w-6 bg-zinc-100 text-xs font-semibold text-zinc-600">
-              <AvatarImage src={project.creatorAvatar} alt={project.creatorName || "User"} />
-              <AvatarFallback>{(project.creatorName || "U").slice(0, 2).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <span className="font-medium text-zinc-700 hover:underline">
-              {project.creatorName || "Unknown User"}
-            </span>
+            {project.focusArea
+              ? `g/${project.focusArea.name}`
+              : `u/${project.creatorName}`}
           </Link>
-          {project.team && (
-            <>
-              <span className="text-zinc-300">•</span>
-              <span className="whitespace-nowrap text-zinc-500">{project.team}</span>
-            </>
-          )}
           <span className="text-zinc-300">•</span>
-          <span className="whitespace-nowrap text-zinc-500">
-            {getRelativeTime(project._creationTime)}
-          </span>
+          <span>{getRelativeTime(project._creationTime)}</span>
         </div>
         <Facepile
           adopters={project.adopters}
@@ -333,7 +320,7 @@ function ProjectRow({
           <ProjectMediaCarousel media={project.previewMedia} />
         </div>
       ) : project.summary ? (
-        <p className="text-sm text-zinc-600 line-clamp-2 break-words">
+        <p className="text-sm leading-5 text-zinc-600 line-clamp-2 break-words">
           {project.summary}
         </p>
       ) : null}
@@ -463,7 +450,7 @@ function FocusAreaSpotlight({
   const focusAreaIds = new Set(focusAreas.map((area) => area._id));
   const spotlightProjects = projects
     .filter((project) =>
-      project.focusAreas.some((area) => focusAreaIds.has(area._id))
+      project.focusArea && focusAreaIds.has(project.focusArea._id)
     )
     .slice(0, 4);
 
@@ -498,15 +485,12 @@ function FocusAreaSpotlight({
       </div>
       <div className="flex flex-col gap-0">
         {spotlightProjects.map((project, index) => {
-          const matchingFocusAreas = project.focusAreas.filter((area) =>
-            focusAreaIds.has(area._id)
-          );
           return (
             <React.Fragment key={project._id}>
               {index > 0 && <Separator className="bg-zinc-200" />}
               <SpotlightProjectCard
                 project={project}
-                focusAreas={matchingFocusAreas}
+                focusArea={project.focusArea}
               />
             </React.Fragment>
           );
@@ -518,10 +502,10 @@ function FocusAreaSpotlight({
 
 function SpotlightProjectCard({
   project,
-  focusAreas,
+  focusArea,
 }: {
   project: Project;
-  focusAreas: FocusArea[];
+  focusArea: FocusArea | null;
 }) {
   const router = useRouter();
   const hasMedia = project.previewMedia && project.previewMedia.length > 0;
@@ -548,10 +532,12 @@ function SpotlightProjectCard({
           </div>
         </div>
 
-        {/* Footer: Focus Areas - aligned to bottom */}
-        {focusAreas.length > 0 && (
-          <div className="overflow-x-auto overflow-y-hidden scrollbar-hide -mx-1 px-1 mt-auto pt-3">
-            <FocusAreaBadges focusAreas={focusAreas} className="text-[11px]" />
+        {/* Footer: Focus Area - aligned to bottom */}
+        {focusArea && (
+          <div className="mt-auto pt-3">
+            <Badge variant="secondary" className="text-[11px]">
+              {focusArea.name}
+            </Badge>
           </div>
         )}
       </div>
