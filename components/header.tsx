@@ -11,7 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@workos-inc/authkit-nextjs/components';
 import { signOut } from "@workos-inc/authkit-nextjs";
-import { Bell, LogOut, User, Sparkles } from "lucide-react";
+import { Bell, LogOut, User, Sparkles, Plus } from "lucide-react";
+import { CreateFocusAreaDialog } from "./CreateFocusAreaDialog";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { api } from "@/convex/_generated/api";
 import { ChatInterface } from "./ChatInterface";
@@ -121,6 +122,17 @@ export function Header() {
                       <ChatInterface />
                     </DialogContent>
                   </Dialog>
+                </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <CreateFocusAreaDialog>
+                    <button
+                      className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3.5 py-1.5 text-sm font-medium text-zinc-700 shadow-sm hover:bg-zinc-50 transition-all"
+                      aria-label="New Focus Area"
+                    >
+                      <Plus className="h-4 w-4" />
+                      <span>New Space</span>
+                    </button>
+                  </CreateFocusAreaDialog>
                 </NavigationMenuItem>
               </Authenticated>
 

@@ -12,7 +12,9 @@
       "mcp__convex__status",
       "mcp__convex__tables",
       "Bash(npx convex codegen:*)",
-      "Bash(npx convex:*)"
+      "Bash(npx convex:*)",
+      "mcp__shadcn-ui__get_component_details",
+      "mcp__ide__getDiagnostics"
     ]
   }
 }

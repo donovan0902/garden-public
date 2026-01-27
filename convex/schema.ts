@@ -138,7 +138,7 @@ export default defineSchema({
   }),
   focusAreas: defineTable({
     name: v.string(),
-    group: v.string(),
+    group: v.optional(v.string()),
     description: v.optional(v.string()),
     isActive: v.boolean(),
     createdAt: v.number(),
