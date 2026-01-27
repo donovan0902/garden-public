@@ -14,7 +14,9 @@
       "Bash(npx convex codegen:*)",
       "Bash(npx convex:*)",
       "mcp__shadcn-ui__get_component_details",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "mcp__shadcn-ui__get_component_examples",
+      "Bash(npx next build)"
     ]
   }
 }
