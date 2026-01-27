@@ -5,8 +5,7 @@ import { Authenticated, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { CreateFocusAreaDialog } from "./CreateFocusAreaDialog";
-import { Plus, Share, Info } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Plus, PlusCircle, Info } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -31,7 +30,7 @@ function SidebarSpaces() {
   const loading = userLoading || focusAreas === undefined;
 
   return (
-    <SidebarGroup>
+    <SidebarGroup className="p-0">
       <SidebarGroupLabel>Your Spaces</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
@@ -65,26 +64,32 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="offcanvas">
       <Authenticated>
-        <SidebarHeader className="gap-3">
-          <Button asChild className="w-full bg-emerald-500 hover:bg-emerald-600">
-            <Link href="/submit">
-              <Share className="h-4 w-4" />
-              <span>Share a Tool</span>
-            </Link>
-          </Button>
-          <CreateFocusAreaDialog>
-            <Button variant="outline" className="w-full">
-              <Plus className="h-4 w-4" />
-              <span>Create Space</span>
-            </Button>
-          </CreateFocusAreaDialog>
+        <SidebarHeader className="p-4">
+          <SidebarMenu className="gap-0">
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild size="lg">
+                <Link href="/submit">
+                  <PlusCircle className="h-4 w-4" />
+                  <span>Share a Tool</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <CreateFocusAreaDialog>
+                <SidebarMenuButton size="lg">
+                  <Plus className="h-4 w-4" />
+                  <span>Create a Space</span>
+                </SidebarMenuButton>
+              </CreateFocusAreaDialog>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarHeader>
 
-        <SidebarContent>
+        <SidebarContent className="px-4">
           <SidebarSpaces />
         </SidebarContent>
 
-        <SidebarFooter>
+        <SidebarFooter className="p-4">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>

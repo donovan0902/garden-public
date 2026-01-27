@@ -50,9 +50,9 @@ export function CreateFocusAreaDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>New Focus Area</DialogTitle>
+          <DialogTitle>What kind of tools belong here?</DialogTitle>
           <DialogDescription>
-            Create a focus area to organize and discover tools.
+            Create a new category to help others discover tools
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">

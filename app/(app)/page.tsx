@@ -149,11 +149,9 @@ export default function Home() {
           <div className="space-y-2">
             <div>
               <h2 className="text-3xl font-semibold tracking-tight flex items-center gap-3">
-                What builders are making
+                What people are making
               </h2>
-              <p className="mt-2 text-lg text-zinc-600">
-                See what&apos;s growing, or share your own.
-              </p>
+
             </div>
             <ShareProjectCallout />
             <LayoutGroup>
@@ -459,7 +457,7 @@ function FocusAreaSpotlight({
   }
 
   return (
-    <div className="flex flex-col gap-4 bg-zinc-100 p-4 rounded-xl">
+    <div className="flex flex-col gap-4 bg-zinc-100 p-3 rounded-xl max-w-[320px]">
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <h3 className="text-2xl font-semibold text-zinc-900">
@@ -515,7 +513,7 @@ function SpotlightProjectCard({
 
   return (
     <div
-      className="cursor-pointer flex gap-5 rounded-xl p-4 transition-colors hover:bg-zinc-100"
+      className="cursor-pointer flex gap-5 rounded-xl p-3 transition-colors hover:bg-zinc-100"
       onClick={() => router.push(`/project/${project._id}`)}
     >
       <div className="flex flex-col flex-1 min-w-0">
@@ -577,7 +575,7 @@ function NewestProjects() {
   const newestProjects = useQuery(api.projects.getNewestProjects, { limit: 3 });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 max-w-[320px]">
       <div className="flex items-center gap-2 px-3">
         <h3 className="text-2xl font-semibold text-zinc-900">Recently shared</h3>
       </div>
