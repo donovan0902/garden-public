@@ -423,7 +423,7 @@ function NewestProjects() {
   return (
     <div className="flex flex-col gap-4 max-w-[320px]">
       <div className="flex items-center gap-2 px-3">
-        <h3 className="text-2xl font-semibold text-zinc-900">Recently shared</h3>
+        <h3 className="text-2xl font-semibold text-zinc-900">Newest Tools</h3>
       </div>
 
       {!newestProjects ? (

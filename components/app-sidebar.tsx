@@ -51,7 +51,7 @@ function SidebarSpaces() {
             ))
           ) : (
             <li className="px-2 py-3 text-xs text-zinc-400">
-              No spaces yet. Create your first one below.
+              You aren&apos;t following any spaces yet.
             </li>
           )}
         </SidebarMenu>
