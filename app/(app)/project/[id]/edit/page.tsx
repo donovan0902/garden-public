@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Id } from "@/convex/_generated/dataModel";
 import { Info } from "lucide-react";
-import { FocusAreaPicker } from "@/components/FocusAreaPicker";
+import { SpacePicker } from "@/components/SpacePicker";
 import { MediaUploadField, type ExistingMediaItem, type NewFileItem } from "@/components/MediaUploadField";
 import { ZipUploadField } from "@/components/ZipUploadField";
 import {
@@ -225,7 +225,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Focus Area Selector - Required field at top */}
+          {/* Space Selector - Required field at top */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <label className="text-base font-semibold text-zinc-900">
@@ -237,15 +237,15 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-xs">
-                    Focus areas help categorize your project and make it easier for teammates to discover relevant work.
+                    Spaces help categorize your project and make it easier for teammates to discover relevant work.
                   </p>
                 </TooltipContent>
               </Tooltip>
             </div>
             <div className="max-w-2xl">
-              <FocusAreaPicker
-                focusAreas={focusAreas}
-                selectedFocusArea={selectedFocusArea}
+              <SpacePicker
+                spaces={focusAreas}
+                selectedSpace={selectedFocusArea}
                 onSelectionChange={setSelectedFocusArea}
                 currentUserName={currentUser?.name}
               />

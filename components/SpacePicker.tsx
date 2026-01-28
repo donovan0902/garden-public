@@ -11,33 +11,33 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 
-type FocusArea = {
+type Space = {
   _id: Id<"focusAreas">;
   name: string;
   description?: string;
 };
 
-type FocusAreaOption = {
+type SpaceOption = {
   id: Id<"focusAreas"> | "personal";
   label: string;
   description?: string;
 };
 
-interface FocusAreaPickerProps {
-  focusAreas: FocusArea[] | undefined;
-  selectedFocusArea: Id<"focusAreas"> | "personal" | null;
+interface SpacePickerProps {
+  spaces: Space[] | undefined;
+  selectedSpace: Id<"focusAreas"> | "personal" | null;
   onSelectionChange: (selected: Id<"focusAreas"> | "personal" | null) => void;
   currentUserName?: string;
 }
 
-export function FocusAreaPicker({
-  focusAreas,
-  selectedFocusArea,
+export function SpacePicker({
+  spaces,
+  selectedSpace,
   onSelectionChange,
   currentUserName,
-}: FocusAreaPickerProps) {
+}: SpacePickerProps) {
   const allOptions = useMemo(() => {
-    const options: FocusAreaOption[] = [];
+    const options: SpaceOption[] = [];
 
     if (currentUserName) {
       options.push({
@@ -47,30 +47,30 @@ export function FocusAreaPicker({
       });
     }
 
-    if (focusAreas) {
-      for (const fa of focusAreas) {
+    if (spaces) {
+      for (const space of spaces) {
         options.push({
-          id: fa._id,
-          label: `g/${fa.name}`,
-          description: fa.description,
+          id: space._id,
+          label: `g/${space.name}`,
+          description: space.description,
         });
       }
     }
 
     return options;
-  }, [focusAreas, currentUserName]);
+  }, [spaces, currentUserName]);
 
   const selectedOption = useMemo(
-    () => allOptions.find((opt) => opt.id === selectedFocusArea) ?? null,
-    [allOptions, selectedFocusArea]
+    () => allOptions.find((opt) => opt.id === selectedSpace) ?? null,
+    [allOptions, selectedSpace]
   );
 
   return (
     <Combobox
       items={allOptions}
-      itemToStringValue={(option: FocusAreaOption | null) => option?.label ?? ''}
+      itemToStringValue={(option: SpaceOption | null) => option?.label ?? ""}
       value={selectedOption}
-      onValueChange={(option: FocusAreaOption | null) => {
+      onValueChange={(option: SpaceOption | null) => {
         onSelectionChange(option?.id ?? null);
       }}
     >
