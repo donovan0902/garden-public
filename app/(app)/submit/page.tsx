@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Info } from "lucide-react";
 import { SimilarProjectsPreview } from "@/components/SimilarProjectsPreview";
-import { FocusAreaPicker } from "@/components/FocusAreaPicker";
+import { SpacePicker } from "@/components/SpacePicker";
 import { MediaUploadField, type NewFileItem } from "@/components/MediaUploadField";
 import { ZipUploadField } from "@/components/ZipUploadField";
 import {
@@ -202,7 +202,7 @@ export default function SubmitProject() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Focus Area Selector - Required field at top */}
+          {/* Space Selector - Required field at top */}
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <label className="text-base font-semibold text-zinc-900">
@@ -214,15 +214,15 @@ export default function SubmitProject() {
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-xs">
-                    Focus areas help categorize your project and make it easier for teammates to discover relevant work.
+                    Spaces help categorize your project and make it easier for teammates to discover relevant work.
                   </p>
                 </TooltipContent>
               </Tooltip>
             </div>
             <div className="max-w-2xl">
-              <FocusAreaPicker
-                focusAreas={focusAreas}
-                selectedFocusArea={selectedFocusArea}
+              <SpacePicker
+                spaces={focusAreas}
+                selectedSpace={selectedFocusArea}
                 onSelectionChange={setSelectedFocusArea}
                 currentUserName={currentUser?.name}
               />

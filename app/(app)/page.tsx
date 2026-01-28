@@ -468,14 +468,14 @@ function FocusAreaSpotlight({
               <button
                 type="button"
                 className="inline-flex h-6 w-6 items-center justify-center rounded-full text-zinc-500 transition hover:text-zinc-700"
-                aria-label="About focus area spotlight"
+                aria-label="About space spotlight"
               >
                 <Info className="h-4 w-4" aria-hidden="true" />
               </button>
             </TooltipTrigger>
             <TooltipContent className="max-w-xs">
               <p className="text-xs">
-                Projects matched to your selected focus areas.
+                Projects matched to your selected spaces.
               </p>
             </TooltipContent>
           </Tooltip>
@@ -530,7 +530,7 @@ function SpotlightProjectCard({
           </div>
         </div>
 
-        {/* Footer: Focus Area - aligned to bottom */}
+        {/* Footer: Space - aligned to bottom */}
         {focusArea && (
           <div className="mt-auto pt-3">
             <Badge variant="secondary" className="text-[11px]">
