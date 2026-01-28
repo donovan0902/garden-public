@@ -44,7 +44,7 @@ export default function SubmitProject() {
   const generateUploadUrl = useMutation(api.projects.generateUploadUrl);
   const addMediaToProject = useMutation(api.projects.addMediaToProject);
   const addFileToProject = useMutation(api.projects.addFileToProject);
-  const focusAreasGrouped = useQuery(api.focusAreas.listActiveGrouped);
+  const focusAreas = useQuery(api.focusAreas.listActive);
   const currentUser = useQuery(api.users.current);
   const [formData, setFormData] = useState({
     summary: "",
@@ -221,7 +221,7 @@ export default function SubmitProject() {
             </div>
             <div className="max-w-2xl">
               <FocusAreaPicker
-                focusAreasGrouped={focusAreasGrouped}
+                focusAreas={focusAreas}
                 selectedFocusArea={selectedFocusArea}
                 onSelectionChange={setSelectedFocusArea}
                 currentUserName={currentUser?.name}

@@ -49,7 +49,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
         localStore.setQuery(api.projects.getProjectMedia, { projectId: args.projectId }, reordered);
       }
     });
-  const focusAreasGrouped = useQuery(api.focusAreas.listActiveGrouped);
+  const focusAreas = useQuery(api.focusAreas.listActive);
   const currentUser = useQuery(api.users.current);
 
   const [formData, setFormData] = useState({
@@ -244,7 +244,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
             </div>
             <div className="max-w-2xl">
               <FocusAreaPicker
-                focusAreasGrouped={focusAreasGrouped}
+                focusAreas={focusAreas}
                 selectedFocusArea={selectedFocusArea}
                 onSelectionChange={setSelectedFocusArea}
                 currentUserName={currentUser?.name}
