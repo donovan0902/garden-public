@@ -88,9 +88,9 @@ export function FocusAreaPicker({
   return (
     <Combobox
       items={allOptions}
-      itemToStringValue={(option) => option.label}
+      itemToStringValue={(option: FocusAreaOption | null) => option?.label ?? ''}
       value={selectedOption}
-      onValueChange={(option) => {
+      onValueChange={(option: FocusAreaOption | null) => {
         onSelectionChange(option?.id ?? null);
       }}
     >

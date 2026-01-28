@@ -14,7 +14,7 @@ type FocusArea = {
   _id: Id<"focusAreas">;
   name: string;
   description?: string;
-  group: string;
+  group?: string;
 };
 
 type FocusAreasGrouped = Record<string, FocusArea[]>;
