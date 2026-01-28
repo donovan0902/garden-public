@@ -28,7 +28,7 @@ import { useCurrentUser } from "@/app/useCurrentUser";
 type FocusArea = {
   _id: Id<"focusAreas">;
   name: string;
-  group: string;
+  group: string | undefined;
 };
 
 type Project = {
