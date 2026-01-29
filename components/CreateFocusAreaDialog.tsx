@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import {
@@ -12,9 +12,86 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { SmilePlus } from "lucide-react";
+import { SpaceIcon } from "@/components/SpaceIcon";
+
+function EmojiPickerPopover({
+  selectedEmoji,
+  onSelect,
+}: {
+  selectedEmoji: string;
+  onSelect: (emoji: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const pickerRef = useRef<HTMLDivElement>(null);
+  const [Picker, setPicker] = useState<React.ComponentType<Record<string, unknown>> | null>(null);
+  const [pickerData, setPickerData] = useState<unknown>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    Promise.all([
+      import("@emoji-mart/react"),
+      import("@emoji-mart/data"),
+    ]).then(([pickerModule, dataModule]) => {
+      if (!cancelled) {
+        setPicker(() => pickerModule.default);
+        setPickerData(dataModule.default);
+      }
+    });
+    return () => { cancelled = true; };
+  }, [open]);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-12 w-12 p-0"
+        >
+          {selectedEmoji ? (
+            <span className="text-2xl">{selectedEmoji}</span>
+          ) : (
+            <SmilePlus className="h-5 w-5 text-zinc-400" />
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-auto p-0 border-0"
+        side="right"
+        align="start"
+      >
+        <div ref={pickerRef}>
+          {Picker && pickerData ? (
+            <Picker
+              data={pickerData}
+              onEmojiSelect={(emoji: { native: string }) => {
+                onSelect(emoji.native);
+                setOpen(false);
+              }}
+              theme="light"
+              previewPosition="none"
+              skinTonePosition="none"
+            />
+          ) : (
+            <div className="flex items-center justify-center p-8 text-sm text-zinc-400">
+              Loading...
+            </div>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function CreateFocusAreaDialog({
   children,
@@ -24,6 +101,7 @@ export function CreateFocusAreaDialog({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [icon, setIcon] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createFocusArea = useMutation(api.focusAreas.create);
 
@@ -36,9 +114,11 @@ export function CreateFocusAreaDialog({
       await createFocusArea({
         name: name.trim(),
         description: description.trim() || undefined,
+        icon: icon || undefined,
       });
       setName("");
       setDescription("");
+      setIcon("");
       setOpen(false);
     } finally {
       setIsSubmitting(false);
@@ -60,13 +140,29 @@ export function CreateFocusAreaDialog({
             <label htmlFor="fa-name" className="text-sm font-medium text-zinc-700">
               Name
             </label>
-            <Input
-              id="fa-name"
-              placeholder="e.g. Developer Productivity"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+            <div className="flex items-center gap-3">
+              <EmojiPickerPopover
+                selectedEmoji={icon}
+                onSelect={setIcon}
+              />
+              <Input
+                id="fa-name"
+                placeholder="e.g. Developer Productivity"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="flex-1"
+              />
+            </div>
+            {icon && (
+              <button
+                type="button"
+                onClick={() => setIcon("")}
+                className="text-xs text-zinc-400 hover:text-zinc-600"
+              >
+                Remove icon
+              </button>
+            )}
           </div>
           <div className="space-y-2">
             <label htmlFor="fa-desc" className="text-sm font-medium text-zinc-700">
