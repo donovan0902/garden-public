@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import {
@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { SmilePlus } from "lucide-react";
+import EmojiPicker, { EmojiStyle, type EmojiClickData } from "emoji-picker-react";
 
 function EmojiPickerPopover({
   selectedEmoji,
@@ -30,49 +31,6 @@ function EmojiPickerPopover({
   onSelect: (emoji: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const pickerMountedRef = useRef(false);
-
-  const handleEmojiSelect = useCallback(
-    (emoji: { native: string }) => {
-      onSelect(emoji.native);
-      setOpen(false);
-    },
-    [onSelect]
-  );
-
-  useEffect(() => {
-    if (!open || !containerRef.current || pickerMountedRef.current) return;
-    let cancelled = false;
-
-    Promise.all([
-      import("emoji-mart"),
-      import("@emoji-mart/data"),
-    ]).then(([{ Picker }, dataModule]) => {
-      if (cancelled || !containerRef.current) return;
-      pickerMountedRef.current = true;
-      new Picker({
-        data: dataModule.default,
-        onEmojiSelect: handleEmojiSelect,
-        theme: "light",
-        previewPosition: "none",
-        skinTonePosition: "none",
-        parent: containerRef.current,
-      });
-    });
-
-    return () => { cancelled = true; };
-  }, [open, handleEmojiSelect]);
-
-  // Reset mount tracking when popover closes so it re-creates on next open
-  useEffect(() => {
-    if (!open) {
-      pickerMountedRef.current = false;
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
-      }
-    }
-  }, [open]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -94,13 +52,17 @@ function EmojiPickerPopover({
         side="right"
         align="start"
       >
-        <div ref={containerRef}>
-          {!pickerMountedRef.current && (
-            <div className="flex items-center justify-center p-8 text-sm text-zinc-400">
-              Loading...
-            </div>
-          )}
-        </div>
+        <EmojiPicker
+          onEmojiClick={(emojiData: EmojiClickData) => {
+            onSelect(emojiData.emoji);
+            setOpen(false);
+          }}
+          emojiStyle={EmojiStyle.NATIVE}
+          skinTonesDisabled
+          searchPlaceholder="Search emoji..."
+          width={350}
+          height={400}
+        />
       </PopoverContent>
     </Popover>
   );
