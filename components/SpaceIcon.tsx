@@ -13,16 +13,40 @@ const sizeClasses = {
   md: "h-8 w-8",
 } as const;
 
+const iconTextClasses = {
+  sm: "text-base",
+  md: "text-2xl",
+} as const;
+
 const fallbackTextClasses = {
   sm: "text-[10px]",
   md: "text-xs",
 } as const;
 
 export function SpaceIcon({ icon, name, size = "sm", className }: SpaceIconProps) {
+  // For emojis, render standalone without Avatar wrapper
+  if (icon) {
+    return (
+      <span
+        role="img"
+        aria-label={`${name} icon`}
+        className={cn(
+          "flex shrink-0 items-center justify-center",
+          sizeClasses[size],
+          iconTextClasses[size],
+          className
+        )}
+      >
+        {icon}
+      </span>
+    );
+  }
+
+  // For fallback initials, use Avatar for consistency
   return (
     <Avatar className={cn("rounded", sizeClasses[size], className)}>
       <AvatarFallback className={cn("bg-zinc-200 text-zinc-600 font-semibold", fallbackTextClasses[size])}>
-        {icon || name.slice(0, 2).toUpperCase()}
+        {name.slice(0, 2).toUpperCase()}
       </AvatarFallback>
     </Avatar>
   );

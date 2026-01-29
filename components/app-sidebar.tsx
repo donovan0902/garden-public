@@ -50,7 +50,6 @@ function SidebarSpaces() {
                     <span className="text-zinc-500 font-mono text-xs">
                       g/{area.name}
                     </span>
-                    <span>{area.name}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
