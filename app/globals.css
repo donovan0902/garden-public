@@ -158,6 +158,10 @@ body {
   color: #a1a1aa;
 }
 
+.rich-text-editor .ql-tooltip {
+  z-index: 30;
+}
+
 /* Rich text content display */
 .rich-text-content {
   font-size: 0.875rem;
