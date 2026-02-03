@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Authenticated, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useCurrentUser } from "@/app/useCurrentUser";
 import { CreateFocusAreaDialog } from "./CreateFocusAreaDialog";
 import { SpaceIcon } from "./SpaceIcon";
 import { Plus, PlusCircle, Info } from "lucide-react";
@@ -22,17 +21,13 @@ import {
 } from "@/components/ui/sidebar";
 
 function SidebarSpaces() {
-  const { user, isLoading: userLoading } = useCurrentUser();
-  const focusAreas = useQuery(
-    api.users.getUserFocusAreas,
-    user ? { userId: user._id } : "skip"
-  );
+  const focusAreas = useQuery(api.focusAreas.listActive);
 
-  const loading = userLoading || focusAreas === undefined;
+  const loading = focusAreas === undefined;
 
   return (
     <SidebarGroup className="p-0">
-      <SidebarGroupLabel>Your Spaces</SidebarGroupLabel>
+      <SidebarGroupLabel>Spaces</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {loading ? (
@@ -56,7 +51,7 @@ function SidebarSpaces() {
             ))
           ) : (
             <li className="px-2 py-3 text-xs text-zinc-400">
-              You aren&apos;t following any spaces yet.
+              No spaces yet.
             </li>
           )}
         </SidebarMenu>
