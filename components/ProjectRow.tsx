@@ -35,7 +35,7 @@ export type ProjectRowData = {
   creatorName: string;
   creatorAvatar: string;
   focusArea: FocusArea | null;
-  readinessStatus?: "in_progress" | "ready_to_use";
+  readinessStatus?: "in_progress" | "just_an_idea" | "early_prototype" | "mostly_working" | "ready_to_use";
   previewMedia: Array<{
     _id: string;
     storageId: string;

@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from '@workos-inc/authkit-nextjs/components';
 import { signOut } from "@workos-inc/authkit-nextjs";
-import { Bell, LogOut, User, Sparkles } from "lucide-react";
+import { Bell, LogOut, User, Sparkles, PlusCircle } from "lucide-react";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { api } from "@/convex/_generated/api";
 import { ChatInterface } from "./ChatInterface";
@@ -103,7 +103,7 @@ export function Header() {
             <Dialog>
               <DialogTrigger asChild>
                 <button
-                  className="inline-flex h-9 w-96 items-center justify-center gap-2 rounded-full border border-emerald-200 bg-zinc-50 px-3 text-sm font-normal text-zinc-500 shadow-sm hover:bg-zinc-100 hover:text-zinc-900 transition-all ring-2 ring-emerald-500/20"
+                  className="inline-flex h-9 w-80 items-center justify-center gap-2 rounded-full border border-emerald-200 bg-zinc-50 px-3 text-sm font-normal text-zinc-500 shadow-sm hover:bg-zinc-100 hover:text-zinc-900 transition-all ring-2 ring-emerald-500/20"
                   aria-label="Search tools"
                 >
                   <Sparkles className="h-4 w-4 text-emerald-600" />
@@ -123,6 +123,18 @@ export function Header() {
         <div className="flex items-center gap-3">
           <NavigationMenu className="hidden md:block">
             <NavigationMenuList>
+              <Authenticated>
+                <NavigationMenuItem>
+                  <Link
+                    href="/submit"
+                    className={`${navigationMenuTriggerStyle()} inline-flex items-center gap-2`}
+                    aria-label="Share a tool"
+                  >
+                    <PlusCircle className="h-4 w-4" />
+                    <span>Share</span>
+                  </Link>
+                </NavigationMenuItem>
+              </Authenticated>
               <Authenticated>
                 <NavigationMenuItem>
                   <Popover onOpenChange={handleNotificationsOpen}>

@@ -14,7 +14,13 @@ export default defineSchema({
     allFields: v.optional(v.string()),
     link: v.optional(v.string()),
     focusAreaId: v.optional(v.id("focusAreas")),
-    readinessStatus: v.union(v.literal("in_progress"), v.literal("ready_to_use")),
+    readinessStatus: v.optional(v.union(
+      v.literal("in_progress"),       // legacy — kept for migration compatibility
+      v.literal("just_an_idea"),
+      v.literal("early_prototype"),
+      v.literal("mostly_working"),
+      v.literal("ready_to_use"),
+    )),
     pinned: v.optional(v.boolean()),
     engagementScore: v.optional(v.number()),
     hotScore: v.optional(v.number()),

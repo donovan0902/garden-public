@@ -408,7 +408,7 @@ export const create = action({
     summary: v.optional(v.string()),
     link: v.optional(v.string()),
     focusAreaId: v.optional(v.id("focusAreas")),
-    readinessStatus: v.union(v.literal("in_progress"), v.literal("ready_to_use")),
+    readinessStatus: v.union(v.literal("just_an_idea"), v.literal("early_prototype"), v.literal("mostly_working"), v.literal("ready_to_use")),
   },
   handler: async (ctx, args): Promise<{
     projectId: Id<"projects">;
@@ -489,7 +489,7 @@ export const createProject = internalMutation({
     userId: v.id("users"),
     link: v.optional(v.string()),
     focusAreaId: v.optional(v.id("focusAreas")),
-    readinessStatus: v.union(v.literal("in_progress"), v.literal("ready_to_use")),
+    readinessStatus: v.union(v.literal("just_an_idea"), v.literal("early_prototype"), v.literal("mostly_working"), v.literal("ready_to_use")),
     pinned: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
@@ -579,7 +579,7 @@ export const populateProjectDetails = internalQuery({
         allFields: v.optional(v.string()),
         link: v.optional(v.string()),
         focusAreaId: v.optional(v.id("focusAreas")),
-        readinessStatus: v.optional(v.union(v.literal("in_progress"), v.literal("ready_to_use"))),
+        readinessStatus: v.optional(v.union(v.literal("in_progress"), v.literal("just_an_idea"), v.literal("early_prototype"), v.literal("mostly_working"), v.literal("ready_to_use"))),
         pinned: v.optional(v.boolean()),
         engagementScore: v.optional(v.number()),
         hotScore: v.optional(v.number()),
@@ -661,7 +661,7 @@ export const updateProjectFields = internalMutation({
     summary: v.optional(v.string()),
     link: v.optional(v.string()),
     focusAreaId: v.optional(v.id("focusAreas")),
-    readinessStatus: v.union(v.literal("in_progress"), v.literal("ready_to_use")),
+    readinessStatus: v.union(v.literal("just_an_idea"), v.literal("early_prototype"), v.literal("mostly_working"), v.literal("ready_to_use")),
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.projectId, {
@@ -681,7 +681,7 @@ export const updateProject = action({
     summary: v.optional(v.string()),
     link: v.optional(v.string()),
     focusAreaId: v.optional(v.id("focusAreas")),
-    readinessStatus: v.union(v.literal("in_progress"), v.literal("ready_to_use")),
+    readinessStatus: v.union(v.literal("just_an_idea"), v.literal("early_prototype"), v.literal("mostly_working"), v.literal("ready_to_use")),
   },
   handler: async (ctx, args) => {
     const user = await ctx.runQuery(internal.projects.getCurrentUserInternal, {});
@@ -1819,6 +1819,34 @@ export const migrateClearFocusAreas = internalMutation({
         hotScore: project.hotScore,
       });
       updated++;
+    }
+
+    return { updated };
+  },
+});
+
+// Migration: Convert "in_progress" readinessStatus to "early_prototype"
+// Run via: npx convex run projects:migrateReadinessStatusAction
+export const migrateReadinessStatusAction = action({
+  args: {},
+  handler: async (ctx): Promise<{ updated: number }> => {
+    return await ctx.runMutation(internal.projects.migrateReadinessStatus, {});
+  },
+});
+
+export const migrateReadinessStatus = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const projects = await ctx.db.query("projects").collect();
+    let updated = 0;
+
+    for (const project of projects) {
+      if (project.readinessStatus === "in_progress") {
+        await ctx.db.patch(project._id, {
+          readinessStatus: "early_prototype",
+        });
+        updated++;
+      }
     }
 
     return { updated };

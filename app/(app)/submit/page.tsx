@@ -10,13 +10,7 @@ import { Input } from "@/components/ui/input";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { isRichTextEmpty, stripHtml } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import { Info } from "lucide-react";
 import { SimilarProjectsPreview } from "@/components/SimilarProjectsPreview";
 import { SpacePicker } from "@/components/SpacePicker";
@@ -27,6 +21,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+const readinessSliderValues = ["just_an_idea", "early_prototype", "mostly_working", "ready_to_use"] as const;
+const readinessSliderLabels = ["Just an idea", "Early prototype", "Mostly working", "Ready to use"];
 
 const thingsThatBelong = [
   "a script you wrote for yourself",
@@ -56,7 +53,7 @@ export default function SubmitProject() {
   const [selectedFiles, setSelectedFiles] = useState<NewFileItem[]>([]);
   const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
   const [selectedFocusArea, setSelectedFocusArea] = useState<Id<"focusAreas"> | "personal" | null>(null);
-  const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"in_progress" | "ready_to_use">("in_progress");
+  const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"just_an_idea" | "early_prototype" | "mostly_working" | "ready_to_use">("just_an_idea");
 
   const deriveName = () => {
     const title = formData.workingTitle.trim();
@@ -312,25 +309,36 @@ export default function SubmitProject() {
                       <Info className="h-4 w-4 text-zinc-400 cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
-                      <div className="space-y-2 text-xs">
-                        <p><strong>In Progress:</strong> Early/rough, but useful. Sharing to get eyes and ideas.</p>
-                        <p><strong>Ready to Use:</strong> Works reliably. Someone else could pick it up and use it now.</p>
+                      <div className="space-y-1.5 text-xs">
+                        <p><strong>Just an idea:</strong> Haven&apos;t started building yet.</p>
+                        <p><strong>Early prototype:</strong> First attempt — rough but shows the concept.</p>
+                        <p><strong>Mostly working:</strong> Core functionality works, still has rough edges.</p>
+                        <p><strong>Ready to use:</strong> Works reliably. Someone else could pick it up now.</p>
                       </div>
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <Select
-                  value={selectedReadinessStatus}
-                  onValueChange={(value: "in_progress" | "ready_to_use") => setSelectedReadinessStatus(value)}
-                >
-                  <SelectTrigger id="readinessStatus" className="w-full">
-                    <SelectValue placeholder="Select readiness status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="in_progress">In progress</SelectItem>
-                    <SelectItem value="ready_to_use">Ready to use</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-3 pt-1">
+                  <Slider
+                    id="readinessStatus"
+                    min={0}
+                    max={3}
+                    step={1}
+                    value={[readinessSliderValues.indexOf(selectedReadinessStatus)]}
+                    onValueChange={([val]) => setSelectedReadinessStatus(readinessSliderValues[val])}
+                  />
+                  <div className="flex justify-between text-xs text-zinc-500">
+                    {readinessSliderLabels.map((label, i) => (
+                      <span
+                        key={label}
+                        className={`text-center ${i === readinessSliderValues.indexOf(selectedReadinessStatus) ? "font-semibold text-zinc-900" : ""}`}
+                        style={{ width: "25%" }}
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div className="border-t border-zinc-200 pt-4">
