@@ -13,18 +13,15 @@ import { Info } from "lucide-react";
 import { SpacePicker } from "@/components/SpacePicker";
 import { MediaUploadField, type ExistingMediaItem, type NewFileItem } from "@/components/MediaUploadField";
 import { ZipUploadField } from "@/components/ZipUploadField";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+const readinessSliderValues = ["just_an_idea", "early_prototype", "mostly_working", "ready_to_use"] as const;
+const readinessSliderLabels = ["Just an idea", "Early prototype", "Mostly working", "Ready to use"];
 
 export default function EditProject({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -64,7 +61,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
   const [selectedZipFile, setSelectedZipFile] = useState<File | null>(null);
   const [deleteExistingZipFile, setDeleteExistingZipFile] = useState(false);
   const [selectedFocusArea, setSelectedFocusArea] = useState<Id<"focusAreas"> | "personal" | null>(null);
-  const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"in_progress" | "ready_to_use">("in_progress");
+  const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"just_an_idea" | "early_prototype" | "mostly_working" | "ready_to_use">("just_an_idea");
 
   const handleExistingMediaReorder = async (reorderedMedia: ExistingMediaItem[]) => {
     try {
@@ -101,7 +98,8 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
         link: project.link || "",
       });
       setSelectedFocusArea(project.focusAreaId ?? null);
-      setSelectedReadinessStatus(project.readinessStatus ?? "in_progress");
+      const loadedStatus = project.readinessStatus === "in_progress" ? "early_prototype" : project.readinessStatus ?? "just_an_idea";
+      setSelectedReadinessStatus(loadedStatus);
       setIsLoading(false);
     }
   }, [project]);
@@ -352,25 +350,36 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
                       <Info className="h-4 w-4 text-zinc-400 cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
-                      <div className="space-y-2 text-xs">
-                        <p><strong>In Progress:</strong> Early/rough, but useful. Sharing to get eyes and ideas.</p>
-                        <p><strong>Ready to Use:</strong> Works reliably. Someone else could pick it up and use it now.</p>
+                      <div className="space-y-1.5 text-xs">
+                        <p><strong>Just an idea:</strong> Haven&apos;t started building yet.</p>
+                        <p><strong>Early prototype:</strong> First attempt — rough but shows the concept.</p>
+                        <p><strong>Mostly working:</strong> Core functionality works, still has rough edges.</p>
+                        <p><strong>Ready to use:</strong> Works reliably. Someone else could pick it up now.</p>
                       </div>
                     </TooltipContent>
                   </Tooltip>
                 </div>
-                <Select
-                  value={selectedReadinessStatus}
-                  onValueChange={(value: "in_progress" | "ready_to_use") => setSelectedReadinessStatus(value)}
-                >
-                  <SelectTrigger id="readinessStatus" className="w-full">
-                    <SelectValue placeholder="Select readiness status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="in_progress">In progress</SelectItem>
-                    <SelectItem value="ready_to_use">Ready to use</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-3 pt-1">
+                  <Slider
+                    id="readinessStatus"
+                    min={0}
+                    max={3}
+                    step={1}
+                    value={[readinessSliderValues.indexOf(selectedReadinessStatus)]}
+                    onValueChange={([val]) => setSelectedReadinessStatus(readinessSliderValues[val])}
+                  />
+                  <div className="flex justify-between text-xs text-zinc-500">
+                    {readinessSliderLabels.map((label, i) => (
+                      <span
+                        key={label}
+                        className={`text-center ${i === readinessSliderValues.indexOf(selectedReadinessStatus) ? "font-semibold text-zinc-900" : ""}`}
+                        style={{ width: "25%" }}
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
 
             </section>

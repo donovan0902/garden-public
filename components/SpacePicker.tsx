@@ -9,8 +9,12 @@ import {
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
+  ComboboxSeparator,
 } from "@/components/ui/combobox";
 import { SpaceIcon } from "@/components/SpaceIcon";
+import { CreateFocusAreaDialog } from "@/components/CreateFocusAreaDialog";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 type Space = {
   _id: Id<"focusAreas">;
@@ -46,7 +50,7 @@ export function SpacePicker({
     if (currentUserName) {
       options.push({
         id: "personal",
-        label: `u/${currentUserName}`,
+        label: "None",
         name: currentUserName,
         description: "Your personal space",
       });
@@ -99,6 +103,15 @@ export function SpacePicker({
             </ComboboxItem>
           ))}
         </ComboboxList>
+        <ComboboxSeparator />
+        <div className="p-1">
+          <CreateFocusAreaDialog>
+            <Button variant="ghost" size="sm" className="w-full justify-start">
+              <Plus className="h-4 w-4" />
+              Create new space
+            </Button>
+          </CreateFocusAreaDialog>
+        </div>
       </ComboboxContent>
     </Combobox>
   );

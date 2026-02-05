@@ -5,7 +5,8 @@ import { Authenticated, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CreateFocusAreaDialog } from "./CreateFocusAreaDialog";
 import { SpaceIcon } from "./SpaceIcon";
-import { Plus, PlusCircle, Info } from "lucide-react";
+import { Plus, PlusCircle, Info, Home } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -27,7 +28,14 @@ function SidebarSpaces() {
 
   return (
     <SidebarGroup className="p-0">
-      <SidebarGroupLabel>Spaces</SidebarGroupLabel>
+      <div className="flex items-center justify-between px-2 py-1.5">
+        <SidebarGroupLabel className="px-0">Spaces</SidebarGroupLabel>
+        <CreateFocusAreaDialog>
+          <Button variant="ghost" size="icon" className="h-6 w-6">
+            <Plus className="h-4 w-4" />
+          </Button>
+        </CreateFocusAreaDialog>
+      </div>
       <SidebarGroupContent>
         <SidebarMenu>
           {loading ? (
@@ -68,19 +76,19 @@ export function AppSidebar() {
           <SidebarMenu className="gap-0">
             <SidebarMenuItem>
               <SidebarMenuButton asChild size="lg">
+                <Link href="/">
+                  <Home className="h-4 w-4" />
+                  <span>Home</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild size="lg">
                 <Link href="/submit">
                   <PlusCircle className="h-4 w-4" />
                   <span>Share a Tool</span>
                 </Link>
               </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <CreateFocusAreaDialog>
-                <SidebarMenuButton size="lg">
-                  <Plus className="h-4 w-4" />
-                  <span>Create a Space</span>
-                </SidebarMenuButton>
-              </CreateFocusAreaDialog>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>

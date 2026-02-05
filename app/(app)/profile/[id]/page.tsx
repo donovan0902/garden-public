@@ -45,14 +45,14 @@ type Project = {
   commentCount: number;
   adoptionCount: number;
   status: "pending" | "active";
-  readinessStatus?: "in_progress" | "ready_to_use";
+  readinessStatus?: "in_progress" | "just_an_idea" | "early_prototype" | "mostly_working" | "ready_to_use";
 };
 
 type AdoptedProject = {
   _id: Id<"projects">;
   name: string;
   summary?: string;
-  readinessStatus?: "in_progress" | "ready_to_use";
+  readinessStatus?: "in_progress" | "just_an_idea" | "early_prototype" | "mostly_working" | "ready_to_use";
   team: string;
   upvotes: number;
   creatorId: Id<"users">;
