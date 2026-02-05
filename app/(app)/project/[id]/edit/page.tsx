@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { isRichTextEmpty } from "@/lib/utils";
 import { Id } from "@/convex/_generated/dataModel";
-import { Info, Plus, X } from "lucide-react";
+import { Info } from "lucide-react";
+import { LinksEditor, type LinkItem } from "@/components/LinksEditor";
 import { SpacePicker } from "@/components/SpacePicker";
 import { MediaUploadField, type ExistingMediaItem, type NewFileItem } from "@/components/MediaUploadField";
 import { ZipUploadField } from "@/components/ZipUploadField";
@@ -54,7 +55,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
     name: "",
     description: "",
   });
-  const [links, setLinks] = useState<{ url: string; label: string }[]>([{ url: "", label: "" }]);
+  const [links, setLinks] = useState<LinkItem[]>([{ url: "", label: "" }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedFiles, setSelectedFiles] = useState<NewFileItem[]>([]);
@@ -335,61 +336,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
             </section>
 
             <section className="w-full lg:sticky lg:top-10 lg:self-start space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-zinc-900">
-                  Links <span className="text-xs text-zinc-500">(optional)</span>
-                </label>
-                <div className="space-y-3">
-                  {links.map((link, index) => (
-                    <div key={index} className="flex items-start gap-2">
-                      <div className="flex-1 space-y-1.5">
-                        <Input
-                          type="url"
-                          value={link.url}
-                          onChange={(e) => {
-                            const updated = [...links];
-                            updated[index] = { ...updated[index], url: e.target.value };
-                            setLinks(updated);
-                          }}
-                          placeholder="https://example.com"
-                        />
-                        <Input
-                          type="text"
-                          value={link.label}
-                          onChange={(e) => {
-                            const updated = [...links];
-                            updated[index] = { ...updated[index], label: e.target.value };
-                            setLinks(updated);
-                          }}
-                          placeholder="Label (optional, e.g. GitHub Repo)"
-                          className="h-8 text-xs"
-                        />
-                      </div>
-                      {links.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-9 w-9 shrink-0 text-zinc-400 hover:text-zinc-600"
-                          onClick={() => setLinks(links.filter((_, i) => i !== index))}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() => setLinks([...links, { url: "", label: "" }])}
-                >
-                  <Plus className="mr-1.5 h-3.5 w-3.5" />
-                  Add link
-                </Button>
-              </div>
+              <LinksEditor links={links} onChange={setLinks} disabled={isSubmitting} />
 
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
