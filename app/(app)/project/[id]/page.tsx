@@ -71,17 +71,11 @@ function formatProjectLink(url: string, label?: string): {
   }
 }
 
-function getProjectLinks(project: { links?: Array<{ url: string; label?: string }> | null; link?: string | null }): Array<{ href: string; label: string }> {
-  if (project.links && project.links.length > 0) {
-    return project.links
-      .map((l) => formatProjectLink(l.url, l.label))
-      .filter((l): l is NonNullable<typeof l> => l !== null);
-  }
-  if (project.link) {
-    const formatted = formatProjectLink(project.link);
-    return formatted ? [formatted] : [];
-  }
-  return [];
+function getProjectLinks(project: { links?: Array<{ url: string; label?: string }> | null }): Array<{ href: string; label: string }> {
+  if (!project.links || project.links.length === 0) return [];
+  return project.links
+    .map((l) => formatProjectLink(l.url, l.label))
+    .filter((l): l is NonNullable<typeof l> => l !== null);
 }
 
 export default function ProjectPage({

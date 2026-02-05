@@ -96,11 +96,8 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
         name: project.name,
         description: project.summary || "",
       });
-      // Populate links from project.links, fall back to legacy project.link
       if (project.links && project.links.length > 0) {
         setLinks(project.links.map((l) => ({ url: l.url, label: l.label ?? "" })));
-      } else if (project.link) {
-        setLinks([{ url: project.link, label: "" }]);
       } else {
         setLinks([{ url: "", label: "" }]);
       }

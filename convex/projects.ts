@@ -1862,3 +1862,38 @@ export const migrateReadinessStatus = internalMutation({
     return { updated };
   },
 });
+
+// Migration: Convert legacy single `link` field to `links` array
+// Run via: npx convex run projects:migrateLinkToLinksAction
+export const migrateLinkToLinksAction = action({
+  args: {},
+  handler: async (ctx): Promise<{ updated: number }> => {
+    return await ctx.runMutation(internal.projects.migrateLinkToLinks, {});
+  },
+});
+
+export const migrateLinkToLinks = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const projects = await ctx.db.query("projects").collect();
+    let updated = 0;
+
+    for (const project of projects) {
+      if (project.link && (!project.links || project.links.length === 0)) {
+        await ctx.db.patch(project._id, {
+          links: [{ url: project.link }],
+          link: undefined,
+        });
+        updated++;
+      } else if (project.link && project.links && project.links.length > 0) {
+        // links already exists, just clear the legacy field
+        await ctx.db.patch(project._id, {
+          link: undefined,
+        });
+        updated++;
+      }
+    }
+
+    return { updated };
+  },
+});
