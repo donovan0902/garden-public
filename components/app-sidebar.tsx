@@ -70,7 +70,7 @@ function SidebarSpaces() {
 
 export function AppSidebar() {
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="offcanvas">
       <Authenticated>
         <SidebarHeader className="p-4">
           <SidebarMenu className="gap-0">
