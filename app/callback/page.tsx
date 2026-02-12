@@ -4,17 +4,21 @@ import '@/lib/amplify-config';
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getCurrentUser } from 'aws-amplify/auth';
+// Importing signInWithRedirect registers a side-effect listener that
+// detects the ?code= parameter and exchanges it for tokens. In Next.js
+// (a multi-page app), this import must be present on the redirect target
+// page, otherwise code-splitting drops the listener.
+// See: https://docs.amplify.aws/gen1/nextjs/build-a-backend/auth/add-social-provider/
+import { signInWithRedirect, getCurrentUser } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
+
+// Reference to prevent tree-shaking from removing the import
+void signInWithRedirect;
 
 export default function CallbackPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Amplify automatically detects the ?code= parameter at the
-    // configured redirectSignIn URL and exchanges it for tokens.
-    // We just need to wait for that exchange to complete, then redirect.
-
     const unsubscribe = Hub.listen('auth', ({ payload }) => {
       if (payload.event === 'signedIn' || payload.event === 'signInWithRedirect') {
         router.replace('/');
@@ -24,8 +28,8 @@ export default function CallbackPage() {
       }
     });
 
-    // Fallback: if the user is already authenticated (e.g. token exchange
-    // happened before the listener attached), redirect immediately.
+    // Fallback: if the token exchange already completed before the
+    // listener attached, redirect immediately.
     getCurrentUser()
       .then(() => router.replace('/'))
       .catch(() => {
