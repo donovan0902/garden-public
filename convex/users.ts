@@ -166,6 +166,7 @@ export const ensureUser = mutation({
       if (existingByEmail) {
         await ctx.db.patch(existingByEmail._id, {
           externalUserId: cognitoSub,
+          workosUserId: undefined,
         });
         return existingByEmail._id;
       }
