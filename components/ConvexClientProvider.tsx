@@ -1,45 +1,104 @@
 'use client';
 
-import { ReactNode, useCallback, useEffect, useRef } from 'react';
-import { ConvexReactClient } from 'convex/react';
+import '@/lib/amplify-config';
+
+import { ReactNode, useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import { ConvexReactClient, useMutation } from 'convex/react';
 import { ConvexProviderWithAuth } from 'convex/react';
-import { AuthKitProvider, useAuth, useAccessToken } from '@workos-inc/authkit-nextjs/components';
+// signInWithRedirect must be imported here (layout level) so its
+// side-effect OAuth callback listener is registered on every page.
+// In Next.js, code-splitting drops it if only imported on the callback page.
+import { fetchAuthSession, getCurrentUser, signInWithRedirect } from 'aws-amplify/auth';
+import { Hub } from 'aws-amplify/utils';
+
+import { api } from '@/convex/_generated/api';
+
+// Prevent tree-shaking from removing the signInWithRedirect import
+void signInWithRedirect;
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
   return (
-    <AuthKitProvider>
-      <ConvexProviderWithAuth client={convex} useAuth={useAuthFromAuthKit}>
-        {children}
-      </ConvexProviderWithAuth>
-    </AuthKitProvider>
+    <ConvexProviderWithAuth client={convex} useAuth={useAuthFromCognito}>
+      <EnsureUser />
+      {children}
+    </ConvexProviderWithAuth>
   );
 }
 
-function useAuthFromAuthKit() {
-  const { user, loading: isLoading } = useAuth();
-  const { accessToken, loading: tokenLoading, error: tokenError } = useAccessToken();
-  const loading = (isLoading ?? false) || (tokenLoading ?? false);
-  const authenticated = !!user && !!accessToken && !loading;
+function EnsureUser() {
+  const ensureUser = useMutation(api.users.ensureUser);
+  const hasEnsured = useRef(false);
 
-  const stableAccessToken = useRef<string | null>(null);
   useEffect(() => {
-    if (accessToken && !tokenError) {
-      stableAccessToken.current = accessToken;
-    }
-  }, [accessToken, tokenError]);
+    if (hasEnsured.current) return;
 
-  const fetchAccessToken = useCallback(async () => {
-    if (stableAccessToken.current && !tokenError) {
-      return stableAccessToken.current;
+    async function check() {
+      try {
+        await getCurrentUser();
+        hasEnsured.current = true;
+        await ensureUser();
+      } catch {
+        // Not authenticated — nothing to do
+      }
     }
-    return null;
-  }, [tokenError]);
+    void check();
+  }, [ensureUser]);
 
-  return {
-    isLoading: loading,
-    isAuthenticated: authenticated,
-    fetchAccessToken,
-  };
+  return null;
+}
+
+function useAuthFromCognito() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const session = await fetchAuthSession();
+        const idToken = session.tokens?.idToken?.toString() ?? null;
+        setIsAuthenticated(!!idToken);
+      } catch {
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    void checkAuth();
+
+    const unsubscribe = Hub.listen('auth', ({ payload }) => {
+      if (
+        payload.event === 'signedIn' ||
+        payload.event === 'signInWithRedirect' ||
+        payload.event === 'tokenRefresh'
+      ) {
+        void checkAuth();
+      } else if (payload.event === 'signedOut') {
+        setIsAuthenticated(false);
+      }
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const fetchAccessToken = useCallback(
+    async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
+      try {
+        const session = await fetchAuthSession({
+          forceRefresh: forceRefreshToken,
+        });
+        return session.tokens?.idToken?.toString() ?? null;
+      } catch {
+        return null;
+      }
+    },
+    [],
+  );
+
+  return useMemo(
+    () => ({ isLoading, isAuthenticated, fetchAccessToken }),
+    [isLoading, isAuthenticated, fetchAccessToken],
+  );
 }

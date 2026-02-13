@@ -43,7 +43,7 @@ export async function getCurrentUser(ctx: QueryCtx) {
 
   return await ctx.db
     .query("users")
-    .withIndex("by_workosUserId", (q) => q.eq("workosUserId", identity.subject))
+    .withIndex("by_externalUserId", (q) => q.eq("externalUserId", identity.subject))
     .unique();
 }
 
@@ -129,6 +129,58 @@ export const completeOnboarding = mutation({
     });
 
     return { success: true };
+  },
+});
+
+// Called by the client after Cognito authentication to ensure the user
+// record exists and is linked to the current Cognito identity.
+export const ensureUser = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const cognitoSub = identity.subject;
+    const email = identity.email;
+    const name = identity.name ?? email ?? "Unknown User";
+
+    // 1. Try lookup by externalUserId (Cognito sub)
+    const existingByExternalId = await ctx.db
+      .query("users")
+      .withIndex("by_externalUserId", (q) => q.eq("externalUserId", cognitoSub))
+      .unique();
+
+    if (existingByExternalId) {
+      return existingByExternalId._id;
+    }
+
+    // 2. Try re-linking by email (for users migrated from WorkOS)
+    if (email) {
+      const existingByEmail = await ctx.db
+        .query("users")
+        .withIndex("by_email", (q) => q.eq("email", email))
+        .first();
+
+      if (existingByEmail) {
+        await ctx.db.patch(existingByEmail._id, {
+          externalUserId: cognitoSub,
+          workosUserId: undefined,
+        });
+        return existingByEmail._id;
+      }
+    }
+
+    // 3. Create new user
+    const userId = await ctx.db.insert("users", {
+      externalUserId: cognitoSub,
+      email: email ?? undefined,
+      name,
+      onboardingCompleted: false,
+    });
+
+    return userId;
   },
 });
 
