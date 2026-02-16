@@ -2,9 +2,6 @@
 
 import Link from "next/link";
 import {
-  Authenticated,
-  Unauthenticated,
-  AuthLoading,
   useMutation,
   useQuery,
 } from "convex/react";
@@ -47,7 +44,7 @@ function timeAgo(timestamp: number) {
 
 
 export function Header() {
-  const { user: convexUser } = useCurrentUser();
+  const { user: convexUser, isLoading: userLoading, isAuthenticated } = useCurrentUser();
   const notifications = useQuery(api.notifications.getNotifications, { limit: 8 }) ?? [];
   const unreadCount = useQuery(api.notifications.getUnreadNotificationCount) ?? 0;
   const markAllRead = useMutation(api.notifications.markAllRead);
@@ -97,7 +94,7 @@ export function Header() {
           </Link>
         </div>
 
-        <Authenticated>
+        {isAuthenticated && (
             <Dialog>
               <DialogTrigger asChild>
                 <button
@@ -115,13 +112,13 @@ export function Header() {
                 <ChatInterface />
               </DialogContent>
             </Dialog>
-        </Authenticated>
+        )}
 
         {/* Right: Navigation Menu & Auth Buttons */}
         <div className="flex items-center gap-3">
           <NavigationMenu className="hidden md:block">
             <NavigationMenuList>
-              <Authenticated>
+              {isAuthenticated && (
                 <NavigationMenuItem>
                   <Link
                     href="/submit"
@@ -132,8 +129,8 @@ export function Header() {
                     <span>Share</span>
                   </Link>
                 </NavigationMenuItem>
-              </Authenticated>
-              <Authenticated>
+              )}
+              {isAuthenticated && (
                 <NavigationMenuItem>
                   <Popover onOpenChange={handleNotificationsOpen}>
                     <PopoverTrigger asChild>
@@ -198,9 +195,9 @@ export function Header() {
                     </PopoverContent>
                   </Popover>
                 </NavigationMenuItem>
-              </Authenticated>
+              )}
 
-              <Authenticated>
+              {isAuthenticated && (
                 <NavigationMenuItem>
                   <NavigationMenuTrigger>
                     {convexUser?.name?.split(" ")[0] ?? "Profile"}
@@ -232,25 +229,27 @@ export function Header() {
                     </ul>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
-              </Authenticated>
+              )}
             </NavigationMenuList>
           </NavigationMenu>
-          <Unauthenticated>
-            <Button size="sm" asChild>
-              <Link href="/sign-in" prefetch={false}>
-                Sign In
-              </Link>
-            </Button>
-            <Link href="/sign-up" prefetch={false}>
-              <Button size="sm">
-                Sign Up
+          {!userLoading && !isAuthenticated && (
+            <>
+              <Button size="sm" asChild>
+                <Link href="/sign-in" prefetch={false}>
+                  Sign In
+                </Link>
               </Button>
-            </Link>
-          </Unauthenticated>
+              <Link href="/sign-up" prefetch={false}>
+                <Button size="sm">
+                  Sign Up
+                </Button>
+              </Link>
+            </>
+          )}
 
-          <AuthLoading>
+          {userLoading && (
             <div className="h-9 w-9 animate-pulse rounded-full bg-zinc-200" />
-          </AuthLoading>
+          )}
         </div>
       </div>
     </header>

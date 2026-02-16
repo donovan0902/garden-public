@@ -7,8 +7,8 @@ export function useCurrentUser() {
   const user = useQuery(api.users.current);
 
   return {
-    isLoading: isLoading || (isAuthenticated && user === null),
-    isAuthenticated: isAuthenticated && user !== null,
-    user,
+    isLoading: isLoading || (isAuthenticated && !user),
+    isAuthenticated: isAuthenticated && !!user,
+    user: user ?? null,
   };
 }
