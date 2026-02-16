@@ -1,12 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useQuery } from 'convex/react';
+import { useQuery, useConvexAuth } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import { useEffect } from 'react';
 
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { isAuthenticated } = useConvexAuth();
   const user = useQuery(api.users.current);
 
   useEffect(() => {
@@ -20,6 +21,15 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
 
   // Show loading while fetching user data
   if (user === undefined) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-zinc-500">Loading...</div>
+      </div>
+    );
+  }
+
+  // Authenticated but user doc not yet created (ensureUser in progress)
+  if (isAuthenticated && !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-zinc-500">Loading...</div>

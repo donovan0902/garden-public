@@ -3,12 +3,12 @@
 import '@/lib/amplify-config';
 
 import { ReactNode, useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { ConvexReactClient, useMutation } from 'convex/react';
+import { ConvexReactClient, useConvexAuth, useMutation } from 'convex/react';
 import { ConvexProviderWithAuth } from 'convex/react';
 // signInWithRedirect must be imported here (layout level) so its
 // side-effect OAuth callback listener is registered on every page.
 // In Next.js, code-splitting drops it if only imported on the callback page.
-import { fetchAuthSession, getCurrentUser, signInWithRedirect } from 'aws-amplify/auth';
+import { fetchAuthSession, signInWithRedirect } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 
 import { api } from '@/convex/_generated/api';
@@ -29,22 +29,35 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
 
 function EnsureUser() {
   const ensureUser = useMutation(api.users.ensureUser);
+  const { isAuthenticated } = useConvexAuth();
   const hasEnsured = useRef(false);
 
   useEffect(() => {
+    if (!isAuthenticated) {
+      hasEnsured.current = false;
+      return;
+    }
     if (hasEnsured.current) return;
 
-    async function check() {
+    let cancelled = false;
+
+    async function run() {
       try {
-        await getCurrentUser();
-        hasEnsured.current = true;
         await ensureUser();
+        if (!cancelled) {
+          hasEnsured.current = true;
+        }
       } catch {
-        // Not authenticated — nothing to do
+        // Mutation failed — will retry on next auth state change or remount
       }
     }
-    void check();
-  }, [ensureUser]);
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, ensureUser]);
 
   return null;
 }
