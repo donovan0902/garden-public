@@ -2,7 +2,6 @@
 
 import '@aws-amplify/ui-react/styles.css';
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Authenticator } from '@aws-amplify/ui-react';
 
 type AuthPageProps = {
@@ -18,7 +17,7 @@ const formFields = {
   signUp: {
     name: {
       label: 'Full Name',
-      placeholder: 'Donovan Liao',
+      placeholder: 'John Doe',
       order: 1,
     },
     email: {
@@ -65,9 +64,10 @@ export function AuthPage({ initialState }: AuthPageProps) {
 }
 
 function RedirectOnAuth() {
-  const router = useRouter();
   useEffect(() => {
-    router.replace('/');
-  }, [router]);
+    // Use a full page navigation so auth-only global CSS is unloaded
+    // immediately when leaving the auth route.
+    window.location.replace('/');
+  }, []);
   return <p className="text-muted-foreground">Signing you in…</p>;
 }
