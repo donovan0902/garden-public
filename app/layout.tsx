@@ -22,9 +22,9 @@ const chonburi = Chonburi({
 });
 
 export const metadata: Metadata = {
-  title: "Garden | Internal launch visibility",
+  title: "Garden",
   description:
-    "An internal Product Hunt-style surface so teams can share progress, unblock faster, and celebrate momentum.",
+    "Discover the scripts, dashboards, and automations your Honda colleagues have built — and share what you're working on.",
 };
 
 export default function RootLayout({

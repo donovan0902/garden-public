@@ -3,7 +3,8 @@
 import { OnboardingGuard } from './OnboardingGuard';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
-import { Authenticated, Unauthenticated } from 'convex/react' 
+import { Authenticated, Unauthenticated } from 'convex/react';
+import { LandingPage } from '@/components/LandingPage';
 
 export default function ProtectedLayout({
   children,
@@ -19,11 +20,7 @@ export default function ProtectedLayout({
         </SidebarProvider>
       </Authenticated>
       <Unauthenticated>
-        <div className="flex min-h-screen items-center justify-center p-6 text-center">
-          <p className="max-w-xl text-xl font-semibold tracking-tight text-zinc-800 sm:text-2xl">
-            Sign in to peruse
-          </p>
-        </div>
+        <LandingPage />
       </Unauthenticated>
     </OnboardingGuard>
   );
