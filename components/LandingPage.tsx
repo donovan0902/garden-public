@@ -84,10 +84,10 @@ export function LandingPage() {
           </div>
 
           <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
-            More is being built than you think.
+            Share your solutions
           </h1>
           <p className="mt-4 max-w-xl text-base text-zinc-500 sm:text-lg">
-          Garden helps you discover and share the tools and solutions being built across teams, because great work shouldn't stay hidden.
+          Garden helps you discover and share the tools and solutions being made across teams, because great work shouldn't stay hidden.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
