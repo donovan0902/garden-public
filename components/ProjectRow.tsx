@@ -5,7 +5,7 @@ import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Share } from "lucide-react";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { ProjectMediaCarousel } from "@/components/ProjectMediaCarousel";
@@ -91,6 +91,11 @@ export function ProjectRow({
   const handleCommentClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     router.push(`/project/${project._id}#discussion`);
+  };
+
+  const handleShareClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(`${window.location.origin}/project/${project._id}`);
   };
 
   const handleAdoptClick = () => {
@@ -198,6 +203,17 @@ export function ProjectRow({
           >
             <MessageCircle className="h-4 w-4" aria-hidden="true" />
             <span>{project.commentCount}</span>
+          </Button>
+        </motion.div>
+        <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShareClick}
+            className="flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
+            aria-label="Copy project link"
+          >
+            <Share className="h-4 w-4" aria-hidden="true" />
           </Button>
         </motion.div>
       </div>
