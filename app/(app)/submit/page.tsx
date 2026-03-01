@@ -237,7 +237,7 @@ export default function SubmitProject() {
               <Tabs defaultValue="details" className="!mt-10">
                 <TabsList variant="line">
                   <TabsTrigger value="details" className="px-5">Details</TabsTrigger>
-                  <TabsTrigger value="media" className="px-5">Media</TabsTrigger>
+                  <TabsTrigger value="media" className="px-5">Files & media</TabsTrigger>
                   <TabsTrigger value="link" className="px-5">Link</TabsTrigger>
                 </TabsList>
 
