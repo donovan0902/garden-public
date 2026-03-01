@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { MessageCircle, Share } from "lucide-react";
+import { Forward, MessageCircle } from "lucide-react";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import {
@@ -145,7 +145,7 @@ export function ProjectRow({
         <Facepile
           adopters={project.adopters}
           totalCount={project.adoptionCount}
-          maxVisible={4}
+          maxVisible={3}
           size="sm"
           hasAdopted={project.hasAdopted}
           currentUser={currentUser}
@@ -222,7 +222,8 @@ export function ProjectRow({
             className="flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
             aria-label="Copy project link"
           >
-            <Share className="h-4 w-4" aria-hidden="true" />
+            <span aria-hidden="true">Share</span>
+            <Forward className="h-4 w-4" aria-hidden="true" />
           </Button>
         </motion.div>
       </div>

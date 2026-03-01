@@ -51,7 +51,7 @@ interface FacepileProps {
 export function Facepile({
   adopters,
   totalCount,
-  maxVisible = 4,
+  maxVisible = 3,
   size = "sm",
   hasAdopted = false,
   currentUser = null,
@@ -184,9 +184,12 @@ export function Facepile({
         {/* Current user's avatar (if adopted) or +You button */}
         {renderUserAction()}
       </div>
-      {remainingCount > 0 && (
+      {(showLabel || remainingCount > 0) && (
         <span className="text-sm text-zinc-500 whitespace-nowrap cursor-pointer hover:underline">
-          and {remainingCount} {remainingCount === 1 ? "other" : "others"}
+          {remainingCount > 0 && (
+            <>and {remainingCount} {remainingCount === 1 ? "other" : "others"} </>
+          )}
+          {showLabel && (totalCount === 1 ? "uses this" : "use this")}
         </span>
       )}
     </div>
@@ -199,11 +202,6 @@ export function Facepile({
         className="flex items-center gap-2"
         onClick={(e) => e.stopPropagation()}
       >
-        {showLabel && totalCount > 0 && (
-          <span className="text-sm text-zinc-500 whitespace-nowrap">
-            Used by
-          </span>
-        )}
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <div className="cursor-pointer hover:opacity-80 transition-opacity">
@@ -253,11 +251,6 @@ export function Facepile({
       className="flex items-center gap-2"
       onClick={(e) => e.stopPropagation()}
     >
-      {showLabel && totalCount > 0 && (
-        <span className="text-sm text-zinc-500 whitespace-nowrap">
-          Used by
-        </span>
-      )}
       {content}
     </div>
   );
