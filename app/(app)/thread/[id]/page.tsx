@@ -13,7 +13,9 @@ import { ThreadCommentForm } from "@/components/ThreadCommentForm";
 import { ThreadCommentThread } from "@/components/ThreadCommentThread";
 import { RichTextContent } from "@/components/RichTextContent";
 import Link from "next/link";
-import { Forward } from "lucide-react";
+import { Forward, Pencil, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { SpaceIcon } from "@/components/SpaceIcon";
 import {
   Breadcrumb,
@@ -29,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { useState } from "react";
 
@@ -51,12 +54,26 @@ export default function ThreadPage({
 }) {
   const router = useRouter();
   const { id } = use(params);
-  const { isAuthenticated } = useCurrentUser();
+  const { isAuthenticated, user } = useCurrentUser();
   const threadId = id as Id<"threads">;
   const thread = useQuery(api.threads.getById, { threadId });
   const comments = useQuery(api.threads.getComments, { threadId });
   const toggleUpvote = useMutation(api.threads.toggleUpvote);
+  const updateThread = useMutation(api.threads.updateThread);
+  const deleteThread = useMutation(api.threads.deleteThread);
   const [shareOpen, setShareOpen] = useState(false);
+
+  // Edit state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Delete state
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const isOwner = user && thread && thread.userId === user._id;
 
   const topLevelComments =
     comments?.filter((c) => !c.parentCommentId && !c.isDeleted) || [];
@@ -72,6 +89,51 @@ export default function ThreadPage({
   const handleShare = async () => {
     await navigator.clipboard.writeText(window.location.href);
     setShareOpen(true);
+  };
+
+  const handleStartEdit = () => {
+    if (!thread) return;
+    setEditTitle(thread.title);
+    setEditBody(thread.body || "");
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditTitle("");
+    setEditBody("");
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editTitle.trim()) return;
+    setIsSaving(true);
+    try {
+      await updateThread({
+        threadId,
+        title: editTitle.trim(),
+        body: editBody.trim() || undefined,
+      });
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to update thread:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteThread({ threadId });
+      if (thread?.focusArea) {
+        router.push(`/space/${thread.focusArea._id}`);
+      } else {
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("Failed to delete thread:", error);
+      setIsDeleting(false);
+    }
   };
 
   if (thread === undefined) {
@@ -128,8 +190,10 @@ export default function ThreadPage({
                 <BreadcrumbSeparator />
               </>
             )}
-            <BreadcrumbItem>
-              <BreadcrumbPage>{thread.title}</BreadcrumbPage>
+            <BreadcrumbItem className="max-w-[200px] min-w-0">
+              <BreadcrumbPage className="truncate" title={thread.title}>
+                {thread.title}
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -178,11 +242,71 @@ export default function ThreadPage({
                 </div>
               </div>
 
-              <h1 className="text-2xl font-semibold text-zinc-900">
-                {thread.title}
-              </h1>
-
-              {thread.body && <RichTextContent html={thread.body} />}
+              {isEditing ? (
+                <div className="space-y-3">
+                  <Input
+                    value={editTitle}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditTitle(e.target.value)}
+                    placeholder="Thread title"
+                    className="text-base font-medium"
+                    disabled={isSaving}
+                    autoFocus
+                  />
+                  <Textarea
+                    value={editBody}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditBody(e.target.value)}
+                    placeholder="Add more context (optional)"
+                    className="min-h-16 text-sm"
+                    disabled={isSaving}
+                  />
+                  <div className="flex items-center justify-between">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setDeleteOpen(true)}
+                      className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancelEdit}
+                        disabled={isSaving}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSaveEdit}
+                        disabled={isSaving || !editTitle.trim()}
+                      >
+                        {isSaving ? "Saving..." : "Save"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-semibold text-zinc-900">
+                      {thread.title}
+                    </h1>
+                    {isOwner && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleStartEdit}
+                        className="h-8 w-8 text-zinc-400 hover:text-zinc-600"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  {thread.body && <RichTextContent html={thread.body} />}
+                </>
+              )}
             </div>
 
             <div id="discussion" className="space-y-6">
@@ -273,6 +397,7 @@ export default function ThreadPage({
                     Share
                   </Button>
                 </div>
+
               </div>
             </div>
           </aside>
@@ -287,6 +412,34 @@ export default function ThreadPage({
               The link to this thread has been copied to your clipboard.
             </DialogDescription>
           </DialogHeader>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this thread?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete this thread along with all its
+              comments and upvotes. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOpen(false)}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

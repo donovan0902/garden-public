@@ -32,6 +32,71 @@ export const createThread = mutation({
   },
 });
 
+// ─── Editing ────────────────────────────────────────────────────────────────
+
+export const updateThread = mutation({
+  args: {
+    threadId: v.id("threads"),
+    title: v.string(),
+    body: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    const thread = await ctx.db.get(args.threadId);
+    if (!thread) throw new Error("Thread not found");
+    if (thread.userId !== user._id)
+      throw new Error("You can only edit your own threads");
+
+    await ctx.db.patch(args.threadId, {
+      title: args.title.trim(),
+      body: args.body?.trim() || undefined,
+    });
+  },
+});
+
+// ─── Deletion ───────────────────────────────────────────────────────────────
+
+export const deleteThread = mutation({
+  args: { threadId: v.id("threads") },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUserOrThrow(ctx);
+    const thread = await ctx.db.get(args.threadId);
+    if (!thread) throw new Error("Thread not found");
+    if (thread.userId !== user._id)
+      throw new Error("You can only delete your own threads");
+
+    // Cascade: delete all comment upvotes, then comments
+    const comments = await ctx.db
+      .query("threadComments")
+      .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
+      .collect();
+
+    for (const comment of comments) {
+      const commentUpvotes = await ctx.db
+        .query("threadCommentUpvotes")
+        .withIndex("by_comment", (q) => q.eq("commentId", comment._id))
+        .collect();
+      await Promise.all(
+        commentUpvotes.map((upvote) => ctx.db.delete(upvote._id))
+      );
+    }
+
+    await Promise.all(comments.map((c) => ctx.db.delete(c._id)));
+
+    // Delete thread upvotes
+    const threadUpvotes = await ctx.db
+      .query("threadUpvotes")
+      .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
+      .collect();
+    await Promise.all(
+      threadUpvotes.map((upvote) => ctx.db.delete(upvote._id))
+    );
+
+    // Delete the thread itself
+    await ctx.db.delete(args.threadId);
+  },
+});
+
 // ─── Queries ─────────────────────────────────────────────────────────────────
 
 export const getById = query({
