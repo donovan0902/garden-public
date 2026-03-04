@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { CreateFocusAreaDialog } from "./CreateFocusAreaDialog";
 import { SpaceIcon } from "./SpaceIcon";
-import { Plus, PlusCircle, Info, Home } from "lucide-react";
+import { Plus, PlusCircle, MessageSquarePlus, Info, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Sidebar,
@@ -86,6 +86,14 @@ export function AppSidebar() {
               <Link href="/submit">
                 <PlusCircle className="h-4 w-4" />
                 <span>Share a Tool</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild size="lg">
+              <Link href="/create-thread">
+                <MessageSquarePlus className="h-4 w-4" />
+                <span>Start a Thread</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
