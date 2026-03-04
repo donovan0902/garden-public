@@ -117,9 +117,13 @@ export default function ProjectPage({
   const isOwner = user && project && project.userId === user._id;
   const [shareOpen, setShareOpen] = useState(false);
 
-  // Get top-level comments (no parent)
+  // Get top-level comments (no parent); keep deleted ones that have non-deleted replies
   const topLevelComments =
-    comments?.filter((c) => !c.parentCommentId && !c.isDeleted) || [];
+    comments?.filter((c) => {
+      if (c.parentCommentId) return false;
+      if (!c.isDeleted) return true;
+      return comments.some((r) => r.parentCommentId === c._id && !r.isDeleted);
+    }) || [];
 
   useEffect(() => {
     if (!project) {

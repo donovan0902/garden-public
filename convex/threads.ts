@@ -384,7 +384,6 @@ export const getComments = query({
     const comments = await ctx.db
       .query("threadComments")
       .withIndex("by_thread", (q) => q.eq("threadId", args.threadId))
-      .filter((q) => q.neq(q.field("isDeleted"), true))
       .collect();
 
     const sorted = comments.sort((a, b) => a.createdAt - b.createdAt);
@@ -394,6 +393,17 @@ export const getComments = query({
 
     const enrichedComments = await Promise.all(
       sorted.map(async (comment) => {
+        if (comment.isDeleted) {
+          return {
+            ...comment,
+            content: "[deleted]",
+            upvotes: 0,
+            hasUpvoted: false,
+            userName: "[deleted]",
+            userAvatar: "",
+          };
+        }
+
         const commentUser = await ctx.db.get(comment.userId);
 
         let hasUpvoted = false;

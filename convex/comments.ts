@@ -55,7 +55,6 @@ export const getComments = query({
     const comments = await ctx.db
       .query("comments")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
-      .filter((q) => q.neq(q.field("isDeleted"), true))
       .collect();
 
     const sorted = comments.sort((a, b) => a.createdAt - b.createdAt);
@@ -63,41 +62,37 @@ export const getComments = query({
     const user = await getCurrentUser(ctx);
     const userId = user?._id;
 
-    if (!userId) {
-      // Enrich comments with user data even for unauthenticated users
-      const enrichedComments = await Promise.all(
-        sorted.map(async (comment) => {
-          const user = await ctx.db.get(comment.userId);
-          return {
-            ...comment,
-            upvotes: comment.upvotes ?? 0,
-            hasUpvoted: false,
-            userName: user?.name ?? "Unknown User",
-            userAvatar: user?.avatarUrlId ?? "",
-          };
-        })
-      );
-      return enrichedComments;
+    const upvotedCommentIds = new Set<string>();
+    if (userId) {
+      const userUpvotes = await ctx.db
+        .query("commentUpvotes")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect();
+      for (const upvote of userUpvotes) {
+        upvotedCommentIds.add(upvote.commentId);
+      }
     }
 
-    // if the user is authenticated, get their upvotes
-    const userUpvotes = await ctx.db
-      .query("commentUpvotes")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-
-    const upvotedCommentIds = new Set(userUpvotes.map((upvote) => upvote.commentId));
-
-    // Enrich comments with user data
+    // Enrich comments with user data; sanitize deleted comments
     const enrichedComments = await Promise.all(
       sorted.map(async (comment) => {
-        const user = await ctx.db.get(comment.userId);
+        if (comment.isDeleted) {
+          return {
+            ...comment,
+            content: "[deleted]",
+            upvotes: 0,
+            hasUpvoted: false,
+            userName: "[deleted]",
+            userAvatar: "",
+          };
+        }
+        const commentUser = await ctx.db.get(comment.userId);
         return {
           ...comment,
           upvotes: comment.upvotes ?? 0,
           hasUpvoted: upvotedCommentIds.has(comment._id),
-          userName: user?.name ?? "Unknown User",
-          userAvatar: user?.avatarUrlId ?? "",
+          userName: commentUser?.name ?? "Unknown User",
+          userAvatar: commentUser?.avatarUrlId ?? "",
         };
       })
     );

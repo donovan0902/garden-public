@@ -69,8 +69,13 @@ export default function ThreadPage({
 
   const isOwner = user && thread && thread.userId === user._id;
 
+  // Keep deleted top-level comments that have non-deleted replies
   const topLevelComments =
-    comments?.filter((c) => !c.parentCommentId && !c.isDeleted) || [];
+    comments?.filter((c) => {
+      if (c.parentCommentId) return false;
+      if (!c.isDeleted) return true;
+      return comments.some((r) => r.parentCommentId === c._id && !r.isDeleted);
+    }) || [];
 
   const handleUpvote = async () => {
     try {
