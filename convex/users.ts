@@ -145,6 +145,8 @@ export const ensureUser = mutation({
     const cognitoSub = identity.subject;
     const email = identity.email;
     const name = identity.name ?? email ?? "Unknown User";
+    // Cognito custom attributes are forwarded as-is on the identity token
+    const department = (identity as Record<string, unknown>)["custom:department"] as string | undefined;
 
     // 1. Try lookup by externalUserId (Cognito sub)
     const existingByExternalId = await ctx.db
@@ -153,6 +155,9 @@ export const ensureUser = mutation({
       .unique();
 
     if (existingByExternalId) {
+      if (department !== undefined && existingByExternalId.department !== department) {
+        await ctx.db.patch(existingByExternalId._id, { department });
+      }
       return existingByExternalId._id;
     }
 
@@ -168,6 +173,7 @@ export const ensureUser = mutation({
         await ctx.db.patch(existingByEmail._id, {
           externalUserId: cognitoSub,
           workosUserId: undefined,
+          ...(department !== undefined ? { department } : {}),
         });
         return existingByEmail._id;
       }
@@ -180,6 +186,7 @@ export const ensureUser = mutation({
       emailLower: email ? email.toLowerCase() : undefined,
       name,
       onboardingCompleted: false,
+      ...(department !== undefined ? { department } : {}),
     });
 
     return userId;
