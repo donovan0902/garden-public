@@ -2,6 +2,7 @@
 
 import { use } from "react";
 import { useQuery, useMutation } from "convex/react";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { api } from "@/convex/_generated/api";
@@ -9,11 +10,12 @@ import { Id } from "@/convex/_generated/dataModel";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ThreadCommentForm } from "@/components/ThreadCommentForm";
-import { ThreadCommentThread } from "@/components/ThreadCommentThread";
+import { CommentForm } from "@/components/CommentForm";
+import { CommentThread } from "@/components/CommentThread";
 import { RichTextContent } from "@/components/RichTextContent";
 import Link from "next/link";
 import { Forward, Pencil, Trash2 } from "lucide-react";
+import { getRelativeTime } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SpaceIcon } from "@/components/SpaceIcon";
@@ -35,17 +37,6 @@ import {
 } from "@/components/ui/dialog";
 import { useState } from "react";
 
-function getRelativeTime(timestamp: number): string {
-  const now = Date.now();
-  const diffInSeconds = Math.floor((now - timestamp) / 1000);
-
-  if (diffInSeconds < 60) return "just now";
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 604800)
-    return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  return `${Math.floor(diffInSeconds / 604800)}w ago`;
-}
 
 export default function ThreadPage({
   params,
@@ -61,6 +52,9 @@ export default function ThreadPage({
   const toggleUpvote = useMutation(api.threads.toggleUpvote);
   const updateThread = useMutation(api.threads.updateThread);
   const deleteThread = useMutation(api.threads.deleteThread);
+  const addComment = useMutation(api.threads.addComment);
+  const deleteComment = useMutation(api.threads.deleteComment);
+  const toggleCommentUpvote = useMutation(api.threads.toggleCommentUpvote);
   const [shareOpen, setShareOpen] = useState(false);
 
   // Edit state
@@ -83,6 +77,7 @@ export default function ThreadPage({
       await toggleUpvote({ threadId });
     } catch (error) {
       console.error("Failed to toggle upvote:", error);
+      toast.error("Failed to upvote. Please try again.");
     }
   };
 
@@ -116,6 +111,7 @@ export default function ThreadPage({
       setIsEditing(false);
     } catch (error) {
       console.error("Failed to update thread:", error);
+      toast.error("Failed to update thread. Please try again.");
     } finally {
       setIsSaving(false);
     }
@@ -132,6 +128,7 @@ export default function ThreadPage({
       }
     } catch (error) {
       console.error("Failed to delete thread:", error);
+      toast.error("Failed to delete thread. Please try again.");
       setIsDeleting(false);
     }
   };
@@ -311,7 +308,9 @@ export default function ThreadPage({
 
             <div id="discussion" className="space-y-6">
               <div className="space-y-4">
-                <ThreadCommentForm threadId={threadId} />
+                <CommentForm
+                  onSubmit={(content) => addComment({ threadId, content })}
+                />
                 {comments === undefined ? (
                   <div className="py-8 text-center text-sm text-zinc-500">
                     Loading comments...
@@ -325,11 +324,13 @@ export default function ThreadPage({
                 ) : (
                   <div className="space-y-4">
                     {topLevelComments.map((comment) => (
-                      <ThreadCommentThread
+                      <CommentThread
                         key={comment._id}
                         comment={comment}
                         allComments={comments}
-                        threadId={threadId}
+                        onDelete={(id) => deleteComment({ commentId: id as Id<"threadComments"> })}
+                        onToggleUpvote={(id) => toggleCommentUpvote({ commentId: id as Id<"threadComments"> })}
+                        onSubmitReply={(content, parentId) => addComment({ threadId, content, parentCommentId: parentId as Id<"threadComments"> })}
                       />
                     ))}
                   </div>

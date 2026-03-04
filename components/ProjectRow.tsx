@@ -19,7 +19,7 @@ import { ProjectMediaCarousel } from "@/components/ProjectMediaCarousel";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
 import { Facepile } from "@/components/Facepile";
 import { SpaceIcon } from "@/components/SpaceIcon";
-import { stripHtml } from "@/lib/utils";
+import { stripHtml, getRelativeTime } from "@/lib/utils";
 import type { FocusArea, ProjectRowData, UserRef } from "@/lib/types";
 
 interface ProjectRowProps {
@@ -31,16 +31,6 @@ interface ProjectRowProps {
   hideSpaceLabel?: boolean;
 }
 
-function getRelativeTime(timestamp: number): string {
-  const now = Date.now();
-  const diffInSeconds = Math.floor((now - timestamp) / 1000);
-
-  if (diffInSeconds < 60) return "just now";
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  return `${Math.floor(diffInSeconds / 604800)}w ago`;
-}
 
 export function ProjectRow({
   project,

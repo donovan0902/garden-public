@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CommentForm } from "./CommentForm";
@@ -10,13 +9,13 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import Link from "next/link";
 import { Reply, Trash2 } from "lucide-react";
+import { getRelativeTime } from "@/lib/utils";
 
-interface Comment {
-  _id: Id<"comments">;
-  projectId: Id<"projects">;
+export interface BaseComment {
+  _id: string;
   userId: Id<"users">;
   content: string;
-  parentCommentId?: Id<"comments">;
+  parentCommentId?: string;
   createdAt: number;
   isDeleted?: boolean;
   upvotes?: number;
@@ -26,54 +25,42 @@ interface Comment {
 }
 
 interface CommentThreadProps {
-  comment: Comment;
-  allComments: Comment[];
-  projectId: Id<"projects">;
+  comment: BaseComment;
+  allComments: BaseComment[];
+  onDelete: (commentId: string) => Promise<unknown>;
+  onToggleUpvote: (commentId: string) => Promise<unknown>;
+  onSubmitReply: (content: string, parentCommentId: string) => Promise<unknown>;
   depth?: number;
 }
 
 export function CommentThread({
   comment,
   allComments,
-  projectId,
+  onDelete,
+  onToggleUpvote,
+  onSubmitReply,
   depth = 0,
 }: CommentThreadProps) {
   const { user } = useCurrentUser();
-  const deleteComment = useMutation(api.comments.deleteComment);
-  const toggleCommentUpvote = useMutation(api.comments.toggleCommentUpvote);
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTogglingUpvote, setIsTogglingUpvote] = useState(false);
 
-  // Get replies to this comment
   const replies = allComments.filter(
     (c) => c.parentCommentId === comment._id && !c.isDeleted
   );
 
   const isOwner = user?._id === comment.userId;
 
-  // Format timestamp
-  const timeAgo = (timestamp: number) => {
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
-    if (seconds < 60) return "just now";
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    if (days < 7) return `${days}d ago`;
-    return new Date(timestamp).toLocaleDateString();
-  };
-
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this comment?")) return;
 
     setIsDeleting(true);
     try {
-      await deleteComment({ commentId: comment._id });
+      await onDelete(comment._id);
     } catch (error) {
       console.error("Failed to delete comment:", error);
-      alert("Failed to delete comment. Please try again.");
+      toast.error("Failed to delete comment. Please try again.");
     } finally {
       setIsDeleting(false);
     }
@@ -91,10 +78,10 @@ export function CommentThread({
 
     setIsTogglingUpvote(true);
     try {
-      await toggleCommentUpvote({ commentId: comment._id });
+      await onToggleUpvote(comment._id);
     } catch (error) {
       console.error("Failed to toggle comment upvote:", error);
-      alert("Failed to update upvote. Please try again.");
+      toast.error("Failed to update upvote. Please try again.");
     } finally {
       setIsTogglingUpvote(false);
     }
@@ -126,7 +113,7 @@ export function CommentThread({
               >
                 {comment.userName || "Unknown User"}
               </Link>
-              <span>{timeAgo(comment.createdAt)}</span>
+              <span>{getRelativeTime(comment.createdAt)}</span>
             </div>
             <p className="mt-1 text-sm leading-5 text-zinc-600 whitespace-pre-wrap break-words">
               {comment.content}
@@ -169,12 +156,10 @@ export function CommentThread({
         </div>
       </div>
 
-      {/* Reply form */}
       {showReplyForm && (
         <div className="ml-11 mt-3">
           <CommentForm
-            projectId={projectId}
-            parentCommentId={comment._id}
+            onSubmit={(content) => onSubmitReply(content, comment._id)}
             onCancel={() => setShowReplyForm(false)}
             placeholder="Write a reply..."
             submitText="Reply"
@@ -182,7 +167,6 @@ export function CommentThread({
         </div>
       )}
 
-      {/* Nested replies */}
       {replies.length > 0 && (
         <div className="ml-11 mt-3 space-y-3 border-l-2 border-zinc-300 pl-4">
           {replies.map((reply) => (
@@ -190,7 +174,9 @@ export function CommentThread({
               key={reply._id}
               comment={reply}
               allComments={allComments}
-              projectId={projectId}
+              onDelete={onDelete}
+              onToggleUpvote={onToggleUpvote}
+              onSubmitReply={onSubmitReply}
               depth={depth + 1}
             />
           ))}

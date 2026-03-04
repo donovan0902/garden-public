@@ -37,3 +37,19 @@ export function stripHtml(html: string): string {
 export function isRichTextEmpty(html: string): boolean {
   return stripHtml(html).length === 0;
 }
+
+/**
+ * Returns a human-readable relative time string for a given timestamp.
+ * e.g. "just now", "5m ago", "3h ago", "2d ago", or a locale date string.
+ */
+export function getRelativeTime(timestamp: number): string {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString();
+}

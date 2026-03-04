@@ -109,6 +109,9 @@ export default function ProjectPage({
   const toggleUpvote = useMutation(api.projects.toggleUpvote);
   const toggleAdoption = useMutation(api.projects.toggleAdoption);
   const trackView = useMutation(api.projects.trackView);
+  const addComment = useMutation(api.comments.addComment);
+  const deleteComment = useMutation(api.comments.deleteComment);
+  const toggleCommentUpvote = useMutation(api.comments.toggleCommentUpvote);
   const trackedProjectId = useRef<Id<"projects"> | null>(null);
 
   const isOwner = user && project && project.userId === user._id;
@@ -292,7 +295,9 @@ export default function ProjectPage({
 
             <div id="discussion" className="space-y-6">
               <div className="space-y-4">
-                <CommentForm projectId={projectId} />
+                <CommentForm
+                  onSubmit={(content) => addComment({ projectId, content })}
+                />
                 {comments === undefined ? (
                   <div className="py-8 text-center text-sm text-zinc-500">
                     Loading comments...
@@ -310,7 +315,9 @@ export default function ProjectPage({
                         key={comment._id}
                         comment={comment}
                         allComments={comments}
-                        projectId={projectId}
+                        onDelete={(id) => deleteComment({ commentId: id as Id<"comments"> })}
+                        onToggleUpvote={(id) => toggleCommentUpvote({ commentId: id as Id<"comments"> })}
+                        onSubmitReply={(content, parentId) => addComment({ projectId, content, parentCommentId: parentId as Id<"comments"> })}
                       />
                     ))}
                   </div>

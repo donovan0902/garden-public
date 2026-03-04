@@ -1,30 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useConvexAuth } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { useConvexAuth } from "convex/react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Id } from "@/convex/_generated/dataModel";
 import Link from "next/link";
 
 interface CommentFormProps {
-  projectId: Id<"projects">;
-  parentCommentId?: Id<"comments">;
+  onSubmit: (content: string) => Promise<unknown>;
   onCancel?: () => void;
   placeholder?: string;
   submitText?: string;
 }
 
 export function CommentForm({
-  projectId,
-  parentCommentId,
+  onSubmit,
   onCancel,
   placeholder = "What do you think?",
   submitText = "Comment",
 }: CommentFormProps) {
   const { isAuthenticated } = useConvexAuth();
-  const addComment = useMutation(api.comments.addComment);
   const [content, setContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -34,16 +30,12 @@ export function CommentForm({
 
     setIsSubmitting(true);
     try {
-      await addComment({
-        projectId,
-        content: content.trim(),
-        parentCommentId,
-      });
+      await onSubmit(content.trim());
       setContent("");
       onCancel?.();
     } catch (error) {
       console.error("Failed to post comment:", error);
-      alert("Failed to post comment. Please try again.");
+      toast.error("Failed to post comment. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
