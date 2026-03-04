@@ -17,7 +17,7 @@ import { ThreadRow } from "@/components/ThreadRow";
 import { CreateThreadForm } from "@/components/CreateThreadForm";
 import type { ProjectRowData, ThreadRowData } from "@/lib/types";
 import { SpaceIcon } from "@/components/SpaceIcon";
-import { Users, MessageCircle } from "lucide-react";
+import { ArrowBigUp, Users, MessageCircle } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -402,7 +402,8 @@ export default function SpacePage({
                           </h4>
                           <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
                             <span className="flex items-center gap-0.5">
-                              <span>&uarr;</span> {thread.upvoteCount}
+                              <ArrowBigUp className="h-3.5 w-3.5" fill="none" aria-hidden="true" />
+                              {thread.upvoteCount}
                             </span>
                             <span className="text-zinc-300">&bull;</span>
                             <span className="flex items-center gap-0.5">
@@ -453,7 +454,8 @@ export default function SpacePage({
                           </h4>
                           <div className="mt-1 flex items-center gap-2 text-xs text-zinc-500">
                             <span className="flex items-center gap-0.5">
-                              <span>&uarr;</span> {project.upvoteCount}
+                              <ArrowBigUp className="h-3.5 w-3.5" fill="none" aria-hidden="true" />
+                              {project.upvoteCount}
                             </span>
                             <span className="text-zinc-300">&bull;</span>
                             <span className="flex items-center gap-0.5">
@@ -484,5 +486,4 @@ export default function SpacePage({
     </div>
   );
 }
-
 

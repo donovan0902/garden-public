@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { Forward, MessageCircle } from "lucide-react";
+import { ArrowBigUp, Forward, MessageCircle } from "lucide-react";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import {
@@ -133,12 +133,16 @@ export function ProjectRow({
         {isAuthenticated ? (
           <motion.div whileTap={{ scale: 1.15, rotate: -3 }} transition={{ type: "spring", stiffness: 800, damping: 20 }}>
             <Button
-              variant={project.hasUpvoted ? "default" : "outline"}
+              variant="ghost"
               size="sm"
               onClick={handleUpvoteClick}
-              className={`flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all ${project.hasUpvoted ? "hover:!bg-primary hover:!text-primary-foreground" : "hover:!bg-background hover:!text-foreground"}`}
+              className={`group flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium !bg-zinc-200 hover:!bg-zinc-300 active:!bg-zinc-400 ${project.hasUpvoted ? "text-orange-500 hover:text-orange-600" : "text-zinc-700 hover:text-orange-500"}`}
             >
-              <span aria-hidden="true">↑</span>
+              <ArrowBigUp
+                className={`h-4 w-4 transition-colors ${project.hasUpvoted ? "" : "text-zinc-700 group-hover:text-orange-500"}`}
+                fill={project.hasUpvoted ? "currentColor" : "none"}
+                aria-hidden="true"
+              />
               <span>{project.upvotes}</span>
             </Button>
           </motion.div>
@@ -148,11 +152,11 @@ export function ProjectRow({
               variant="outline"
               size="sm"
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
+              className="flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium !bg-zinc-200 hover:!bg-zinc-300 active:!bg-zinc-400 !text-zinc-700"
               asChild
             >
               <Link href="/sign-in" prefetch={false}>
-                <span aria-hidden="true">↑</span>
+                <ArrowBigUp className="h-4 w-4" fill="none" aria-hidden="true" />
                 <span>{project.upvotes}</span>
               </Link>
             </Button>
@@ -163,7 +167,7 @@ export function ProjectRow({
             variant="outline"
             size="sm"
             onClick={handleCommentClick}
-            className="flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
+            className="flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium !bg-zinc-200 hover:!bg-zinc-300 active:!bg-zinc-400 !text-zinc-700"
             aria-label={`View ${project.commentCount} comments`}
           >
             <MessageCircle className="h-4 w-4" aria-hidden="true" />
@@ -175,7 +179,7 @@ export function ProjectRow({
             variant="outline"
             size="sm"
             onClick={handleShareClick}
-            className="flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
+            className="flex items-center gap-1.5 rounded-full px-3 h-8 text-sm font-medium !bg-zinc-200 hover:!bg-zinc-300 active:!bg-zinc-400 !text-zinc-700"
             aria-label="Copy project link"
           >
             <span aria-hidden="true">Share</span>

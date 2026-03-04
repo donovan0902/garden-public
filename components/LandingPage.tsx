@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, Users2, Sparkles, Share2, Zap } from "lucide-react";
+import { ArrowBigUp, Users2, Sparkles, Share2, Zap } from "lucide-react";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { ReadinessStatus } from "@/lib/types";
@@ -134,7 +134,7 @@ export function LandingPage() {
                 {/* Stats */}
                 <div className="mt-4 flex items-center gap-4 text-xs text-zinc-400">
                   <span className="flex items-center gap-1">
-                    <ArrowUp className="h-3.5 w-3.5" />
+                    <ArrowBigUp className="h-3.5 w-3.5" fill="none" />
                     {project.upvotes}
                   </span>
                   <span className="flex items-center gap-1">

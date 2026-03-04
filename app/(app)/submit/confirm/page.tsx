@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Link from "next/link";
 import { stripHtml } from "@/lib/utils";
+import { ArrowBigUp } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -382,7 +383,7 @@ function SimilarProjectCard({ project }: { project: Project }) {
             className="hidden h-6 lg:block"
           />
           <span className="flex items-center gap-1">
-            <span>↑</span>
+            <ArrowBigUp className="h-4 w-4" fill="none" aria-hidden="true" />
             <span className="font-medium text-zinc-900">
               {project.upvotes}
             </span>

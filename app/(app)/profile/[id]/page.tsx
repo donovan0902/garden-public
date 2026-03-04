@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
-import { Eye, MessageSquare, Pencil, Target, Users } from "lucide-react";
+import { ArrowBigUp, Eye, MessageSquare, Pencil, Target, Users } from "lucide-react";
 import { stripHtml } from "@/lib/utils";
 import {
   Breadcrumb,
@@ -366,7 +366,7 @@ function ProjectCard({
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-zinc-600">
-                <span>↑</span>
+                <ArrowBigUp className="h-4 w-4" fill="none" aria-hidden="true" />
                 <span>{project.upvotes}</span>
                 <span className="text-zinc-300">•</span>
                 <MessageSquare className="h-4 w-4" aria-hidden="true" />
