@@ -14,7 +14,7 @@ import { CommentForm } from "@/components/CommentForm";
 import { CommentThread } from "@/components/CommentThread";
 import { RichTextContent } from "@/components/RichTextContent";
 import Link from "next/link";
-import { Forward, Pencil, Trash2 } from "lucide-react";
+import { ArrowBigUp, Forward, Pencil, Trash2 } from "lucide-react";
 import { getRelativeTime } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -363,11 +363,16 @@ export default function ThreadPage({
                         }}
                       >
                         <Button
-                          variant={thread.hasUpvoted ? "default" : "outline"}
+                          variant="ghost"
                           onClick={handleUpvote}
-                          className={`h-9 rounded-md px-3 text-sm font-semibold hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all ${thread.hasUpvoted ? "!text-primary-foreground hover:!bg-primary hover:!text-primary-foreground" : "!text-foreground hover:!bg-background hover:!text-foreground"}`}
+                          className={`group h-9 rounded-md px-3 text-sm font-semibold flex items-center gap-1.5 border shadow-sm ${thread.hasUpvoted ? "!bg-amber-100 border-orange-300/70 hover:!bg-amber-200 active:!bg-amber-300 text-orange-500 hover:text-orange-600" : "!bg-zinc-200 border-zinc-300/80 hover:!bg-zinc-300 active:!bg-zinc-400 text-zinc-700 hover:text-orange-500"}`}
                         >
-                          &uarr; {thread.upvoteCount}
+                          <ArrowBigUp
+                            className={`h-4 w-4 transition-colors ${thread.hasUpvoted ? "" : "text-zinc-700 group-hover:text-orange-500"}`}
+                            fill={thread.hasUpvoted ? "currentColor" : "none"}
+                            aria-hidden="true"
+                          />
+                          <span>{thread.upvoteCount}</span>
                         </Button>
                       </motion.div>
                     ) : (
@@ -381,11 +386,12 @@ export default function ThreadPage({
                       >
                         <Button
                           variant="outline"
-                          className="h-9 rounded-md border-zinc-200 px-3 text-sm font-semibold !text-foreground hover:!bg-background hover:!text-foreground hover:ring-2 hover:ring-accent hover:ring-offset-2 transition-all"
+                          className="h-9 rounded-md px-3 text-sm font-semibold border border-zinc-300/80 shadow-sm !bg-zinc-200 hover:!bg-zinc-300 active:!bg-zinc-400 !text-zinc-700"
                           asChild
                         >
                           <Link href="/sign-in" prefetch={false}>
-                            &uarr; {thread.upvoteCount}
+                            <ArrowBigUp className="h-4 w-4" fill="none" aria-hidden="true" />
+                            <span>{thread.upvoteCount}</span>
                           </Link>
                         </Button>
                       </motion.div>
@@ -396,7 +402,7 @@ export default function ThreadPage({
                 <div>
                   <Button
                     variant="outline"
-                    className="w-full gap-2 rounded-full bg-accent text-accent-foreground border-accent hover:bg-background hover:text-foreground hover:border-input"
+                    className="w-full gap-2 rounded-full !bg-zinc-200 hover:!bg-zinc-300 active:!bg-zinc-400 !text-zinc-700"
                     onClick={handleShare}
                   >
                     <Forward className="h-4 w-4" />

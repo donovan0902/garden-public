@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { ProjectRow } from "@/components/ProjectRow";
 import type { ProjectRowData } from "@/lib/types";
-import { MessageCircle } from "lucide-react";
+import { ArrowBigUp, MessageCircle } from "lucide-react";
 import { SpaceIcon } from "@/components/SpaceIcon";
 
 export default function Home() {
@@ -202,7 +202,7 @@ function TrendingThreads() {
               </h4>
               <div className="flex items-center gap-2 text-xs text-zinc-500">
                 <span className="flex items-center gap-0.5">
-                  <span>&uarr;</span> {thread.upvoteCount}
+                  <ArrowBigUp className="h-3.5 w-3.5" fill="none" aria-hidden="true" /> {thread.upvoteCount}
                 </span>
                 <span>&bull;</span>
                 <span className="flex items-center gap-0.5">
@@ -216,5 +216,4 @@ function TrendingThreads() {
     </div>
   );
 }
-
 

@@ -292,10 +292,10 @@ export function CommentThread({
                 size="xs"
                 onClick={handleToggleUpvote}
                 disabled={isTogglingUpvote}
-                className={`gap-0.5 text-xs ${hasUpvoted ? "text-orange-500 hover:text-orange-600" : "text-zinc-400 hover:text-zinc-600"}`}
+                className={`group gap-0.5 text-xs !bg-transparent hover:!bg-transparent active:!bg-transparent ${hasUpvoted ? "text-orange-500 hover:text-orange-600" : "text-zinc-400 hover:text-orange-500"}`}
               >
                 <ArrowBigUp
-                  className="h-4 w-4"
+                  className={`h-4 w-4 transition-colors ${hasUpvoted ? "" : "text-zinc-400 group-hover:text-orange-500"}`}
                   fill={hasUpvoted ? "currentColor" : "none"}
                 />
                 {currentUpvotes > 0 && (
