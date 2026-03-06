@@ -1,7 +1,7 @@
 import { internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
-import type { Doc, Id } from "./_generated/dataModel";
+import type { Id } from "./_generated/dataModel";
 import { isEmailEnabled } from "./emails";
 
 const BATCH_SIZE = 50;
@@ -144,11 +144,11 @@ export const generateDigestBatch = internalAction({
 
       if (isDigestEmpty(digestData)) continue;
 
-      await ctx.runMutation(internal.digests.writeDigestRecord, {
+      await ctx.runMutation(internal.digests.enqueueDigestEmail, {
         userId,
         periodStart: args.periodStart,
         periodEnd: args.periodEnd,
-        ...digestData,
+        digestData,
       });
     }
   },
@@ -317,86 +317,43 @@ export const gatherUserDigestData = internalQuery({
   },
 });
 
-// ─── Internal: write digest record ────────────────────────────────────────────
+// ─── Internal: enqueue digest email ───────────────────────────────────────────
 
-export const writeDigestRecord = internalMutation({
+const ONE_HOUR_MS = 60 * 60 * 1000;
+
+export const enqueueDigestEmail = internalMutation({
   args: {
     userId: v.id("users"),
     periodStart: v.number(),
     periodEnd: v.number(),
-    ownProjectActivity: v.array(
-      v.object({
-        projectId: v.id("projects"),
-        projectName: v.string(),
-        newUpvotes: v.number(),
-        newComments: v.number(),
-        newAdoptions: v.number(),
-        newViews: v.number(),
-      })
-    ),
-    ownProjectTotals: v.object({
-      totalNewUpvotes: v.number(),
-      totalNewComments: v.number(),
-      totalNewAdoptions: v.number(),
-      totalNewViews: v.number(),
-    }),
-    followedSpaceActivity: v.array(
-      v.object({
-        focusAreaId: v.id("focusAreas"),
-        focusAreaName: v.string(),
-        focusAreaIcon: v.optional(v.string()),
-        topProjects: v.array(
-          v.object({
-            projectId: v.id("projects"),
-            projectName: v.string(),
-            upvotes: v.number(),
-            creatorName: v.string(),
-          })
-        ),
-        newThreads: v.array(
-          v.object({
-            threadId: v.id("threads"),
-            threadTitle: v.string(),
-            creatorName: v.string(),
-          })
-        ),
-      })
-    ),
+    digestData: v.any(),
   },
   handler: async (ctx, args) => {
-    // Deduplicate: skip if a digest already exists for this user and period
+    // Deduplicate: skip if a weekly_digest email was already enqueued for this
+    // user within 1 hour of periodEnd (guards against action retries)
+    const deduplicationWindow = args.periodEnd - ONE_HOUR_MS;
     const existing = await ctx.db
-      .query("weeklyDigests")
-      .withIndex("by_userId_periodEnd", (q) =>
-        q.eq("userId", args.userId).eq("periodEnd", args.periodEnd)
+      .query("emailQueue")
+      .withIndex("by_userId_type_createdAt", (q) =>
+        q
+          .eq("userId", args.userId)
+          .eq("type", "weekly_digest")
+          .gte("createdAt", deduplicationWindow)
       )
       .first();
 
     if (existing) return;
 
-    const digestId = await ctx.db.insert("weeklyDigests", {
-      userId: args.userId,
-      periodStart: args.periodStart,
-      periodEnd: args.periodEnd,
-      status: "pending",
-      ownProjectActivity: args.ownProjectActivity,
-      ownProjectTotals: args.ownProjectTotals,
-      followedSpaceActivity: args.followedSpaceActivity,
-      createdAt: Date.now(),
-    });
-
-    // Enqueue the email for the batch sender
-    await ctx.runMutation(internal.emails.enqueueEmail, {
+    await ctx.db.insert("emailQueue", {
       userId: args.userId,
       type: "weekly_digest",
-      referenceId: digestId,
+      status: "pending",
       payload: {
-        ownProjectActivity: args.ownProjectActivity,
-        ownProjectTotals: args.ownProjectTotals,
-        followedSpaceActivity: args.followedSpaceActivity,
+        ...args.digestData,
         periodStart: args.periodStart,
         periodEnd: args.periodEnd,
       },
+      createdAt: Date.now(),
     });
   },
 });

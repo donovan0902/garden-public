@@ -202,50 +202,9 @@ export default defineSchema({
   })
     .index("by_comment", ["commentId"])
     .index("by_comment_and_user", ["commentId", "userId"]),
-  weeklyDigests: defineTable({
-    userId: v.id("users"),
-    periodStart: v.number(),
-    periodEnd: v.number(),
-    status: v.union(v.literal("pending"), v.literal("sent"), v.literal("failed")),
-    ownProjectActivity: v.array(v.object({
-      projectId: v.id("projects"),
-      projectName: v.string(),
-      newUpvotes: v.number(),
-      newComments: v.number(),
-      newAdoptions: v.number(),
-      newViews: v.number(),
-    })),
-    ownProjectTotals: v.object({
-      totalNewUpvotes: v.number(),
-      totalNewComments: v.number(),
-      totalNewAdoptions: v.number(),
-      totalNewViews: v.number(),
-    }),
-    followedSpaceActivity: v.array(v.object({
-      focusAreaId: v.id("focusAreas"),
-      focusAreaName: v.string(),
-      focusAreaIcon: v.optional(v.string()),
-      topProjects: v.array(v.object({
-        projectId: v.id("projects"),
-        projectName: v.string(),
-        upvotes: v.number(),
-        creatorName: v.string(),
-      })),
-      newThreads: v.array(v.object({
-        threadId: v.id("threads"),
-        threadTitle: v.string(),
-        creatorName: v.string(),
-      })),
-    })),
-    createdAt: v.number(),
-  })
-    .index("by_userId", ["userId"])
-    .index("by_userId_periodEnd", ["userId", "periodEnd"])
-    .index("by_status", ["status"]),
   emailQueue: defineTable({
     userId: v.id("users"),
     type: v.string(),
-    referenceId: v.optional(v.string()),
     status: v.union(v.literal("pending"), v.literal("sent"), v.literal("failed")),
     payload: v.any(),
     createdAt: v.number(),
@@ -254,5 +213,6 @@ export default defineSchema({
   })
     .index("by_status", ["status"])
     .index("by_userId", ["userId"])
-    .index("by_status_createdAt", ["status", "createdAt"]),
+    .index("by_status_createdAt", ["status", "createdAt"])
+    .index("by_userId_type_createdAt", ["userId", "type", "createdAt"]),
 });

@@ -27,14 +27,12 @@ export const enqueueEmail = internalMutation({
   args: {
     userId: v.id("users"),
     type: v.string(),
-    referenceId: v.optional(v.string()),
     payload: v.any(),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("emailQueue", {
       userId: args.userId,
       type: args.type,
-      referenceId: args.referenceId,
       status: "pending",
       payload: args.payload,
       createdAt: Date.now(),
