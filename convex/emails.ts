@@ -1,4 +1,4 @@
-import { internalAction, internalMutation, mutation, query } from "./_generated/server";
+import { internalAction, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { getCurrentUser, getCurrentUserOrThrow } from "./users";
 import type { Doc } from "./_generated/dataModel";
@@ -20,25 +20,6 @@ export function isEmailEnabled(
   const value = prefs[category];
   return value !== false;
 }
-
-// ─── Internal: enqueue a batch email ──────────────────────────────────────────
-
-export const enqueueEmail = internalMutation({
-  args: {
-    userId: v.id("users"),
-    type: v.string(),
-    payload: v.any(),
-  },
-  handler: async (ctx, args) => {
-    await ctx.db.insert("emailQueue", {
-      userId: args.userId,
-      type: args.type,
-      status: "pending",
-      payload: args.payload,
-      createdAt: Date.now(),
-    });
-  },
-});
 
 // ─── Internal: sendEmail stub ─────────────────────────────────────────────────
 
