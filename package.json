@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@ai-sdk/amazon-bedrock": "^3.0.72",
@@ -73,8 +74,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "baseline-browser-mapping": "^2.9.19",
-    "eslint": "^4.1.1",
-    "eslint-config-next": "^0.2.4",
+    "eslint": "^9.39.3",
+    "eslint-config-next": "^16.1.6",
     "shadcn": "^3.5.1",
     "tailwindcss": "^4",
     "typescript": "5.9.3"

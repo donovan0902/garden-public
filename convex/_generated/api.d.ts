@@ -11,6 +11,8 @@
 import type * as admin from "../admin.js";
 import type * as comments from "../comments.js";
 import type * as crons from "../crons.js";
+import type * as digests from "../digests.js";
+import type * as emails from "../emails.js";
 import type * as focusAreas from "../focusAreas.js";
 import type * as functions from "../functions.js";
 import type * as http from "../http.js";
@@ -42,6 +44,8 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   comments: typeof comments;
   crons: typeof crons;
+  digests: typeof digests;
+  emails: typeof emails;
   focusAreas: typeof focusAreas;
   functions: typeof functions;
   http: typeof http;

@@ -50,7 +50,7 @@ export const sendEmail = internalAction({
 
 // ─── Queue drainer ───────────────────────────────────────────────────────────
 
-const DRAIN_BATCH_SIZE = 50;
+const DRAIN_BATCH_SIZE = 14;
 
 export const getPendingEmails = internalQuery({
   args: { limit: v.number() },
