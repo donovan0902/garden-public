@@ -53,17 +53,6 @@ export function isEmailEnabled(
   return value !== false;
 }
 
-// ─── Internal: getUserEmail ───────────────────────────────────────────────────
-
-export const getUserEmail = internalQuery({
-  args: { userId: v.id("users") },
-  handler: async (ctx, args) => {
-    const user = await ctx.db.get(args.userId);
-    if (!user) return null;
-    return { email: user.email, name: user.name };
-  },
-});
-
 // ─── Internal: sendEmail (SES v2) ────────────────────────────────────────────
 
 export const sendEmail = internalAction({
