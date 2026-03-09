@@ -27,21 +27,10 @@ type EmailRecipient = {
 
 function getAppBaseUrl(): string {
   const explicitBaseUrl =
-    process.env.APP_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.NEXT_PUBLIC_SITE_URL;
-  if (explicitBaseUrl) {
-    return explicitBaseUrl.endsWith("/")
-      ? explicitBaseUrl.slice(0, -1)
-      : explicitBaseUrl;
-  }
-
-  const redirectUri = process.env.NEXT_PUBLIC_COGNITO_REDIRECT_URI;
-  if (redirectUri) {
-    return new URL("/", redirectUri).origin;
-  }
-
-  return "http://localhost:3000";
+    process.env.APP_URL ?? "http://localhost:3000";
+  return explicitBaseUrl.endsWith("/")
+    ? explicitBaseUrl.slice(0, -1)
+    : explicitBaseUrl;
 }
 
 /**
