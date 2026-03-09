@@ -8,7 +8,7 @@ const BATCH_SIZE = 50;
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const MAX_TOP_PROJECTS_PER_SPACE = 3;
 const MAX_NEW_THREADS_PER_SPACE = 5;
-const MAX_PLATFORM_HIGHLIGHTS = 5;
+const MAX_PLATFORM_HIGHLIGHTS = 3;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
