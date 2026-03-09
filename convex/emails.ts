@@ -27,21 +27,10 @@ type EmailRecipient = {
 
 function getAppBaseUrl(): string {
   const explicitBaseUrl =
-    process.env.APP_URL ??
-    process.env.NEXT_PUBLIC_APP_URL ??
-    process.env.NEXT_PUBLIC_SITE_URL;
-  if (explicitBaseUrl) {
-    return explicitBaseUrl.endsWith("/")
-      ? explicitBaseUrl.slice(0, -1)
-      : explicitBaseUrl;
-  }
-
-  const redirectUri = process.env.NEXT_PUBLIC_COGNITO_REDIRECT_URI;
-  if (redirectUri) {
-    return new URL("/", redirectUri).origin;
-  }
-
-  return "http://localhost:3000";
+    process.env.APP_URL ?? "http://localhost:3000";
+  return explicitBaseUrl.endsWith("/")
+    ? explicitBaseUrl.slice(0, -1)
+    : explicitBaseUrl;
 }
 
 /**
@@ -86,11 +75,15 @@ export const sendEmail = internalAction({
     let html: string;
     let text: string | undefined;
 
+    const baseUrl = getAppBaseUrl();
+    const profileUrl = `${baseUrl}/profile/${args.userId}`;
+
     if (args.type === "weekly_digest") {
       const rendered = renderWeeklyDigestEmail({
         recipientName: recipient.name,
         payload: args.payload as WeeklyDigestPayload,
-        baseUrl: getAppBaseUrl(),
+        baseUrl,
+        profileUrl,
       });
       subject = rendered.subject;
       html = rendered.html;
@@ -99,7 +92,8 @@ export const sendEmail = internalAction({
       const rendered = renderSpaceActivityEmail({
         recipientName: recipient.name,
         payload: args.payload as SpaceActivityPayload,
-        baseUrl: getAppBaseUrl(),
+        baseUrl,
+        profileUrl,
       });
       subject = rendered.subject;
       html = rendered.html;

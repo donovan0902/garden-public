@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
+import { EmailPreferencesSection } from "@/components/EmailPreferencesSection";
 import { ArrowBigUp, Eye, MessageSquare, Pencil, Users } from "lucide-react";
 import { stripHtml } from "@/lib/utils";
 import {
@@ -104,7 +105,7 @@ export default function ProfilePage({
   if (isLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen bg-zinc-50">
-        <main className="mx-auto w-full max-w-5xl px-6 py-16">
+        <main className="mx-auto w-full max-w-6xl px-6 py-16">
           <p className="text-center text-zinc-500">Loading profile...</p>
         </main>
       </div>
@@ -114,7 +115,7 @@ export default function ProfilePage({
   if (profile === undefined) {
     return (
       <div className="min-h-screen bg-zinc-50">
-        <main className="mx-auto w-full max-w-5xl px-6 py-16">
+        <main className="mx-auto w-full max-w-6xl px-6 py-16">
           <p className="text-center text-zinc-500">Loading profile...</p>
         </main>
       </div>
@@ -124,7 +125,7 @@ export default function ProfilePage({
   if (profile === null) {
     return (
       <div className="min-h-screen bg-zinc-50">
-        <main className="mx-auto w-full max-w-5xl px-6 py-16">
+        <main className="mx-auto w-full max-w-6xl px-6 py-16">
           <div className="text-center">
             <p className="text-xl font-semibold text-zinc-900">
               Profile not found
@@ -152,7 +153,7 @@ export default function ProfilePage({
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      <main className="mx-auto w-full max-w-5xl space-y-8 px-6 pb-16 pt-4">
+        <main className="mx-auto w-full max-w-6xl space-y-8 px-6 pb-16 pt-4">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -166,137 +167,153 @@ export default function ProfilePage({
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <div className="relative flex flex-col items-center gap-6 pr-12 text-center md:items-start md:text-left">
-          {!isOwner && email && (
-            <div className="absolute right-0 top-0 flex gap-1">
-              {teamsChatLink && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10"
-                  asChild
-                >
-                  <a
-                    href={teamsChatLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`Chat with ${profile.name} in Teams`}
+        <div
+          className={
+            isOwner
+              ? "space-y-8 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8 lg:space-y-0"
+              : "space-y-8"
+          }
+        >
+          <div className="min-w-0 space-y-8">
+            <div className="relative flex flex-col items-center gap-6 pr-12 text-center md:items-start md:text-left">
+              {!isOwner && email && (
+                <div className="absolute right-0 top-0 flex gap-1">
+                  {teamsChatLink && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10"
+                      asChild
+                    >
+                      <a
+                        href={teamsChatLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Chat with ${profile.name} in Teams`}
+                      >
+                        <i className="bi bi-microsoft-teams text-xl text-zinc-600" aria-hidden="true" />
+                      </a>
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10"
+                    asChild
                   >
-                    <i className="bi bi-microsoft-teams text-xl text-zinc-600" aria-hidden="true" />
-                  </a>
-                </Button>
+                    <a
+                      href={`mailto:${email}`}
+                      aria-label={`Send email to ${profile.name}`}
+                    >
+                      <i className="bi bi-envelope text-xl text-zinc-600" aria-hidden="true" />
+                    </a>
+                  </Button>
+                </div>
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10"
-                asChild
-              >
-                <a
-                  href={`mailto:${email}`}
-                  aria-label={`Send email to ${profile.name}`}
-                >
-                  <i className="bi bi-envelope text-xl text-zinc-600" aria-hidden="true" />
-                </a>
-              </Button>
-            </div>
-          )}
-          <div className="flex flex-col items-center gap-4 md:flex-row md:items-center">
-            <Avatar className="h-16 w-16 border border-white shadow-sm">
-              <AvatarImage src={profile.avatarUrlId} alt={profile.name} />
-              <AvatarFallback>
-                {(profile.name || "U").slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start">
-                <h1 className="text-3xl font-semibold text-zinc-900">
-                  {profile.name}
-                </h1>
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-zinc-600 md:justify-start">
-                {profile.department && (
-                  <span className="inline-flex items-center gap-2">
-                    <span className="text-zinc-500">{profile.department}</span>
-                  </span>
-                )}
-                {profile.team && (
-                  <Badge variant="outline" className="border-zinc-300">
-                    Team {profile.team}
-                  </Badge>
-                )}
+              <div className="flex flex-col items-center gap-4 md:flex-row md:items-center">
+                <Avatar className="h-16 w-16 border border-white shadow-sm">
+                  <AvatarImage src={profile.avatarUrlId} alt={profile.name} />
+                  <AvatarFallback>
+                    {(profile.name || "U").slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center justify-center gap-2 md:justify-start">
+                    <h1 className="text-3xl font-semibold text-zinc-900">
+                      {profile.name}
+                    </h1>
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-zinc-600 md:justify-start">
+                    {profile.department && (
+                      <span className="inline-flex items-center gap-2">
+                        <span className="text-zinc-500">{profile.department}</span>
+                      </span>
+                    )}
+                    {profile.team && (
+                      <Badge variant="outline" className="border-zinc-300">
+                        Team {profile.team}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
 
-        <Tabs defaultValue="projects" className="space-y-6">
-          <div className="relative flex items-center">
-            <div className="absolute left-0">
-              {isOwner && (
-                <Button variant="outline" asChild>
-                  <Link href="/submit" prefetch={false}>
-                    Share a tool
-                  </Link>
-                </Button>
-              )}
-            </div>
-            <div className="flex flex-1 justify-center">
-              <TabsList className="bg-white/90 shadow-sm ring-1 ring-zinc-200">
-                <TabsTrigger value="projects" className="gap-2">
-                  Built
-                  <Badge variant="secondary" className="bg-zinc-100">
-                    {profile.projectCount}
-                  </Badge>
-                </TabsTrigger>
-                <TabsTrigger value="adopted" className="gap-2">
-                  {`Tools ${firstName} uses`}
-                  <Badge variant="secondary" className="bg-zinc-100">
-                    {profile.adoptionCount}
-                  </Badge>
-                </TabsTrigger>
-              </TabsList>
-            </div>
-          </div>
+            <Tabs defaultValue="projects" className="min-w-0 space-y-6">
+              <div className="relative flex items-center">
+                <div className="absolute left-0">
+                  {isOwner && (
+                    <Button variant="outline" asChild>
+                      <Link href="/submit" prefetch={false}>
+                        Share a tool
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+                <div className="flex flex-1 justify-center">
+                  <TabsList className="bg-white/90 shadow-sm ring-1 ring-zinc-200">
+                    <TabsTrigger value="projects" className="gap-2">
+                      Built
+                      <Badge variant="secondary" className="bg-zinc-100">
+                        {profile.projectCount}
+                      </Badge>
+                    </TabsTrigger>
+                    <TabsTrigger value="adopted" className="gap-2">
+                      {`Tools ${firstName} uses`}
+                      <Badge variant="secondary" className="bg-zinc-100">
+                        {profile.adoptionCount}
+                      </Badge>
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+              </div>
 
-          <TabsContent value="projects" className="space-y-4">
-            {projects === undefined ? (
-              <EmptyState message="Loading tools..." />
-            ) : projects.length === 0 ? (
-              <EmptyState
-                message={
-                  isOwner
-                    ? "Your garden is empty. What are you working on?"
-                    : "Nothing shared yet."
-                }
-              />
-            ) : (
-              <div className="space-y-3">
-                {projects.map((project) => (
-                  <ProjectCard
-                    key={project._id}
-                    project={project}
-                    canEdit={isOwner}
+              <TabsContent value="projects" className="space-y-4">
+                {projects === undefined ? (
+                  <EmptyState message="Loading tools..." />
+                ) : projects.length === 0 ? (
+                  <EmptyState
+                    message={
+                      isOwner
+                        ? "Your garden is empty. What are you working on?"
+                        : "Nothing shared yet."
+                    }
                   />
-                ))}
-              </div>
-            )}
-          </TabsContent>
+                ) : (
+                  <div className="space-y-3">
+                    {projects.map((project) => (
+                      <ProjectCard
+                        key={project._id}
+                        project={project}
+                        canEdit={isOwner}
+                      />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
 
-          <TabsContent value="adopted" className="space-y-4">
-            {adoptedProjects === undefined ? (
-              <EmptyState message="Loading tools in use..." />
-            ) : adoptedProjects.length === 0 ? (
-              <EmptyState message="Nothing gathered yet." />
-            ) : (
-              <div className="space-y-3">
-                {adoptedProjects.map((project) => (
-                  <AdoptedCard key={project._id} project={project} />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+              <TabsContent value="adopted" className="space-y-4">
+                {adoptedProjects === undefined ? (
+                  <EmptyState message="Loading tools in use..." />
+                ) : adoptedProjects.length === 0 ? (
+                  <EmptyState message="Nothing gathered yet." />
+                ) : (
+                  <div className="space-y-3">
+                    {adoptedProjects.map((project) => (
+                      <AdoptedCard key={project._id} project={project} />
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {isOwner && (
+            <aside className="lg:sticky lg:top-6">
+              <EmailPreferencesSection />
+            </aside>
+          )}
+        </div>
       </main>
     </div>
   );
