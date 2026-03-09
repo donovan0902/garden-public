@@ -414,9 +414,15 @@ export function renderWeeklyDigestEmail(args: {
                     <div style="font-size: 15px; line-height: 1.6; color: #3f3f46; margin: 0 0 16px;">
                       Here's a quick summary of what happened in Garden this week.
                     </div>
-                    <div style="font-size: 14px; line-height: 1.6; color: #52525b; background-color: #f9fafb; border: 1px solid #e4e4e7; border-radius: 12px; padding: 14px 16px;">
-                      ${escapeHtml(introSummary)}
-                    </div>
+                    ${
+                      getTotalInteractions(payload) > 0
+                        ? `
+                          <div style="font-size: 14px; line-height: 1.6; color: #52525b; background-color: #f9fafb; border: 1px solid #e4e4e7; border-radius: 12px; padding: 14px 16px;">
+                            ${escapeHtml(introSummary)}
+                          </div>
+                        `
+                        : ""
+                    }
                   </td>
                 </tr>
                 ${
