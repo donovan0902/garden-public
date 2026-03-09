@@ -44,8 +44,8 @@ export function EmailPreferencesSection() {
       <h2 className="text-lg font-semibold text-zinc-900">
         Email notifications
       </h2>
-      <Card className="border-zinc-200/80 bg-white/90">
-        <CardContent className="divide-y divide-zinc-100 px-6 py-2">
+      <Card className="border-zinc-200 bg-zinc-200/80 shadow-none">
+        <CardContent className="divide-y divide-zinc-200 px-6 py-2">
           {PREFERENCES.map((pref) => (
             <div
               key={pref.key}
@@ -64,6 +64,7 @@ export function EmailPreferencesSection() {
                 id={pref.key}
                 checked={prefs[pref.key]}
                 onCheckedChange={(checked) => handleToggle(pref.key, checked)}
+                className="data-[state=unchecked]:bg-zinc-400"
               />
             </div>
           ))}
