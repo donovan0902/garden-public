@@ -196,6 +196,21 @@ export const confirmProject = mutation({
       status: "active" as const,
       hotScore: calculateHotScore(project.engagementScore ?? 0, project._creationTime, now),
     });
+
+    // Notify followers of the space about the new project
+    if (project.focusAreaId) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.spaceNotifications.notifySpaceFollowers,
+        {
+          focusAreaId: project.focusAreaId,
+          contentType: "project" as const,
+          contentId: args.projectId,
+          contentTitle: project.name,
+          creatorUserId: project.userId,
+        }
+      );
+    }
   },
 });
 
