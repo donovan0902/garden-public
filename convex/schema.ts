@@ -125,6 +125,11 @@ export default defineSchema({
     onboardingCompleted: v.boolean(),
     department: v.optional(v.string()),
     userIntent: v.optional(v.union(v.literal("looking"), v.literal("sharing"), v.literal("both"))),
+    emailPreferences: v.optional(v.object({
+      weeklyDigest: v.optional(v.boolean()),
+      spaceActivity: v.optional(v.boolean()),
+      projectActivity: v.optional(v.boolean()),
+    })),
   })
     .index("by_teamId", ["teamId"])
     .index("by_userIntent", ["userIntent"])
@@ -197,4 +202,17 @@ export default defineSchema({
   })
     .index("by_comment", ["commentId"])
     .index("by_comment_and_user", ["commentId", "userId"]),
+  emailQueue: defineTable({
+    userId: v.id("users"),
+    type: v.string(),
+    status: v.union(v.literal("pending"), v.literal("sent"), v.literal("failed")),
+    payload: v.any(),
+    createdAt: v.number(),
+    sentAt: v.optional(v.number()),
+    failureReason: v.optional(v.string()),
+  })
+    .index("by_status", ["status"])
+    .index("by_userId", ["userId"])
+    .index("by_status_createdAt", ["status", "createdAt"])
+    .index("by_userId_type_createdAt", ["userId", "type", "createdAt"]),
 });
