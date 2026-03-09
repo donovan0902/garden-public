@@ -1,4 +1,5 @@
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { getCurrentUser, getCurrentUserOrThrow } from "./users";
@@ -27,6 +28,19 @@ export const createThread = mutation({
       hotScore: calculateHotScore(0, now, now),
       createdAt: now,
     });
+
+    // Notify followers of the space about the new thread
+    await ctx.scheduler.runAfter(
+      0,
+      internal.spaceNotifications.notifySpaceFollowers,
+      {
+        focusAreaId: args.focusAreaId,
+        contentType: "thread" as const,
+        contentId: threadId,
+        contentTitle: args.title.trim(),
+        creatorUserId: user._id,
+      }
+    );
 
     return threadId;
   },

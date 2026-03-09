@@ -10,7 +10,12 @@ import { v } from "convex/values";
 import { getCurrentUser, getCurrentUserOrThrow } from "./users";
 import type { Doc } from "./_generated/dataModel";
 import { SESv2Client, SendEmailCommand } from "@aws-sdk/client-sesv2";
-import { renderWeeklyDigestEmail, type WeeklyDigestPayload } from "./emailRenderer";
+import {
+  renderWeeklyDigestEmail,
+  renderSpaceActivityEmail,
+  type WeeklyDigestPayload,
+  type SpaceActivityPayload,
+} from "./emailRenderer";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -85,6 +90,15 @@ export const sendEmail = internalAction({
       const rendered = renderWeeklyDigestEmail({
         recipientName: recipient.name,
         payload: args.payload as WeeklyDigestPayload,
+        baseUrl: getAppBaseUrl(),
+      });
+      subject = rendered.subject;
+      html = rendered.html;
+      text = rendered.text;
+    } else if (args.type === "space_activity") {
+      const rendered = renderSpaceActivityEmail({
+        recipientName: recipient.name,
+        payload: args.payload as SpaceActivityPayload,
         baseUrl: getAppBaseUrl(),
       });
       subject = rendered.subject;
