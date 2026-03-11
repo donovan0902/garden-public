@@ -8,7 +8,8 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/RichTextEditor";
+import { isRichTextEmpty } from "@/lib/utils";
 import { SpacePicker } from "@/components/SpacePicker";
 
 export default function CreateThreadPage() {
@@ -35,7 +36,7 @@ export default function CreateThreadPage() {
     try {
       const threadId = await createThread({
         title: title.trim(),
-        body: body.trim() || undefined,
+        body: isRichTextEmpty(body) ? undefined : body,
         focusAreaId,
       });
       router.push(`/thread/${threadId}`);
@@ -81,13 +82,10 @@ export default function CreateThreadPage() {
               Body{" "}
               <span className="text-zinc-400 font-normal">(optional)</span>
             </label>
-            <Textarea
+            <RichTextEditor
               value={body}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                setBody(e.target.value)
-              }
+              onChange={setBody}
               placeholder="Add more context"
-              className="min-h-24"
               disabled={isSubmitting}
             />
           </div>
