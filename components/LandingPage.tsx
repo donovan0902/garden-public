@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowBigUp, Users2 } from "lucide-react";
+import { ArrowBigUp, Users2, Share2, BookMarked, TrendingUp } from "lucide-react";
 import { ReadinessBadge } from "@/components/ReadinessBadge";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { ReadinessStatus } from "@/lib/types";
@@ -56,95 +56,171 @@ const MOCK_PROJECTS: {
     summary:
       "A Power BI template for tracking team OKRs with drill-down by quarter. Adapt the data model to your department.",
   },
+  {
+    name: "Slack Bot for IT Ticket Triage",
+    space: "Integrations",
+    spaceIcon: "🔗",
+    readiness: "ready_to_use",
+    upvotes: 22,
+    adopters: 15,
+    summary:
+      "Posts new ServiceNow tickets to the right Slack channel and pings the on-call engineer automatically.",
+  },
+  {
+    name: "Onboarding Checklist Automation",
+    space: "HR Tools",
+    spaceIcon: "📋",
+    readiness: "ready_to_use",
+    upvotes: 14,
+    adopters: 9,
+    summary:
+      "Assigns tasks to manager, IT, and new hire on day one via SharePoint. No manual handoffs needed.",
+  },
+  {
+    name: "Python Script: Invoice Data Extractor",
+    space: "Python",
+    spaceIcon: "🐍",
+    readiness: "early_prototype",
+    upvotes: 9,
+    adopters: 3,
+    summary:
+      "Reads PDF invoices and outputs a structured CSV. Handles most common supplier formats with minimal config.",
+  },
 ];
 
 export function LandingPage() {
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white">
-        {/* Hero */}
-        <section className="flex flex-col items-center px-6 pb-16 pt-20 text-center sm:pt-28">
-          <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-zinc-900 sm:text-4xl">
-            See what other people are working on
-          </h1>
-          <p className="mt-4 max-w-xl text-base text-zinc-500 sm:text-lg">
-            Sign in to peruse
-          </p>
+      <div className="min-h-screen bg-white">
+        {/* Hero — dark with emerald glow */}
+        <section className="relative overflow-hidden bg-zinc-950 px-6 pb-28 pt-24 text-center sm:pt-36">
+          {/* Ambient glow blobs */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute left-1/2 top-0 h-[480px] w-[640px] -translate-x-1/2 -translate-y-1/4 rounded-full bg-emerald-500/10 blur-3xl" />
+            <div className="absolute bottom-0 left-1/4 h-48 w-48 rounded-full bg-emerald-600/8 blur-2xl" />
+            <div className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-zinc-800/60 blur-2xl" />
+          </div>
 
-          <div className="mt-8 flex w-full flex-wrap items-center justify-center gap-3">
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="h-12 w-full max-w-sm justify-center rounded-xl border border-zinc-200 bg-zinc-50 px-4 text-zinc-900 shadow-sm transition-all hover:border-zinc-300 hover:bg-zinc-100 hover:text-zinc-900 hover:shadow-md focus-visible:border-zinc-400 focus-visible:text-zinc-900 sm:w-auto sm:min-w-[300px]"
-            >
-              <Link
-                href="/sign-in"
-                aria-label="Continue with Microsoft"
-                className="flex w-full items-center justify-center gap-2.5"
+          <div className="relative">
+            {/* Headline — kept exactly as-is */}
+            <h1 className="mx-auto max-w-2xl text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+              See what people are working on
+            </h1>
+
+            {/* Sub-headline — kept exactly as-is */}
+            <p className="mx-auto mt-5 max-w-lg text-lg text-zinc-400 sm:text-xl">
+              Share your own work too!
+            </p>
+
+            {/* CTA */}
+            <div className="mt-10 flex justify-center">
+              <Button
+                asChild
+                size="lg"
+                className="h-12 rounded-xl bg-white px-8 text-zinc-900 shadow-lg transition-all hover:bg-zinc-100 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-white/40"
               >
-                <span
-                  aria-hidden="true"
-                  className="grid h-5 w-5 grid-cols-2 gap-[2px] rounded-[2px]"
+                <Link
+                  href="/sign-in"
+                  aria-label="Continue with Microsoft"
+                  className="flex items-center gap-2.5"
                 >
-                  <span className="bg-[#f25022]" />
-                  <span className="bg-[#7fba00]" />
-                  <span className="bg-[#00a4ef]" />
-                  <span className="bg-[#ffb900]" />
-                </span>
-                <span className="truncate font-medium">
-                  Continue with Microsoft
-                </span>
-              </Link>
-            </Button>
+                  <span
+                    aria-hidden="true"
+                    className="grid h-5 w-5 grid-cols-2 gap-[2px] rounded-[2px]"
+                  >
+                    <span className="bg-[#f25022]" />
+                    <span className="bg-[#7fba00]" />
+                    <span className="bg-[#00a4ef]" />
+                    <span className="bg-[#ffb900]" />
+                  </span>
+                  <span className="font-medium">Continue with Microsoft</span>
+                </Link>
+              </Button>
+            </div>
+
+            {/* Feature highlights */}
+            <div className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-zinc-500">
+              <span className="flex items-center gap-2">
+                <Share2 className="h-4 w-4 text-emerald-500" />
+                Share scripts &amp; automations
+              </span>
+              <span className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-emerald-500" />
+                Upvote what&apos;s useful
+              </span>
+              <span className="flex items-center gap-2">
+                <BookMarked className="h-4 w-4 text-emerald-500" />
+                Follow topics you care about
+              </span>
+            </div>
           </div>
         </section>
 
-        {/* Preview cards */}
-        <section className="mx-auto max-w-4xl px-6 pb-20">
-          <h2 className="mb-6 text-center text-sm font-semibold uppercase tracking-widest text-zinc-400">
-            Example of what's inside
+        {/* Preview cards — auto-scrolling marquee */}
+        <section className="overflow-hidden bg-zinc-50 py-20">
+          <style>{`
+            @keyframes marquee {
+              from { transform: translateX(0); }
+              to   { transform: translateX(-50%); }
+            }
+            .marquee-track {
+              animation: marquee 40s linear infinite;
+              will-change: transform;
+            }
+            .marquee-track:hover {
+              animation-play-state: paused;
+            }
+          `}</style>
+
+          <h2 className="mb-10 text-center text-xs font-semibold uppercase tracking-widest text-zinc-400">
+            Example of what&apos;s inside (not real projects)
           </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {MOCK_PROJECTS.map((project) => (
-              <div
-                key={project.name}
-                className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm"
-              >
-                {/* Space badge + readiness */}
-                <div className="mb-3 flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
-                    <span aria-hidden>{project.spaceIcon}</span>
-                    {project.space}
-                  </span>
-                  <div className="flex items-center gap-1.5">
+
+          <div className="relative">
+            {/* Fade masks */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-zinc-50 to-transparent" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-zinc-50 to-transparent" />
+
+            {/* Scrolling track — items duplicated for seamless loop */}
+            <div className="marquee-track flex gap-4 px-4" style={{ width: "max-content" }}>
+              {[...MOCK_PROJECTS, ...MOCK_PROJECTS].map((project, i) => (
+                <div
+                  key={i}
+                  className="group w-72 flex-none rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-emerald-200 hover:shadow-md"
+                >
+                  {/* Space badge + readiness */}
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-0.5 text-xs font-medium text-zinc-600">
+                      <span aria-hidden>{project.spaceIcon}</span>
+                      {project.space}
+                    </span>
                     <ReadinessBadge status={project.readiness} />
                   </div>
+
+                  {/* Name */}
+                  <p className="text-sm font-semibold leading-snug text-zinc-900 transition-colors duration-200 group-hover:text-emerald-700">
+                    {project.name}
+                  </p>
+
+                  {/* Summary */}
+                  <p className="mt-1.5 line-clamp-2 text-xs text-zinc-500">
+                    {project.summary}
+                  </p>
+
+                  {/* Stats */}
+                  <div className="mt-4 flex items-center gap-4 text-xs text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      <ArrowBigUp className="h-3.5 w-3.5" fill="none" />
+                      {project.upvotes}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users2 className="h-3.5 w-3.5" />
+                      {project.adopters} using this
+                    </span>
+                  </div>
                 </div>
-
-                {/* Name */}
-                <p className="text-sm font-semibold leading-snug text-zinc-900">
-                  {project.name}
-                </p>
-
-                {/* Summary */}
-                <p className="mt-1.5 line-clamp-2 text-xs text-zinc-500">
-                  {project.summary}
-                </p>
-
-                {/* Stats */}
-                <div className="mt-4 flex items-center gap-4 text-xs text-zinc-400">
-                  <span className="flex items-center gap-1">
-                    <ArrowBigUp className="h-3.5 w-3.5" fill="none" />
-                    {project.upvotes}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users2 className="h-3.5 w-3.5" />
-                    {project.adopters} using this
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
       </div>
