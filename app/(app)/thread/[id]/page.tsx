@@ -13,11 +13,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CommentForm } from "@/components/CommentForm";
 import { CommentThread } from "@/components/CommentThread";
 import { RichTextContent } from "@/components/RichTextContent";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import Link from "next/link";
 import { ArrowBigUp, Forward, Pencil, Trash2 } from "lucide-react";
-import { getRelativeTime } from "@/lib/utils";
+import { getRelativeTime, isRichTextEmpty } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { SpaceIcon } from "@/components/SpaceIcon";
 import {
   Breadcrumb,
@@ -111,7 +111,7 @@ export default function ThreadPage({
       await updateThread({
         threadId,
         title: editTitle.trim(),
-        body: editBody.trim() || undefined,
+        body: isRichTextEmpty(editBody) ? undefined : editBody,
       });
       setIsEditing(false);
     } catch (error) {
@@ -254,11 +254,10 @@ export default function ThreadPage({
                     disabled={isSaving}
                     autoFocus
                   />
-                  <Textarea
+                  <RichTextEditor
                     value={editBody}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setEditBody(e.target.value)}
+                    onChange={setEditBody}
                     placeholder="Add more context (optional)"
-                    className="min-h-16 text-sm"
                     disabled={isSaving}
                   />
                   <div className="flex items-center justify-between">

@@ -7,7 +7,8 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/RichTextEditor";
+import { isRichTextEmpty } from "@/lib/utils";
 import { MessageSquarePlus } from "lucide-react";
 
 interface CreateThreadFormProps {
@@ -31,7 +32,7 @@ export function CreateThreadForm({ focusAreaId, defaultExpanded, onSuccess }: Cr
     try {
       await createThread({
         title: title.trim(),
-        body: body.trim() || undefined,
+        body: isRichTextEmpty(body) ? undefined : body,
         focusAreaId,
       });
       setTitle("");
@@ -71,11 +72,10 @@ export function CreateThreadForm({ focusAreaId, defaultExpanded, onSuccess }: Cr
         disabled={isSubmitting}
         autoFocus
       />
-      <Textarea
+      <RichTextEditor
         value={body}
-        onChange={(e) => setBody(e.target.value)}
+        onChange={setBody}
         placeholder="Add more context (optional)"
-        className="min-h-16 text-sm"
         disabled={isSubmitting}
       />
       <div className="flex justify-end gap-2">
