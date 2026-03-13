@@ -5,21 +5,21 @@ import { File as FileIcon, X } from "lucide-react";
 import { formatFileSize, MAX_FILE_SIZE, MAX_PROJECT_FILES } from "@/lib/fileSize";
 import type { NewProjectFileItem } from "@/lib/types";
 
-interface FileUploadFieldProps {
-  existingFiles?: Array<{ _id: string; filename: string; fileSize: number }>;
-  onExistingFileDelete?: (fileId: string) => void;
+interface FileUploadFieldProps<TId extends string = string> {
+  existingFiles?: Array<{ _id: TId; filename: string; fileSize: number }>;
+  onExistingFileDelete?: (fileId: TId) => void;
   newFiles: NewProjectFileItem[];
   onNewFilesChange: (files: NewProjectFileItem[]) => void;
   disabled?: boolean;
 }
 
-export function FileUploadField({
+export function FileUploadField<TId extends string = string>({
   existingFiles = [],
   onExistingFileDelete,
   newFiles,
   onNewFilesChange,
   disabled = false,
-}: FileUploadFieldProps) {
+}: FileUploadFieldProps<TId>) {
   const totalFileCount = existingFiles.length + newFiles.length;
   const canAddMore = totalFileCount < MAX_PROJECT_FILES;
 

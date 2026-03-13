@@ -82,16 +82,16 @@ export default function EditVersionPage({
   }
 
   const existingFiles = version.files.map((f) => ({
-    _id: f._id as string,
+    _id: f._id,
     filename: f.filename,
     fileSize: f.fileSize,
   }));
 
-  const handleExistingFileDelete = async (fileId: string) => {
+  const handleExistingFileDelete = async (fileId: Id<"versionFiles">) => {
     try {
       await deleteFileFromVersion({
         versionId,
-        fileId: fileId as Id<"versionFiles">,
+        fileId,
       });
     } catch {
       toast.error("Failed to delete file");

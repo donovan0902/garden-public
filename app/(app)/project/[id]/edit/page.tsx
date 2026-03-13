@@ -96,9 +96,9 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
     }
   };
 
-  const handleExistingFileDelete = async (fileId: string) => {
+  const handleExistingFileDelete = async (fileId: Id<"projectFiles">) => {
     try {
-      await deleteFileFromProject({ projectId, fileId: fileId as Id<"projectFiles"> });
+      await deleteFileFromProject({ projectId, fileId });
     } catch (error) {
       console.error("Failed to delete file:", error);
       toast.error("Failed to delete file. Please try again.");
