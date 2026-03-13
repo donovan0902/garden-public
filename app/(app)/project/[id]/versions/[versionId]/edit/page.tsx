@@ -116,12 +116,15 @@ export default function EditVersionPage({
       // Upload new files
       for (const fileItem of newFiles) {
         const uploadUrl = await generateUploadUrl();
-        const result = await fetch(uploadUrl, {
+        const uploadResult = await fetch(uploadUrl, {
           method: "POST",
           headers: { "Content-Type": fileItem.file.type },
           body: fileItem.file,
         });
-        const { storageId } = await result.json();
+        if (!uploadResult.ok) {
+          throw new Error(`Failed to upload ${fileItem.file.name}`);
+        }
+        const { storageId } = await uploadResult.json();
         await addFileToVersion({
           versionId,
           storageId,
