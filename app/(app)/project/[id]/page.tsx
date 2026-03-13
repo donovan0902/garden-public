@@ -445,16 +445,24 @@ export default function ProjectPage({
                       )}
                     </div>
                     {versions && versions.length > 0 && (
-                      <Tabs value={activeVersionId} onValueChange={setSelectedVersionId}>
-                        <TabsList variant="line" className="h-auto w-full overflow-x-auto flex-nowrap gap-1 bg-transparent p-0 pb-1">
-                          {versions.map((version) => (
-                            <TabsTrigger key={version._id} value={version._id} className="text-xs px-2.5 py-0.5 shrink-0">
-                              <Tag className="h-3 w-3 mr-1" />
-                              {version.tag}
-                            </TabsTrigger>
-                          ))}
-                        </TabsList>
-                      </Tabs>
+                      <>
+                        <Tabs value={activeVersionId} onValueChange={setSelectedVersionId}>
+                          <TabsList variant="line" className="h-auto w-full overflow-x-auto flex-nowrap gap-1 bg-transparent p-0 pb-1">
+                            {versions.map((version) => (
+                              <TabsTrigger key={version._id} value={version._id} className="text-xs px-2.5 py-0.5 shrink-0">
+                                <Tag className="h-3 w-3 mr-1" />
+                                {version.tag}
+                              </TabsTrigger>
+                            ))}
+                          </TabsList>
+                        </Tabs>
+                        <Link
+                          href={`/project/${id}/versions`}
+                          className="text-xs text-zinc-400 hover:text-zinc-700"
+                        >
+                          View all releases →
+                        </Link>
+                      </>
                     )}
                   </div>
                 )}
