@@ -279,9 +279,25 @@ export const deleteVersion = mutation({
 
     await ctx.db.delete(args.versionId);
 
-    // Decrement version count
+    // Recompute lastVersionAt based on remaining versions
+    const remainingVersions = await ctx.db
+      .query("projectVersions")
+      .withIndex("by_project", (q) => q.eq("projectId", version.projectId))
+      .collect();
+
+    const nonV0Versions = remainingVersions.filter(
+      (v) => v.tag !== "v0"
+    );
+
+    const lastVersionAt =
+      nonV0Versions.length > 0
+        ? Math.max(...nonV0Versions.map((v) => v._creationTime))
+        : undefined;
+
+    // Decrement version count and update lastVersionAt
     await ctx.db.patch(version.projectId, {
       versionCount: Math.max(0, (project.versionCount ?? 0) - 1),
+      lastVersionAt,
     });
   },
 });
