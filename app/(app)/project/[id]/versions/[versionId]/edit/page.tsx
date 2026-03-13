@@ -132,7 +132,7 @@ export default function EditVersionPage({
       }
 
       toast.success("Version updated!");
-      router.push(`/project/${id}?tab=versions`);
+      router.push(`/project/${id}/versions`);
     } catch {
       toast.error("Failed to update version");
     } finally {
@@ -248,7 +248,7 @@ export default function EditVersionPage({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => router.push(`/project/${id}?tab=versions`)}
+              onClick={() => router.push(`/project/${id}/versions`)}
               disabled={isSubmitting}
             >
               Cancel

@@ -119,7 +119,7 @@ export default function NewVersionPage({
       }
 
       toast.success("Release published!");
-      router.push(`/project/${id}?tab=versions`);
+      router.push(`/project/${id}/versions`);
     } catch {
       toast.error("Failed to publish release");
     } finally {
@@ -276,7 +276,7 @@ export default function NewVersionPage({
             <Button
               type="button"
               variant="ghost"
-              onClick={() => router.push(`/project/${id}?tab=versions`)}
+              onClick={() => router.push(`/project/${id}/versions`)}
               disabled={isSubmitting}
             >
               Cancel

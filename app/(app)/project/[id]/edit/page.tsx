@@ -358,7 +358,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
                   <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
                     <p className="text-sm text-zinc-600">
                       Files are now managed through versions.{" "}
-                      <Link href={`/project/${id}?tab=versions`} className="text-zinc-900 font-medium hover:underline">
+                      <Link href={`/project/${id}/versions`} className="text-zinc-900 font-medium hover:underline">
                         View versions
                       </Link>
                     </p>
@@ -398,7 +398,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
                 <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
                   <p className="text-sm text-zinc-600">
                     Links are now managed through versions.{" "}
-                    <Link href={`/project/${id}?tab=versions`} className="text-zinc-900 font-medium hover:underline">
+                    <Link href={`/project/${id}/versions`} className="text-zinc-900 font-medium hover:underline">
                       View versions
                     </Link>
                   </p>
