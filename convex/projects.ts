@@ -67,8 +67,6 @@ export {
   migrateClearFocusAreas,
   migrateReadinessStatusAction,
   migrateReadinessStatus,
-  migrateBackfillV0Action,
-  migrateBackfillV0,
 } from "./projects/migrations";
 
 export {
