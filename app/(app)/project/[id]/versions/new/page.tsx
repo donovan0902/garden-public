@@ -90,6 +90,43 @@ export default function NewVersionPage({
 
     setIsSubmitting(true);
     try {
+      // Upload files first, before creating the version
+      const uploadedFiles: Array<{
+        storageId: Id<"_storage">;
+        filename: string;
+        contentType: string;
+        fileSize: number;
+      }> = [];
+      const failedFiles: string[] = [];
+
+      for (const fileItem of newFiles) {
+        try {
+          const uploadUrl = await generateUploadUrl();
+          const uploadResult = await fetch(uploadUrl, {
+            method: "POST",
+            headers: { "Content-Type": fileItem.file.type },
+            body: fileItem.file,
+          });
+          if (!uploadResult.ok) {
+            failedFiles.push(fileItem.file.name);
+            continue;
+          }
+          const { storageId } = await uploadResult.json();
+          if (!storageId) {
+            failedFiles.push(fileItem.file.name);
+            continue;
+          }
+          uploadedFiles.push({
+            storageId,
+            filename: fileItem.file.name,
+            contentType: fileItem.file.type,
+            fileSize: fileItem.file.size,
+          });
+        } catch {
+          failedFiles.push(fileItem.file.name);
+        }
+      }
+
       const cleanedLinks = links.filter((l) => l.url.trim());
       const versionId = await createVersion({
         projectId,
@@ -100,28 +137,16 @@ export default function NewVersionPage({
         readinessStatus: readinessChanged ? selectedReadinessStatus : undefined,
       });
 
-      // Upload files
-      for (const fileItem of newFiles) {
-        const uploadUrl = await generateUploadUrl();
-        const uploadResult = await fetch(uploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": fileItem.file.type },
-          body: fileItem.file,
-        });
-        if (!uploadResult.ok) {
-          throw new Error(`Failed to upload ${fileItem.file.name}`);
-        }
-        const { storageId } = await uploadResult.json();
-        await addFileToVersion({
-          versionId,
-          storageId,
-          filename: fileItem.file.name,
-          contentType: fileItem.file.type,
-          fileSize: fileItem.file.size,
-        });
+      // Attach successfully uploaded files to the version
+      for (const file of uploadedFiles) {
+        await addFileToVersion({ versionId, ...file });
       }
 
-      toast.success("Release published!");
+      if (failedFiles.length > 0) {
+        toast.warning(`Release published, but ${failedFiles.length} file(s) failed to upload: ${failedFiles.join(", ")}`);
+      } else {
+        toast.success("Release published!");
+      }
       router.push(`/project/${id}/versions`);
     } catch {
       toast.error("Failed to publish release");

@@ -113,28 +113,42 @@ export default function EditVersionPage({
         links: cleanedLinks.length > 0 ? cleanedLinks : undefined,
       });
 
-      // Upload new files
+      // Upload new files — skip individual failures gracefully
+      const failedFiles: string[] = [];
       for (const fileItem of newFiles) {
-        const uploadUrl = await generateUploadUrl();
-        const uploadResult = await fetch(uploadUrl, {
-          method: "POST",
-          headers: { "Content-Type": fileItem.file.type },
-          body: fileItem.file,
-        });
-        if (!uploadResult.ok) {
-          throw new Error(`Failed to upload ${fileItem.file.name}`);
+        try {
+          const uploadUrl = await generateUploadUrl();
+          const uploadResult = await fetch(uploadUrl, {
+            method: "POST",
+            headers: { "Content-Type": fileItem.file.type },
+            body: fileItem.file,
+          });
+          if (!uploadResult.ok) {
+            failedFiles.push(fileItem.file.name);
+            continue;
+          }
+          const { storageId } = await uploadResult.json();
+          if (!storageId) {
+            failedFiles.push(fileItem.file.name);
+            continue;
+          }
+          await addFileToVersion({
+            versionId,
+            storageId,
+            filename: fileItem.file.name,
+            contentType: fileItem.file.type,
+            fileSize: fileItem.file.size,
+          });
+        } catch {
+          failedFiles.push(fileItem.file.name);
         }
-        const { storageId } = await uploadResult.json();
-        await addFileToVersion({
-          versionId,
-          storageId,
-          filename: fileItem.file.name,
-          contentType: fileItem.file.type,
-          fileSize: fileItem.file.size,
-        });
       }
 
-      toast.success("Version updated!");
+      if (failedFiles.length > 0) {
+        toast.warning(`Version updated, but ${failedFiles.length} file(s) failed to upload: ${failedFiles.join(", ")}`);
+      } else {
+        toast.success("Version updated!");
+      }
       router.push(`/project/${id}/versions`);
     } catch {
       toast.error("Failed to update version");
