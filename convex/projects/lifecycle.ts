@@ -197,13 +197,33 @@ export const confirmProject = mutation({
       hotScore: calculateHotScore(project.engagementScore ?? 0, project._creationTime, now),
     });
 
-    // Notify followers of the space about the new project
+    // Notify followers of the primary space about the new project
     if (project.focusAreaId) {
       await ctx.scheduler.runAfter(
         0,
         internal.spaceNotifications.notifySpaceFollowers,
         {
           focusAreaId: project.focusAreaId,
+          contentType: "project" as const,
+          contentId: args.projectId,
+          contentTitle: project.name,
+          creatorUserId: project.userId,
+        }
+      );
+    }
+
+    // Notify followers of secondary spaces
+    const secondaryRows = await ctx.db
+      .query("projectSpaces")
+      .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
+      .collect();
+
+    for (const row of secondaryRows) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.spaceNotifications.notifySpaceFollowers,
+        {
+          focusAreaId: row.focusAreaId,
           contentType: "project" as const,
           contentId: args.projectId,
           contentTitle: project.name,
@@ -220,6 +240,7 @@ export const create = action({
     summary: v.optional(v.string()),
     links: v.optional(v.array(v.object({ url: v.string(), label: v.optional(v.string()) }))),
     focusAreaId: v.optional(v.id("focusAreas")),
+    additionalFocusAreaIds: v.optional(v.array(v.id("focusAreas"))),
     readinessStatus: v.union(v.literal("just_an_idea"), v.literal("early_prototype"), v.literal("mostly_working"), v.literal("ready_to_use")),
   },
   handler: async (ctx, args): Promise<{
@@ -248,6 +269,15 @@ export const create = action({
         userId: user._id,
       }
     );
+    // Sync secondary spaces if provided
+    if (args.additionalFocusAreaIds && args.additionalFocusAreaIds.length > 0) {
+      await ctx.runMutation(internal.projects.syncSecondarySpaces, {
+        projectId,
+        primaryFocusAreaId: args.focusAreaId,
+        additionalFocusAreaIds: args.additionalFocusAreaIds,
+      });
+    }
+
     const text = args.summary ? `${args.name}\n\n${args.summary}` : args.name;
     const { entryId } = await rag.add(ctx, {
       namespace: "projects",
@@ -286,6 +316,7 @@ export const updateProject = action({
     summary: v.optional(v.string()),
     links: v.optional(v.array(v.object({ url: v.string(), label: v.optional(v.string()) }))),
     focusAreaId: v.optional(v.id("focusAreas")),
+    additionalFocusAreaIds: v.optional(v.array(v.id("focusAreas"))),
     readinessStatus: v.union(v.literal("just_an_idea"), v.literal("early_prototype"), v.literal("mostly_working"), v.literal("ready_to_use")),
   },
   handler: async (ctx, args) => {
@@ -310,6 +341,14 @@ export const updateProject = action({
       focusAreaId: args.focusAreaId,
       readinessStatus: args.readinessStatus,
     });
+
+    // Sync secondary spaces
+    await ctx.runMutation(internal.projects.syncSecondarySpaces, {
+      projectId: args.projectId,
+      primaryFocusAreaId: args.focusAreaId,
+      additionalFocusAreaIds: args.additionalFocusAreaIds ?? [],
+    });
+
     const text = args.summary ? `${args.name}\n\n${args.summary}` : args.name;
     const { entryId } = await rag.add(ctx, {
       namespace: "projects",
@@ -344,6 +383,9 @@ export const cancelProject = action({
     if (project.entryId) {
       await rag.delete(ctx, { entryId: project.entryId as EntryId });
     }
+    await ctx.runMutation(internal.projects.deleteSecondarySpaces, {
+      projectId: args.projectId,
+    });
     await ctx.runMutation(internal.projects.deleteProject, {
       projectId: args.projectId,
     });

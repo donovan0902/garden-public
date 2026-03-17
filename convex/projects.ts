@@ -63,6 +63,12 @@ export {
 } from "./projects/search";
 
 export {
+  syncSecondarySpaces,
+  deleteSecondarySpaces,
+  listSecondaryProjectsBySpace,
+} from "./projects/spaces";
+
+export {
   migrateClearFocusAreasAction,
   migrateClearFocusAreas,
   migrateReadinessStatusAction,

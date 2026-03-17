@@ -228,6 +228,13 @@ export default defineSchema({
   })
     .index("by_project", ["projectId"])
     .index("by_project_createdAt", ["projectId", "createdAt"]),
+  projectSpaces: defineTable({
+    projectId: v.id("projects"),
+    focusAreaId: v.id("focusAreas"),
+  })
+    .index("by_focusArea", ["focusAreaId"])
+    .index("by_project", ["projectId"])
+    .index("by_project_focusArea", ["projectId", "focusAreaId"]),
   versionFiles: defineTable({
     versionId: v.id("projectVersions"),
     storageId: v.id("_storage"),
