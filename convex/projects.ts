@@ -63,9 +63,10 @@ export {
 } from "./projects/search";
 
 export {
-  syncSecondarySpaces,
-  deleteSecondarySpaces,
-  listSecondaryProjectsBySpace,
+  syncProjectSpaceMemberships,
+  deleteProjectMemberships,
+  propagateHotScoreToMemberships,
+  listPaginatedBySpaceMembership,
 } from "./projects/spaces";
 
 export {

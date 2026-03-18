@@ -1,23 +1,36 @@
 import { v } from "convex/values";
 import { query } from "../_generated/server";
+import { paginationOptsValidator } from "convex/server";
 import { internalMutation as internalMutationFromFunctions } from "../functions";
 import { getCurrentUser } from "../users";
+import { enrichProjects } from "./helpers";
 import type { Id } from "../_generated/dataModel";
-import type { QueryCtx } from "../_generated/server";
+import type { QueryCtx, MutationCtx } from "../_generated/server";
 
 const MAX_SECONDARY_SPACES = 3;
 
 // ─── Internal mutations ──────────────────────────────────────────────────────
 
-export const syncSecondarySpaces = internalMutationFromFunctions({
+/**
+ * Syncs ALL membership rows (primary + secondary) for a project.
+ * Creates/updates/deletes rows so the table matches the desired state.
+ */
+export const syncProjectSpaceMemberships = internalMutationFromFunctions({
   args: {
     projectId: v.id("projects"),
     primaryFocusAreaId: v.optional(v.id("focusAreas")),
     additionalFocusAreaIds: v.array(v.id("focusAreas")),
+    hotScore: v.number(),
   },
   handler: async (ctx, args) => {
-    // Enforce max and filter out primary
-    const desired = Array.from(
+    // Build desired membership set
+    const desiredMap = new Map<string, boolean>(); // focusAreaId → isPrimary
+
+    if (args.primaryFocusAreaId) {
+      desiredMap.set(args.primaryFocusAreaId, true);
+    }
+
+    const secondaries = Array.from(
       new Set(
         args.additionalFocusAreaIds.filter(
           (id) => id !== args.primaryFocusAreaId
@@ -25,35 +38,56 @@ export const syncSecondarySpaces = internalMutationFromFunctions({
       )
     ).slice(0, MAX_SECONDARY_SPACES);
 
-    // Get existing secondary space rows
+    for (const id of secondaries) {
+      if (!desiredMap.has(id)) {
+        desiredMap.set(id, false);
+      }
+    }
+
+    // Get existing rows
     const existing = await ctx.db
       .query("projectSpaces")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .collect();
 
-    const existingIds = new Set(existing.map((row) => row.focusAreaId));
-    const desiredIds = new Set(desired);
+    const existingByFocusArea = new Map(
+      existing.map((row) => [row.focusAreaId as string, row])
+    );
 
-    // Delete removed ones
+    // Delete rows no longer wanted
     for (const row of existing) {
-      if (!desiredIds.has(row.focusAreaId)) {
+      if (!desiredMap.has(row.focusAreaId)) {
         await ctx.db.delete(row._id);
       }
     }
 
-    // Insert new ones
-    for (const focusAreaId of desired) {
-      if (!existingIds.has(focusAreaId)) {
+    // Insert or update rows
+    for (const [focusAreaId, isPrimary] of desiredMap) {
+      const existingRow = existingByFocusArea.get(focusAreaId);
+      if (existingRow) {
+        // Update if isPrimary or hotScore changed
+        if (existingRow.isPrimary !== isPrimary || existingRow.hotScore !== args.hotScore) {
+          await ctx.db.patch(existingRow._id, {
+            isPrimary,
+            hotScore: args.hotScore,
+          });
+        }
+      } else {
         await ctx.db.insert("projectSpaces", {
           projectId: args.projectId,
-          focusAreaId,
+          focusAreaId: focusAreaId as Id<"focusAreas">,
+          isPrimary,
+          hotScore: args.hotScore,
         });
       }
     }
   },
 });
 
-export const deleteSecondarySpaces = internalMutationFromFunctions({
+/**
+ * Removes all membership rows for a project (used on deletion).
+ */
+export const deleteProjectMemberships = internalMutationFromFunctions({
   args: {
     projectId: v.id("projects"),
   },
@@ -69,6 +103,29 @@ export const deleteSecondarySpaces = internalMutationFromFunctions({
   },
 });
 
+// ─── Hot score propagation ───────────────────────────────────────────────────
+
+/**
+ * Propagate a project's hotScore to all its membership rows.
+ * Call this from any mutation that updates a project's hotScore.
+ */
+export async function propagateHotScoreToMemberships(
+  ctx: MutationCtx,
+  projectId: Id<"projects">,
+  hotScore: number
+) {
+  const rows = await ctx.db
+    .query("projectSpaces")
+    .withIndex("by_project", (q) => q.eq("projectId", projectId))
+    .collect();
+
+  for (const row of rows) {
+    if (row.hotScore !== hotScore) {
+      await ctx.db.patch(row._id, { hotScore });
+    }
+  }
+}
+
 // ─── Shared query helper ─────────────────────────────────────────────────────
 
 export async function getSecondarySpacesForProject(
@@ -80,8 +137,10 @@ export async function getSecondarySpacesForProject(
     .withIndex("by_project", (q) => q.eq("projectId", projectId))
     .collect();
 
+  const secondaryRows = rows.filter((row) => !row.isPrimary);
+
   const spaces = await Promise.all(
-    rows.map(async (row) => {
+    secondaryRows.map(async (row) => {
       const fa = await ctx.db.get(row.focusAreaId);
       if (!fa || !fa.isActive) return null;
       return {
@@ -98,28 +157,30 @@ export async function getSecondarySpacesForProject(
   );
 }
 
-// ─── Public query: secondary projects in a space ─────────────────────────────
+// ─── Paginated space feed (primary + secondary, sorted by hotScore) ──────────
 
-export const listSecondaryProjectsBySpace = query({
+export const listPaginatedBySpaceMembership = query({
   args: {
+    paginationOpts: paginationOptsValidator,
     focusAreaId: v.id("focusAreas"),
   },
   handler: async (ctx, args) => {
     const currentUser = await getCurrentUser(ctx);
     const userId = currentUser?._id;
 
-    // Get all project IDs tagged with this space as secondary
-    const rows = await ctx.db
+    // Paginate through membership rows sorted by hotScore
+    const paginatedResult = await ctx.db
       .query("projectSpaces")
-      .withIndex("by_focusArea", (q) => q.eq("focusAreaId", args.focusAreaId))
-      .collect();
+      .withIndex("by_focusArea_hotScore", (q) =>
+        q.eq("focusAreaId", args.focusAreaId)
+      )
+      .order("desc")
+      .paginate(args.paginationOpts);
 
-    if (rows.length === 0) return [];
-
-    // Fetch project docs, filter to active
+    // Fetch project docs for each membership row
     const projects = (
       await Promise.all(
-        rows.map(async (row) => {
+        paginatedResult.page.map(async (row) => {
           const project = await ctx.db.get(row.projectId);
           if (!project || project.status !== "active") return null;
           return project;
@@ -127,15 +188,11 @@ export const listSecondaryProjectsBySpace = query({
       )
     ).filter((p): p is NonNullable<typeof p> => p !== null);
 
-    if (projects.length === 0) return [];
+    const enrichedProjects = await enrichProjects(ctx, projects, userId);
 
-    // Enrich with the shared helper
-    const { enrichProjects } = await import("./helpers");
-    const enriched = await enrichProjects(ctx, projects, userId);
-
-    // Sort by hotScore desc
-    return enriched.sort(
-      (a, b) => (b.hotScore ?? 0) - (a.hotScore ?? 0)
-    );
+    return {
+      ...paginatedResult,
+      page: enrichedProjects,
+    };
   },
 });

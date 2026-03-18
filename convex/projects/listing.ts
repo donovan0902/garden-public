@@ -333,41 +333,27 @@ export const getTopProjectsBySpace = query({
   handler: async (ctx, args) => {
     const limit = args.limit ?? 5;
 
-    // Primary projects
-    const primaryProjects = await ctx.db
-      .query("projects")
-      .withIndex("by_status_focusArea_hotScore", (q) =>
-        q.eq("status", "active").eq("focusAreaId", args.focusAreaId)
+    // Query membership table (contains both primary + secondary) sorted by hotScore
+    const topRows = await ctx.db
+      .query("projectSpaces")
+      .withIndex("by_focusArea_hotScore", (q) =>
+        q.eq("focusAreaId", args.focusAreaId)
       )
       .order("desc")
       .take(limit);
 
-    // Secondary projects from join table
-    const secondaryRows = await ctx.db
-      .query("projectSpaces")
-      .withIndex("by_focusArea", (q) => q.eq("focusAreaId", args.focusAreaId))
-      .collect();
-
-    const primaryIds = new Set(primaryProjects.map((p) => p._id));
-    const secondaryProjects = (
+    const projects = (
       await Promise.all(
-        secondaryRows
-          .filter((row) => !primaryIds.has(row.projectId))
-          .map(async (row) => {
-            const project = await ctx.db.get(row.projectId);
-            if (!project || project.status !== "active") return null;
-            return project;
-          })
+        topRows.map(async (row) => {
+          const project = await ctx.db.get(row.projectId);
+          if (!project || project.status !== "active") return null;
+          return project;
+        })
       )
     ).filter((p): p is NonNullable<typeof p> => p !== null);
 
-    // Merge, sort by hotScore, take top N
-    const allProjects = [...primaryProjects, ...secondaryProjects]
-      .sort((a, b) => (b.hotScore ?? 0) - (a.hotScore ?? 0))
-      .slice(0, limit);
-
     return Promise.all(
-      allProjects.map(async (project) => {
+      projects.map(async (project) => {
         const upvotes = await ctx.db
           .query("upvotes")
           .withIndex("by_project", (q) => q.eq("projectId", project._id))

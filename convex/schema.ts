@@ -231,8 +231,11 @@ export default defineSchema({
   projectSpaces: defineTable({
     projectId: v.id("projects"),
     focusAreaId: v.id("focusAreas"),
+    isPrimary: v.boolean(),
+    hotScore: v.number(),
   })
     .index("by_focusArea", ["focusAreaId"])
+    .index("by_focusArea_hotScore", ["focusAreaId", "hotScore"])
     .index("by_project", ["projectId"])
     .index("by_project_focusArea", ["projectId", "focusAreaId"]),
   versionFiles: defineTable({

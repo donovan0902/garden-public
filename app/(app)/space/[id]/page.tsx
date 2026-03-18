@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { use, useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
 import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
@@ -45,7 +45,6 @@ export default function SpacePage({
   const toggleThreadUpvote = useMutation(api.threads.toggleUpvote);
   const topThreads = useQuery(api.threads.getTopThreadsBySpace, { focusAreaId });
   const topProjects = useQuery(api.projects.getTopProjectsBySpace, { focusAreaId });
-  const secondaryProjects = useQuery(api.projects.listSecondaryProjectsBySpace, { focusAreaId });
 
   const [activeTab, setActiveTab] = useState("projects");
 
@@ -55,7 +54,7 @@ export default function SpacePage({
     status: projectStatus,
     loadMore: loadMoreProjects,
   } = usePaginatedQuery(
-    api.projects.listPaginatedBySpace,
+    api.projects.listPaginatedBySpaceMembership,
     { focusAreaId },
     { initialNumItems: 15 }
   );
@@ -84,25 +83,6 @@ export default function SpacePage({
   const isLoadingThreads = threadStatus === "LoadingFirstPage";
   const canLoadMoreThreads = threadStatus === "CanLoadMore";
   const isLoadingMoreThreads = threadStatus === "LoadingMore";
-
-  // Merge primary + secondary projects, deduplicate, sort by hotScore
-  const mergedProjects = useMemo(() => {
-    const primaryIds = new Set(projectResults.map((p) => p._id));
-    const secondaryFiltered = (secondaryProjects ?? []).filter(
-      (p) => !primaryIds.has(p._id)
-    );
-    if (secondaryFiltered.length === 0) return projectResults;
-    return [...projectResults, ...secondaryFiltered].sort(
-      (a, b) => {
-        // Pinned projects first (only primaries can be pinned)
-        const aPinned = (a as ProjectRowData & { pinned?: boolean }).pinned ? 1 : 0;
-        const bPinned = (b as ProjectRowData & { pinned?: boolean }).pinned ? 1 : 0;
-        if (aPinned !== bPinned) return bPinned - aPinned;
-        return ((b as ProjectRowData & { hotScore?: number }).hotScore ?? 0) -
-               ((a as ProjectRowData & { hotScore?: number }).hotScore ?? 0);
-      }
-    );
-  }, [projectResults, secondaryProjects]);
 
   // Projects infinite scroll
   const projectLoadMoreRef = useRef<HTMLDivElement>(null);
@@ -275,9 +255,9 @@ export default function SpacePage({
                     <div className="py-8 text-center text-sm text-zinc-500">
                       Loading projects...
                     </div>
-                  ) : mergedProjects.length ? (
+                  ) : projectResults.length ? (
                     <>
-                      {mergedProjects.map((project, index) => (
+                      {projectResults.map((project, index) => (
                         <React.Fragment key={project._id}>
                           {index > 0 && <Separator className="bg-zinc-200" />}
                           <motion.div

@@ -6,6 +6,7 @@ import { rag } from "../rag";
 import type { Id } from "../_generated/dataModel";
 import type { EntryId } from "@convex-dev/rag";
 import { calculateHotScore } from "./helpers";
+import { propagateHotScoreToMemberships } from "./spaces";
 
 export const getCurrentUserInternal = internalQuery({
   args: {},
@@ -192,10 +193,14 @@ export const confirmProject = mutation({
       throw new Error("Project is not pending");
     }
     const now = Date.now();
+    const hotScore = calculateHotScore(project.engagementScore ?? 0, project._creationTime, now);
     await ctx.db.patch(args.projectId, {
       status: "active" as const,
-      hotScore: calculateHotScore(project.engagementScore ?? 0, project._creationTime, now),
+      hotScore,
     });
+
+    // Propagate hotScore to membership rows
+    await propagateHotScoreToMemberships(ctx, args.projectId, hotScore);
 
     // Notify followers of the primary space about the new project
     if (project.focusAreaId) {
@@ -269,14 +274,13 @@ export const create = action({
         userId: user._id,
       }
     );
-    // Sync secondary spaces if provided
-    if (args.additionalFocusAreaIds && args.additionalFocusAreaIds.length > 0) {
-      await ctx.runMutation(internal.projects.syncSecondarySpaces, {
-        projectId,
-        primaryFocusAreaId: args.focusAreaId,
-        additionalFocusAreaIds: args.additionalFocusAreaIds,
-      });
-    }
+    // Sync space memberships (primary + secondary)
+    await ctx.runMutation(internal.projects.syncProjectSpaceMemberships, {
+      projectId,
+      primaryFocusAreaId: args.focusAreaId,
+      additionalFocusAreaIds: args.additionalFocusAreaIds ?? [],
+      hotScore: 0,
+    });
 
     const text = args.summary ? `${args.name}\n\n${args.summary}` : args.name;
     const { entryId } = await rag.add(ctx, {
@@ -342,11 +346,12 @@ export const updateProject = action({
       readinessStatus: args.readinessStatus,
     });
 
-    // Sync secondary spaces
-    await ctx.runMutation(internal.projects.syncSecondarySpaces, {
+    // Sync space memberships (primary + secondary)
+    await ctx.runMutation(internal.projects.syncProjectSpaceMemberships, {
       projectId: args.projectId,
       primaryFocusAreaId: args.focusAreaId,
       additionalFocusAreaIds: args.additionalFocusAreaIds ?? [],
+      hotScore: project.hotScore ?? 0,
     });
 
     const text = args.summary ? `${args.name}\n\n${args.summary}` : args.name;
@@ -383,7 +388,7 @@ export const cancelProject = action({
     if (project.entryId) {
       await rag.delete(ctx, { entryId: project.entryId as EntryId });
     }
-    await ctx.runMutation(internal.projects.deleteSecondarySpaces, {
+    await ctx.runMutation(internal.projects.deleteProjectMemberships, {
       projectId: args.projectId,
     });
     await ctx.runMutation(internal.projects.deleteProject, {
