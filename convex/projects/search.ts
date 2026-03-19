@@ -29,6 +29,7 @@ export const searchCatalog = action({
   ): Promise<
     Array<{
       _id: string;
+      entryId: string;
       type: "project" | "thread";
       name: string;
       summary?: string;
@@ -49,7 +50,7 @@ export const searchCatalog = action({
         namespace: "projects",
         query: args.query,
         limit: 15,
-        vectorScoreThreshold: 0.3,
+        vectorScoreThreshold: 0.5,
       }),
       ctx.runQuery(internal.projects.fullTextSearchProjects, {
         query: args.query,
@@ -59,7 +60,7 @@ export const searchCatalog = action({
         namespace: "threads",
         query: args.query,
         limit: 10,
-        vectorScoreThreshold: 0.3,
+        vectorScoreThreshold: 0.5,
       }),
       ctx.runQuery(internal.threads.fullTextSearchThreads, {
         query: args.query,
@@ -74,7 +75,7 @@ export const searchCatalog = action({
       .filter((id: string | undefined): id is string => id !== undefined);
     const hybridRankedProjectEntryIds = hybridRank(
       [projectEntryIds, projectFullTextEntryIds],
-      { k: 10, weights: [2, 1], cutoffScore: 0.05 }
+      { k: 10, weights: [1.5, 1], cutoffScore: 0.05 }
     );
 
     // Hybrid rank threads
@@ -84,7 +85,7 @@ export const searchCatalog = action({
       .filter((id: string | undefined): id is string => id !== undefined);
     const hybridRankedThreadEntryIds = hybridRank(
       [threadEntryIds, threadFullTextEntryIds],
-      { k: 5, weights: [2, 1], cutoffScore: 0.05 }
+      { k: 5, weights: [1.5, 1], cutoffScore: 0.05 }
     );
 
     // Fetch actual records in parallel
@@ -102,27 +103,35 @@ export const searchCatalog = action({
     type ProjectWithEntryId = (typeof allProjects)[number];
     const projectMap = new Map(allProjects.map((p: ProjectWithEntryId) => [p.entryId!, p]));
     const projectResults = hybridRankedProjectEntryIds
-      .map((entryId) => projectMap.get(entryId))
-      .filter((p): p is NonNullable<typeof p> => p !== undefined)
-      .map((p) => ({
-        _id: p._id as string,
-        type: "project" as const,
-        name: p.name,
-        summary: p.summary,
-      }));
+      .map((entryId) => {
+        const p = projectMap.get(entryId);
+        if (!p) return null;
+        return {
+          _id: p._id as string,
+          entryId,
+          type: "project" as const,
+          name: p.name,
+          summary: p.summary,
+        };
+      })
+      .filter((p): p is NonNullable<typeof p> => p !== null);
 
     // Build ordered thread results
     type ThreadRecord = (typeof allThreads)[number];
     const threadMap = new Map(allThreads.map((t: ThreadRecord) => [t.entryId!, t]));
     const threadResults = hybridRankedThreadEntryIds
-      .map((entryId) => threadMap.get(entryId))
-      .filter((t): t is NonNullable<typeof t> => t !== undefined)
-      .map((t) => ({
-        _id: t._id as string,
-        type: "thread" as const,
-        name: t.title,
-        summary: t.body,
-      }));
+      .map((entryId) => {
+        const t = threadMap.get(entryId);
+        if (!t) return null;
+        return {
+          _id: t._id as string,
+          entryId,
+          type: "thread" as const,
+          name: t.title,
+          summary: t.body,
+        };
+      })
+      .filter((t): t is NonNullable<typeof t> => t !== null);
 
     // Projects first, then threads
     return [...projectResults, ...threadResults];
