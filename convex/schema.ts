@@ -175,11 +175,15 @@ export default defineSchema({
     engagementScore: v.optional(v.number()),
     hotScore: v.optional(v.number()),
     createdAt: v.number(),
+    entryId: v.optional(v.string()),
+    allFields: v.optional(v.string()),
   })
+    .searchIndex("allFields", { searchField: "allFields" })
     .index("by_focusArea", ["focusAreaId"])
     .index("by_focusArea_hotScore", ["focusAreaId", "hotScore"])
     .index("by_hotScore", ["hotScore"])
-    .index("by_userId", ["userId"]),
+    .index("by_userId", ["userId"])
+    .index("by_entryId", ["entryId"]),
   threadUpvotes: defineTable({
     threadId: v.id("threads"),
     userId: v.id("users"),

@@ -1,97 +1,64 @@
 import { createTool } from "@convex-dev/agent";
 import { z } from "zod";
-import { rag } from "./rag";
-import { internal } from "./_generated/api";
-import { hybridRank } from "@convex-dev/rag";
+import { api } from "./_generated/api";
 
 // Tool 1: The "Eye" (Search)
-export const searchProjects = createTool({
-  description: "Search the database for projects matching the query using hybrid search (vector search and full text search).",
-  args: z.object({ query: z.string() }).describe("The query to be used in the hybrid search to find projects"),
+export const searchCatalog = createTool({
+  description: "Search the catalog for projects and discussion threads matching the query using hybrid search (vector search and full text search).",
+  args: z.object({ query: z.string() }).describe("The query to be used in the hybrid search to find projects and threads"),
   handler: async (ctx, { query }): Promise<string> => {
-    // Don't search if query is too short
     if (query.trim().length < 2) {
       return "Query too short. Please provide at least 2 characters.";
     }
 
-    // Run both vector and full-text searches in parallel for better results
-    const [vectorSearchResults, fullTextSearchProjects] = await Promise.all([
-      rag.search(ctx, {
-        namespace: "projects",
-        query: query,
-        limit: 15,
-        vectorScoreThreshold: 0.2,
-      }),
-      ctx.runQuery(internal.projects.fullTextSearchProjects, {
-        query: query,
-        limit: 15,
-      }),
-    ]);
+    const results = await ctx.runAction(api.projects.searchCatalog, { query });
 
-    const { entries } = vectorSearchResults;
+    if (results.length === 0) {
+      return "No results found matching your query.";
+    }
 
-    // Extract entryIds from both search results
-    const entryIds = entries.map((e: { entryId: string }) => e.entryId);
-    const fullTextEntryIds = fullTextSearchProjects
-      .map((p: { entryId?: string }) => p.entryId)
-      .filter((id: string | undefined): id is string => id !== undefined);
+    const projectResults = results.filter((r) => r.type === "project");
+    const threadResults = results.filter((r) => r.type === "thread");
 
-    // Hybrid rank the results (favoring vector search with weight 2:1)
-    const hybridRankedEntryIds = hybridRank(
-      [entryIds, fullTextEntryIds],
-      {
-        k: 15,
-        weights: [2, 1],
-        cutoffScore: 0.01,
-      }
-    );
-
-    // Build a map of entryId -> structured project info
-    type ProjectInfo = { name: string; summary?: string };
-    const projectMap = new Map<string, ProjectInfo>();
-    
-    // Add full-text search results first (these have structured data)
-    fullTextSearchProjects.forEach((p: { entryId?: string; name: string; summary?: string }) => {
-      if (p.entryId) {
-        projectMap.set(p.entryId, { name: p.name, summary: p.summary });
-      }
-    });
-    
-    // Add vector search results (parse name/summary from RAG text if not already in map)
-    entries.forEach((e: { entryId: string; text: string }) => {
-      if (!projectMap.has(e.entryId)) {
-        // RAG text format is: "name\n\nsummary" or just "name"
-        const parts = e.text.split("\n\n");
-        const name = parts[0] || "Untitled";
-        const summary = parts.length > 1 ? parts.slice(1).join("\n\n") : undefined;
-        projectMap.set(e.entryId, { name, summary });
-      }
-    });
-
-    // Format results with clear labels
-    const combinedResults: string = hybridRankedEntryIds
-      .map((entryId: string, index: number) => {
-        const project = projectMap.get(entryId);
-        if (!project) return null;
-        
+    const projectSection = projectResults
+      .map((r, index) => {
         const lines = [
-          `[Result ${index + 1}]`,
-          `Entry ID: ${entryId}`,
-          `Name: ${project.name}`,
+          `[Project ${index + 1}]`,
+          `Type: project`,
+          `Entry ID: ${r.entryId}`,
+          `Name: ${r.name}`,
         ];
-        if (project.summary) {
-          lines.push(`Summary: ${project.summary}`);
+        if (r.summary) {
+          lines.push(`Summary: ${r.summary}`);
         }
         return lines.join("\n");
       })
-      .filter((text: string | null): text is string => text !== null)
       .join("\n\n---\n\n");
 
-    return combinedResults || "No projects found matching your query.";
+    const threadSection = threadResults
+      .map((r, index) => {
+        const lines = [
+          `[Thread ${index + 1}]`,
+          `Type: thread`,
+          `Entry ID: ${r.entryId}`,
+          `Title: ${r.name}`,
+        ];
+        if (r.summary) {
+          lines.push(`Body: ${r.summary.slice(0, 200)}`);
+        }
+        return lines.join("\n");
+      })
+      .join("\n\n---\n\n");
+
+    const sections = [projectSection, threadSection].filter(Boolean);
+    if (sections.length === 1) {
+      return sections[0];
+    }
+    return `${sections[0]}\n\n=== Discussion Threads ===\n\n${sections[1]}`;
   },
 });
 
-// Tool 2: The "Mouth" (Structured Output)
+// Tool 2: The "Mouth" (Structured Output — Projects)
 export const showProjects = createTool({
   description: "Display a list of project cards to the user. Use this when you find relevant projects.",
   args: z.object({
@@ -99,8 +66,20 @@ export const showProjects = createTool({
     summary: z.string().describe("A brief summary of why these were chosen"),
   }),
   handler: async () => {
-    // We don't need to do backend logic here. 
+    // We don't need to do backend logic here.
     // The mere fact that this tool was called is enough for the UI.
     return "Projects displayed to user.";
+  },
+});
+
+// Tool 3: Display Thread Cards
+export const showThreads = createTool({
+  description: "Display a list of discussion thread cards to the user. Use this when you find relevant discussion threads.",
+  args: z.object({
+    threadIds: z.array(z.string()).describe("The entryIDs of the relevant threads"),
+    summary: z.string().describe("A brief summary of why these threads were chosen"),
+  }),
+  handler: async () => {
+    return "Threads displayed to user.";
   },
 });

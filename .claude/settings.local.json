@@ -25,7 +25,10 @@
       "Bash(git add \"app/\\(app\\)/create-thread/page.tsx\")",
       "Bash(brew list gh)",
       "WebSearch",
-      "Bash(gh pr:*)"
+      "Bash(gh pr:*)",
+      "Bash(export PATH=\"/c/Program Files/nodejs:$PATH\")",
+      "Bash(where npm)",
+      "Bash(npm install)"
     ]
   }
 }
