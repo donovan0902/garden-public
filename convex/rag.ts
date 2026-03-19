@@ -1,9 +1,9 @@
 import { components } from "./_generated/api";
 import { RAG } from "@convex-dev/rag";
-import { openai } from "@ai-sdk/openai";
+import { bedrock } from "@ai-sdk/amazon-bedrock";
 
 export const rag = new RAG(components.rag, {
-  textEmbeddingModel: openai.embedding("text-embedding-3-small"),
+  textEmbeddingModel: bedrock.embedding("us.cohere.embed-v4:0"),
   embeddingDimension: 1536,
 });
 
