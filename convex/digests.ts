@@ -17,7 +17,7 @@ interface OwnProjectActivity {
   projectName: string;
   newUpvotes: number;
   newComments: number;
-  newAdoptions: number;
+  newFollows: number;
   newViews: number;
 }
 
@@ -63,7 +63,7 @@ interface DigestData {
   ownProjectTotals: {
     totalNewUpvotes: number;
     totalNewComments: number;
-    totalNewAdoptions: number;
+    totalNewFollows: number;
     totalNewViews: number;
   };
   followedSpaceActivity: SpaceActivity[];
@@ -77,7 +77,7 @@ function isDigestEmpty(data: DigestData): boolean {
   const hasOwnActivity =
     ownProjectTotals.totalNewUpvotes > 0 ||
     ownProjectTotals.totalNewComments > 0 ||
-    ownProjectTotals.totalNewAdoptions > 0 ||
+    ownProjectTotals.totalNewFollows > 0 ||
     ownProjectTotals.totalNewViews > 0;
   const hasPlatformHighlights =
     platformHighlights.topProjects.length > 0 ||
@@ -202,7 +202,7 @@ export const gatherUserDigestData = internalQuery({
     const ownProjectActivity: OwnProjectActivity[] = [];
     let totalNewUpvotes = 0;
     let totalNewComments = 0;
-    let totalNewAdoptions = 0;
+    let totalNewFollows = 0;
     let totalNewViews = 0;
 
     for (const project of activeProjects) {
@@ -225,11 +225,11 @@ export const gatherUserDigestData = internalQuery({
           !c.isDeleted
       ).length;
 
-      const adoptions = await ctx.db
+      const follows = await ctx.db
         .query("adoptions")
         .withIndex("by_project", (q) => q.eq("projectId", project._id))
         .collect();
-      const newAdoptions = adoptions.filter(
+      const newFollows = follows.filter(
         (a) => a.createdAt >= periodStart && a.createdAt < periodEnd
       ).length;
 
@@ -241,20 +241,20 @@ export const gatherUserDigestData = internalQuery({
         (v) => v.viewedAt >= periodStart && v.viewedAt < periodEnd
       ).length;
 
-      if (newUpvotes > 0 || newComments > 0 || newAdoptions > 0 || newViews > 0) {
+      if (newUpvotes > 0 || newComments > 0 || newFollows > 0 || newViews > 0) {
         ownProjectActivity.push({
           projectId: project._id,
           projectName: project.name,
           newUpvotes,
           newComments,
-          newAdoptions,
+          newFollows,
           newViews,
         });
       }
 
       totalNewUpvotes += newUpvotes;
       totalNewComments += newComments;
-      totalNewAdoptions += newAdoptions;
+      totalNewFollows += newFollows;
       totalNewViews += newViews;
     }
 
@@ -402,7 +402,7 @@ export const gatherUserDigestData = internalQuery({
       ownProjectTotals: {
         totalNewUpvotes,
         totalNewComments,
-        totalNewAdoptions,
+        totalNewFollows,
         totalNewViews,
       },
       followedSpaceActivity,

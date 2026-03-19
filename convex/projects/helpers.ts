@@ -39,7 +39,7 @@ export async function enrichProjects(
 
   return Promise.all(
     projects.map(async (project) => {
-      const [upvotes, comments, creator, team, mediaFiles, adoptions] = await Promise.all([
+      const [upvotes, comments, creator, team, mediaFiles, follows] = await Promise.all([
         ctx.db
           .query("upvotes")
           .withIndex("by_project", (q) => q.eq("projectId", project._id))
@@ -80,12 +80,12 @@ export async function enrichProjects(
         icon: focusAreaDoc.icon,
       } : null;
 
-      const [adoptersWithInfo, additionalFocusAreas] = await Promise.all([
+      const [followersWithInfo, additionalFocusAreas] = await Promise.all([
         Promise.all(
-          adoptions.slice(0, 4).map(async (adoption) => {
-            const user = await ctx.db.get(adoption.userId);
+          follows.slice(0, 4).map(async (follow) => {
+            const user = await ctx.db.get(follow.userId);
             return {
-              _id: adoption.userId,
+              _id: follow.userId,
               name: user?.name ?? "Unknown User",
               avatarUrl: user?.avatarUrlId ?? "",
             };
@@ -106,9 +106,9 @@ export async function enrichProjects(
         focusArea,
         additionalFocusAreas,
         previewMedia,
-        adoptionCount: adoptions.length,
-        adopters: adoptersWithInfo,
-        hasAdopted: userId ? adoptions.some((a) => a.userId === userId) : false,
+        followerCount: follows.length,
+        followers: followersWithInfo,
+        hasFollowed: userId ? follows.some((a) => a.userId === userId) : false,
       };
     })
   );

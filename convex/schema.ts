@@ -103,7 +103,8 @@ export default defineSchema({
     type: v.union(
       v.literal("comment"),
       v.literal("upvote"),
-      v.literal("adoption"),
+      v.literal("adoption"),    // legacy — kept for migration compatibility
+      v.literal("follow"),
       v.literal("project_update")
     ),
     commentId: v.optional(v.id("comments")),

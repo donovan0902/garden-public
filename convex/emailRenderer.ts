@@ -5,7 +5,7 @@ type OwnProjectActivity = {
   projectName: string;
   newUpvotes: number;
   newComments: number;
-  newAdoptions: number;
+  newFollows: number;
   newViews: number;
 };
 
@@ -69,7 +69,7 @@ export type WeeklyDigestPayload = {
   ownProjectTotals: {
     totalNewUpvotes: number;
     totalNewComments: number;
-    totalNewAdoptions: number;
+    totalNewFollows: number;
     totalNewViews: number;
   };
   followedSpaceActivity: SpaceActivity[];
@@ -110,7 +110,7 @@ function getTotalInteractions(payload: WeeklyDigestPayload): number {
   return (
     totals.totalNewUpvotes +
     totals.totalNewComments +
-    totals.totalNewAdoptions +
+    totals.totalNewFollows +
     totals.totalNewViews
   );
 }
@@ -138,7 +138,7 @@ function renderOwnProjectSummary(payload: WeeklyDigestPayload): string {
   const summaryParts = [
     formatCount(totals.totalNewUpvotes, "upvote"),
     formatCount(totals.totalNewComments, "comment"),
-    formatCount(totals.totalNewAdoptions, "adoption"),
+    formatCount(totals.totalNewFollows, "new follower"),
     formatCount(totals.totalNewViews, "view"),
   ];
   return summaryParts.join(" | ");
@@ -158,7 +158,7 @@ function renderOwnProjectRows(payload: WeeklyDigestPayload, baseUrl: string): st
                     ${escapeHtml(project.projectName)}
                   </div>
                   <div style="font-size: 14px; line-height: 1.6; color: #52525b; margin: 0 0 12px;">
-                    ${formatCount(project.newUpvotes, "upvote")} | ${formatCount(project.newComments, "comment")} | ${formatCount(project.newAdoptions, "adoption")} | ${formatCount(project.newViews, "view")}
+                    ${formatCount(project.newUpvotes, "upvote")} | ${formatCount(project.newComments, "comment")} | ${formatCount(project.newFollows, "new follower")} | ${formatCount(project.newViews, "view")}
                   </div>
                   <a href="${escapeHtml(projectUrl)}" style="color: #166534; font-size: 14px; font-weight: 600; text-decoration: none;">View project</a>
                 </td>
@@ -323,7 +323,7 @@ function renderTextVersion(
 
     for (const project of payload.ownProjectActivity) {
       sections.push(
-        `- ${project.projectName}: ${formatCount(project.newUpvotes, "upvote")}, ${formatCount(project.newComments, "comment")}, ${formatCount(project.newAdoptions, "adoption")}, ${formatCount(project.newViews, "view")}`
+        `- ${project.projectName}: ${formatCount(project.newUpvotes, "upvote")}, ${formatCount(project.newComments, "comment")}, ${formatCount(project.newFollows, "new follower")}, ${formatCount(project.newViews, "view")}`
       );
       sections.push(`  ${joinUrl(baseUrl, `/project/${project.projectId}`)}`);
     }

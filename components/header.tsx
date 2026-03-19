@@ -58,8 +58,8 @@ export function Header() {
       return `${notification.actorName} upvoted ${projectName}`;
     }
 
-    if (notification.type === "adoption") {
-      return `${notification.actorName} is using ${projectName}`;
+    if (notification.type === "follow" || notification.type === "adoption") {
+      return `${notification.actorName} started following ${projectName}`;
     }
 
     if (notification.type === "project_update") {

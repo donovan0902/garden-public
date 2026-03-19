@@ -210,7 +210,7 @@ export const getByUserId = query({
     const projects = await projectQuery.collect();
     const projectsWithDetails = await Promise.all(
       projects.map(async (project) => {
-        const [upvotes, team, comments, adoptions] = await Promise.all([
+        const [upvotes, team, comments, follows] = await Promise.all([
           ctx.db
             .query("upvotes")
             .withIndex("by_project", (q) => q.eq("projectId", project._id))
@@ -231,7 +231,7 @@ export const getByUserId = query({
           team: team?.name ?? "",
           upvotes: upvotes.length,
           commentCount: comments.length,
-          adoptionCount: adoptions.length,
+          followerCount: follows.length,
         };
       })
     );
@@ -239,7 +239,7 @@ export const getByUserId = query({
   },
 });
 
-export const getAdoptedByUser = query({
+export const getFollowedByUser = query({
   args: {
     userId: v.id("users"),
   },
@@ -248,14 +248,14 @@ export const getAdoptedByUser = query({
     if (!viewer) {
       return [];
     }
-    const adoptions = await ctx.db
+    const follows = await ctx.db
       .query("adoptions")
       .withIndex("by_user", (q) => q.eq("userId", args.userId))
       .order("desc")
       .collect();
-    const adoptedProjects = await Promise.all(
-      adoptions.map(async (adoption) => {
-        const project = await ctx.db.get(adoption.projectId);
+    const followedProjects = await Promise.all(
+      follows.map(async (follow) => {
+        const project = await ctx.db.get(follow.projectId);
         if (!project || project.status !== "active") {
           return null;
         }
@@ -277,11 +277,11 @@ export const getAdoptedByUser = query({
           creatorId: project.userId,
           creatorName: creator?.name ?? "Unknown User",
           creatorAvatar: creator?.avatarUrlId ?? "",
-          adoptedAt: adoption.createdAt,
+          followedAt: follow.createdAt,
         };
       })
     );
-    return adoptedProjects.filter(
+    return followedProjects.filter(
       (project): project is NonNullable<typeof project> => project !== null
     );
   },
@@ -386,14 +386,14 @@ export const getById = query({
       .query("upvotes")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .collect();
-    const adoptions = await ctx.db
+    const follows = await ctx.db
       .query("adoptions")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .order("desc")
       .collect();
     const currentUser = await getCurrentUser(ctx);
     let hasUpvoted = false;
-    let hasAdopted = false;
+    let hasFollowed = false;
     if (currentUser) {
       const userUpvote = await ctx.db
         .query("upvotes")
@@ -402,7 +402,7 @@ export const getById = query({
         )
         .first();
       hasUpvoted = !!userUpvote;
-      hasAdopted = adoptions.some((a) => a.userId === currentUser._id);
+      hasFollowed = follows.some((a) => a.userId === currentUser._id);
     }
     const creator = await ctx.db.get(project.userId);
     let teamName = "";
@@ -417,12 +417,12 @@ export const getById = query({
       group: focusAreaDoc.group,
       icon: focusAreaDoc.icon,
     } : null;
-    const [adoptersWithInfo, additionalFocusAreas] = await Promise.all([
+    const [followersWithInfo, additionalFocusAreas] = await Promise.all([
       Promise.all(
-        adoptions.slice(0, 6).map(async (adoption) => {
-          const user = await ctx.db.get(adoption.userId);
+        follows.slice(0, 6).map(async (follow) => {
+          const user = await ctx.db.get(follow.userId);
           return {
-            _id: adoption.userId,
+            _id: follow.userId,
             name: user?.name ?? "Unknown User",
             avatarUrl: user?.avatarUrlId ?? "",
           };
@@ -440,9 +440,9 @@ export const getById = query({
       creatorAvatar: creator?.avatarUrlId ?? "",
       focusArea,
       additionalFocusAreas,
-      adoptionCount: adoptions.length,
-      adopters: adoptersWithInfo,
-      hasAdopted,
+      followerCount: follows.length,
+      followers: followersWithInfo,
+      hasFollowed,
     };
   },
 });

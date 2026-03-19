@@ -28,7 +28,7 @@ export async function createProjectNotification(
     recipientUserId: Id<"users">;
     actorUserId: Id<"users">;
     projectId: Id<"projects">;
-    type: "comment" | "adoption" | "project_update";
+    type: "comment" | "follow" | "project_update";
     commentId?: Id<"comments">;
   }
 ) {
@@ -58,13 +58,13 @@ export const notifyProjectUpdate = internalMutation({
       return;
     }
 
-    const adoptions = await ctx.db
+    const follows = await ctx.db
       .query("adoptions")
       .withIndex("by_project", (q) => q.eq("projectId", args.projectId))
       .collect();
 
     const recipients = Array.from(
-      new Set(adoptions.map((adoption) => adoption.userId))
+      new Set(follows.map((follow) => follow.userId))
     ).filter((userId) => userId !== args.actorUserId);
 
     if (recipients.length === 0) {

@@ -25,7 +25,7 @@ import type { FocusArea, ProjectRowData, UserRef } from "@/lib/types";
 interface ProjectRowProps {
   project: ProjectRowData;
   onUpvote: (projectId: Id<"projects">) => void;
-  onAdopt: (projectId: Id<"projects">) => void;
+  onFollow: (projectId: Id<"projects">) => void;
   currentUser: UserRef | null;
   isAuthenticated: boolean;
   hideSpaceLabel?: boolean;
@@ -35,7 +35,7 @@ interface ProjectRowProps {
 export function ProjectRow({
   project,
   onUpvote,
-  onAdopt,
+  onFollow,
   currentUser,
   isAuthenticated,
   hideSpaceLabel,
@@ -63,8 +63,8 @@ export function ProjectRow({
     setShareOpen(true);
   };
 
-  const handleAdoptClick = () => {
-    onAdopt(project._id);
+  const handleFollowClick = () => {
+    onFollow(project._id);
   };
 
   const hasMedia = project.previewMedia.length > 0;
@@ -99,14 +99,14 @@ export function ProjectRow({
           <span>{getRelativeTime(project._creationTime)}</span>
         </div>
         <Facepile
-          adopters={project.adopters}
-          totalCount={project.adoptionCount}
+          followers={project.followers}
+          totalCount={project.followerCount}
           maxVisible={3}
           size="sm"
-          hasAdopted={project.hasAdopted}
+          hasFollowed={project.hasFollowed}
           currentUser={currentUser}
           isAuthenticated={isAuthenticated}
-          onToggle={handleAdoptClick}
+          onToggle={handleFollowClick}
           projectId={project._id}
         />
       </div>
