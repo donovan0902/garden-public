@@ -27,6 +27,14 @@ export default function GuidelinesPage() {
           </ul>
         </section>
 
+        {/* Simple is good */}
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold text-zinc-900">Simple is good</h2>
+              <p className="text-base text-zinc-600 leading-relaxed">
+              A 10-line script that saves your team two hours a week is more valuable than a full application nobody uses. Post the simple thing: a formula, template, macro, or dashboard you took the extra time to cobble together in a few minutes. These are exactly what people search for.
+              </p>
+        </section>
+
         {/* The simple test */}
         <section className="border-l-4 border-zinc-300 pl-6 space-y-2">
           <p className="text-xl font-medium text-zinc-800 leading-snug">
