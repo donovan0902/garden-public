@@ -7,8 +7,6 @@ import { enrichProjects } from "./helpers";
 import type { Id } from "../_generated/dataModel";
 import type { QueryCtx, MutationCtx } from "../_generated/server";
 
-const MAX_SECONDARY_SPACES = 3;
-
 // ─── Internal mutations ──────────────────────────────────────────────────────
 
 /**
@@ -36,7 +34,7 @@ export const syncProjectSpaceMemberships = internalMutationFromFunctions({
           (id) => id !== args.primaryFocusAreaId
         )
       )
-    ).slice(0, MAX_SECONDARY_SPACES);
+    );
 
     for (const id of secondaries) {
       if (!desiredMap.has(id)) {
