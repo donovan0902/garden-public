@@ -27,6 +27,17 @@ export default function GuidelinesPage() {
           </ul>
         </section>
 
+        {/* Simple is good */}
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold text-zinc-900">Simple is good</h2>
+          <p className="text-base text-zinc-600 leading-relaxed">
+            A 10-line script that saves your team two hours a week is more valuable than a full application nobody uses. Garden isn&apos;t a showcase for the most technically impressive work — it&apos;s a catalog of what&apos;s actually useful. If you built something that works, even something small, it belongs here as much as anything else.
+          </p>
+          <p className="text-base text-zinc-600 leading-relaxed">
+            A formula, a template, a quick macro you wrote on a Friday afternoon — these are exactly the kind of things people search for and can&apos;t find. Don&apos;t let the polished posts in the feed put you off. Post the simple thing.
+          </p>
+        </section>
+
         {/* Threads */}
         <section className="space-y-3">
           <h2 className="text-xl font-semibold text-zinc-900">What about threads?</h2>
