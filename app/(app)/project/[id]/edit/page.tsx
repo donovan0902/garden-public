@@ -330,7 +330,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
                 </TooltipTrigger>
                 <TooltipContent className="max-w-xs">
                   <p className="text-xs">
-                    Tag up to 3 additional spaces where this project is also relevant. It will appear in those space feeds too.
+                    Add additional spaces to reach other communities where your project is also relevant.
                   </p>
                 </TooltipContent>
               </Tooltip>

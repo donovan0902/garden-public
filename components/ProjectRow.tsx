@@ -78,31 +78,14 @@ export function ProjectRow({
       <div className="flex items-center justify-between gap-2 text-xs text-zinc-500">
         <div className="flex flex-wrap items-center gap-2">
           {project.focusArea && !hideSpaceLabel ? (
-            <>
-              <Link
-                href={`/space/${project.focusArea._id}`}
-                className="flex items-center gap-1 font-medium text-zinc-600 transition-colors hover:text-green-600"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <SpaceIcon icon={project.focusArea.icon} name={project.focusArea.name} size="sm" />
-                g/{project.focusArea.name}
-              </Link>
-              {project.additionalFocusAreas && project.additionalFocusAreas.length > 0 && (
-                <>
-                  {project.additionalFocusAreas.map((space) => (
-                    <Link
-                      key={space._id}
-                      href={`/space/${space._id}`}
-                      className="flex items-center gap-1 text-zinc-400 transition-colors hover:text-green-600"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <SpaceIcon icon={space.icon} name={space.name} size="sm" />
-                      g/{space.name}
-                    </Link>
-                  ))}
-                </>
-              )}
-            </>
+            <Link
+              href={`/space/${project.focusArea._id}`}
+              className="flex items-center gap-1 font-medium text-zinc-600 transition-colors hover:text-green-600"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <SpaceIcon icon={project.focusArea.icon} name={project.focusArea.name} size="sm" />
+              g/{project.focusArea.name}
+            </Link>
           ) : (
             <Link
               href={`/profile/${project.userId}`}

@@ -268,7 +268,7 @@ export default function SubmitProject() {
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
                       <p className="text-xs">
-                        Tag up to 3 additional spaces where this project is also relevant. It will appear in those space feeds too.
+                        Only your primary space appears on project cards. Add additional spaces to reach other communities where your project is also relevant.
                       </p>
                     </TooltipContent>
                   </Tooltip>
