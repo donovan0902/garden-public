@@ -3,7 +3,7 @@ import { RAG } from "@convex-dev/rag";
 import { bedrock } from "@ai-sdk/amazon-bedrock";
 
 export const rag = new RAG(components.rag, {
-  textEmbeddingModel: bedrock.embedding("us.cohere.embed-v4:0"),
-  embeddingDimension: 1536,
+  textEmbeddingModel: bedrock.embedding("amazon.titan-embed-text-v2:0"),
+  embeddingDimension: 1024,
 });
 
