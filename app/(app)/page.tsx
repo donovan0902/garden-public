@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { ProjectRow } from "@/components/ProjectRow";
 import type { ProjectRowData } from "@/lib/types";
-import { ArrowBigUp, MessageCircle } from "lucide-react";
+import { ArrowBigUp, MessageCircle, PlusCircle } from "lucide-react";
 import { SpaceIcon } from "@/components/SpaceIcon";
 
 export default function Home() {
@@ -85,12 +85,22 @@ export default function Home() {
       <main className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 px-6 pb-16 pt-4">
         <section className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_400px]">
           <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold text-zinc-900">
-                Tools catalog
-              </h1>
-              <Link href="/guidelines" className="text-sm text-zinc-500 underline underline-offset-4 hover:text-zinc-700">
-                What can I post?
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-muted px-5 py-3">
+              <div className="min-w-0 flex-1">
+                <Link
+                  href="/submit"
+                  className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
+                >
+                  Share what you're working on
+                </Link>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  <Link href="/guidelines" className="underline underline-offset-2 hover:text-foreground transition-colors">
+                    What can I post?
+                  </Link>
+                </p>
+              </div>
+              <Link href="/submit" className="flex-shrink-0 text-primary hover:text-accent transition-colors">
+                <PlusCircle className="h-5 w-5" />
               </Link>
             </div>
             <LayoutGroup>

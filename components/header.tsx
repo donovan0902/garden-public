@@ -6,27 +6,16 @@ import {
   useMutation,
   useQuery,
 } from "convex/react";
-import { Button } from "@/components/ui/button";
 import { signOut } from "aws-amplify/auth";
-import { Bell, LogOut, User, Sparkles, PlusCircle } from "lucide-react";
+import { Bell, LogOut, User, PlusCircle } from "lucide-react";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { api } from "@/convex/_generated/api";
-import { ChatInterface } from "./ChatInterface";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { SearchBar } from "./SearchBar";
 import { getRelativeTime } from "@/lib/utils";
 import {
   NavigationMenu,
   NavigationMenuList,
   NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuTrigger,
-  NavigationMenuContent,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -101,25 +90,7 @@ export function Header() {
           />
         </div>
 
-        {isAuthenticated && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <button
-                  className="inline-flex h-9 w-80 items-center justify-center gap-2 rounded-full border border-emerald-200 bg-zinc-50 px-3 text-sm font-normal text-zinc-500 shadow-sm hover:bg-zinc-100 hover:text-zinc-900 transition-all ring-2 ring-emerald-500/20"
-                  aria-label="Search the tools catalog"
-                >
-                  <Sparkles className="h-4 w-4 text-emerald-600" />
-                  <span>Search the catalog</span>
-                </button>
-              </DialogTrigger>
-              <DialogContent className="p-0 border-0 bg-transparent shadow-none sm:max-w-3xl w-[90vw]">
-                <VisuallyHidden>
-                  <DialogTitle>Search the Tools Catalog</DialogTitle>
-                </VisuallyHidden>
-                <ChatInterface />
-              </DialogContent>
-            </Dialog>
-        )}
+        {isAuthenticated && <SearchBar />}
 
         {/* Right: Navigation Menu & Auth Buttons */}
         <div className="flex items-center gap-3">
