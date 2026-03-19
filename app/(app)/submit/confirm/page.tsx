@@ -36,11 +36,11 @@ type Project = {
 };
 
 const thingsThatBelong = [
+  "a script you use yourself (even a 10-liner)",
+  "a shortcut, template, or workaround that saved you time",
   "an automation or script used by your team",
   "a dashboard built for a department or project",
-  "a tool requested by leadership or a business need",
   "a prototype that could save others the same effort",
-  "a compliance or reporting solution",
   "a prompt pack or reusable template",
 ];
 
@@ -152,7 +152,10 @@ function ConfirmSubmissionContent() {
               <AccordionTrigger className="py-1 text-sm font-medium text-zinc-700">
                 Not sure if it belongs? It probably does.
               </AccordionTrigger>
-              <AccordionContent className="pt-2">
+              <AccordionContent className="pt-2 space-y-3">
+                <p className="text-sm text-zinc-500">
+                  Complexity doesn&apos;t matter. A simple script that does one thing well is just as valuable here as a full application — often more so.
+                </p>
                 <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-600">
                   {thingsThatBelong.map((item) => (
                     <li key={item}>{item}</li>

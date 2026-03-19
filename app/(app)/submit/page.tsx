@@ -40,11 +40,11 @@ const readinessSliderValues = ["just_an_idea", "early_prototype", "mostly_workin
 const readinessSliderLabels = ["Just an idea", "Early prototype", "Mostly working", "Ready to use"];
 
 const thingsThatBelong = [
-  "a script you wrote for yourself",
+  "a script you use yourself (even a 10-liner)",
+  "a shortcut, template, or workaround that saved you time",
+  "a prototype that never shipped",
   "a tool your manager asked you to build",
   "a department dashboard",
-  "a deadline workaround",
-  "a prototype that never shipped",
   "a compliance/reporting solution",
 ];
 

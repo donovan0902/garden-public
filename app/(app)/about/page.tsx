@@ -22,7 +22,7 @@ export default function AboutPage() {
             Garden is my attempt to fix that, even if just a little. It&apos;s a step toward making internal tools easier to discover, surfacing work that might be useful beyond the team it was built for, and bringing good ideas closer to the people who didn&apos;t even know they were looking for them.
           </p>
           <p className="text-xl text-zinc-600 leading-relaxed">
-            But for me personally, I just want Garden to make creating things feel more fun, exciting, and worth sharing.
+            But for me personally, I just want Garden to make creating things feel more fun, exciting, and worth sharing. That includes the small things — a formula, a template, a quick script written on a Friday afternoon. These are often the most immediately useful finds in a catalog like this, and they deserve a home just as much as anything bigger.
           </p>
           <p className="text-xl text-zinc-600 leading-relaxed">
             If you have ideas, issues, or requests, I&apos;d love to hear them. Email me: {" "}
