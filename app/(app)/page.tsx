@@ -85,20 +85,24 @@ export default function Home() {
       <main className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 px-6 pb-16 pt-4">
         <section className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_400px]">
           <div className="space-y-2">
-            <Link
-              href="/submit"
-              className="flex items-center justify-between gap-4 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-3 transition-colors hover:from-emerald-100 hover:to-teal-100"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-emerald-900">
-                  Built something useful?
-                </p>
-                <p className="text-xs text-emerald-700/70">
-                  Share your script, dashboard, or automation with the team.
+            <div className="flex items-center justify-between gap-4 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-3">
+              <div className="min-w-0 flex-1">
+                <Link
+                  href="/submit"
+                  className="text-sm font-semibold text-emerald-900 hover:text-emerald-800 transition-colors"
+                >
+                  Share what you're working on
+                </Link>
+                <p className="text-xs text-emerald-700/60 mt-0.5">
+                  <Link href="/guidelines" className="underline underline-offset-2 hover:text-emerald-800">
+                    What can I post?
+                  </Link>
                 </p>
               </div>
-              <PlusCircle className="h-5 w-5 flex-shrink-0 text-emerald-600" />
-            </Link>
+              <Link href="/submit" className="flex-shrink-0">
+                <PlusCircle className="h-5 w-5 text-emerald-600 hover:text-emerald-700 transition-colors" />
+              </Link>
+            </div>
             <LayoutGroup>
               <div className="space-y-0">
                 {isLoading ? (
