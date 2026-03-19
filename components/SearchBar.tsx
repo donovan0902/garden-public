@@ -4,9 +4,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAction } from "convex/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Search, Sparkles } from "lucide-react";
+import { Search, Sparkles, Wrench, MessageSquareText } from "lucide-react";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
 import { stripHtml } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -24,7 +23,8 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { ChatInterface } from "./ChatInterface";
 
 interface SearchResult {
-  _id: Id<"projects">;
+  _id: string;
+  type: "project" | "thread";
   name: string;
   summary?: string;
 }
@@ -40,7 +40,7 @@ export function SearchBar() {
   const requestIdRef = useRef(0);
   const router = useRouter();
 
-  const searchProjects = useAction(api.projects.searchProjects);
+  const searchCatalog = useAction(api.projects.searchCatalog);
 
   // Debounce the query
   useEffect(() => {
@@ -63,7 +63,7 @@ export function SearchBar() {
     setIsLoading(true);
     setIsOpen(true);
 
-    searchProjects({ query: debouncedQuery })
+    searchCatalog({ query: debouncedQuery })
       .then((searchResults) => {
         if (requestIdRef.current !== currentRequestId) return;
         setResults(searchResults);
@@ -78,7 +78,7 @@ export function SearchBar() {
         if (requestIdRef.current !== currentRequestId) return;
         setIsLoading(false);
       });
-  }, [debouncedQuery, searchProjects]);
+  }, [debouncedQuery, searchCatalog]);
 
   const closeDropdown = useCallback(() => {
     setIsOpen(false);
@@ -86,10 +86,13 @@ export function SearchBar() {
   }, []);
 
   const navigateToResult = useCallback(
-    (id: Id<"projects">) => {
+    (result: SearchResult) => {
       closeDropdown();
       setQuery("");
-      router.push(`/project/${id}`);
+      const path = result.type === "project"
+        ? `/project/${result._id}`
+        : `/thread/${result._id}`;
+      router.push(path);
     },
     [closeDropdown, router]
   );
@@ -114,7 +117,7 @@ export function SearchBar() {
         case "Enter":
           e.preventDefault();
           if (activeIndex >= 0 && activeIndex < results.length) {
-            navigateToResult(results[activeIndex]._id);
+            navigateToResult(results[activeIndex]);
           }
           break;
         case "Escape":
@@ -136,7 +139,7 @@ export function SearchBar() {
             ref={inputRef}
             type="text"
             className="h-9 w-full rounded-full border border-border bg-background pl-9 pr-14 text-sm text-foreground placeholder:text-muted-foreground shadow-sm ring-2 ring-ring/15 transition-all hover:bg-muted focus:bg-background focus:outline-none focus:ring-2 focus:ring-ring/30"
-            placeholder="Search tools..."
+            placeholder="Search tools & threads..."
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
@@ -148,7 +151,7 @@ export function SearchBar() {
               }
             }}
             onKeyDown={handleKeyDown}
-            aria-label="Search tools"
+            aria-label="Search tools and threads"
             aria-expanded={isOpen}
             role="combobox"
             aria-autocomplete="list"
@@ -198,36 +201,41 @@ export function SearchBar() {
           <div className="max-h-80 overflow-y-auto py-1">
             {results.map((result, index) => (
               <Link
-                key={result._id}
+                key={`${result.type}-${result._id}`}
                 id={`search-result-${index}`}
                 role="option"
                 aria-selected={index === activeIndex}
-                href={`/project/${result._id}`}
-                className={`flex flex-col gap-0.5 px-3 py-2 text-sm no-underline transition-colors ${
+                href={result.type === "project" ? `/project/${result._id}` : `/thread/${result._id}`}
+                className={`flex items-start gap-2.5 px-3 py-2 text-sm no-underline transition-colors ${
                   index === activeIndex
                     ? "bg-zinc-100 text-zinc-900"
                     : "text-zinc-700 hover:bg-zinc-50"
                 }`}
                 onClick={(e) => {
                   e.preventDefault();
-                  navigateToResult(result._id);
+                  navigateToResult(result);
                 }}
                 onMouseEnter={() => setActiveIndex(index)}
               >
-                <span className="font-medium text-zinc-900 truncate">
-                  {result.name}
-                </span>
-                {result.summary && (
-                  <span className="text-xs text-zinc-500 line-clamp-1">
-                    {stripHtml(result.summary)}
-                  </span>
+                {result.type === "project" ? (
+                  <Wrench className="h-4 w-4 mt-0.5 shrink-0 text-zinc-400" />
+                ) : (
+                  <MessageSquareText className="h-4 w-4 mt-0.5 shrink-0 text-zinc-400" />
                 )}
+                <div className="flex flex-col gap-0.5 min-w-0">
+                  <span className="font-medium text-zinc-900 truncate">{result.name}</span>
+                  {result.summary && (
+                    <span className="text-xs text-zinc-500 line-clamp-1">
+                      {stripHtml(result.summary)}
+                    </span>
+                  )}
+                </div>
               </Link>
             ))}
           </div>
         ) : (
           <div className="px-3 py-4 text-center text-sm text-zinc-500">
-            No projects found.
+            No results found.
           </div>
         )}
       </PopoverContent>

@@ -680,6 +680,25 @@ export const getThreadsByEntryIdsPublic = query({
   },
 });
 
+export const getThreadsByEntryIdsInternal = internalQuery({
+  args: {
+    entryIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const threads = await Promise.all(
+      args.entryIds.map(async (entryId) => {
+        return await ctx.db
+          .query("threads")
+          .withIndex("by_entryId", (q) => q.eq("entryId", entryId))
+          .first();
+      })
+    );
+    return threads.filter(
+      (t): t is NonNullable<typeof t> => t !== null
+    );
+  },
+});
+
 // ─── Backfill ───────────────────────────────────────────────────────────────
 
 export const getThreadsWithoutEntryId = internalQuery({

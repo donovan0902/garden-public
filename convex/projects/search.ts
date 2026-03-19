@@ -19,7 +19,7 @@ export const fullTextSearchProjects = internalQuery({
   },
 });
 
-export const searchProjects = action({
+export const searchCatalog = action({
   args: {
     query: v.string(),
   },
@@ -28,7 +28,8 @@ export const searchProjects = action({
     args
   ): Promise<
     Array<{
-      _id: Id<"projects">;
+      _id: string;
+      type: "project" | "thread";
       name: string;
       summary?: string;
     }>
@@ -36,7 +37,14 @@ export const searchProjects = action({
     if (args.query.trim().length < 2) {
       return [];
     }
-    const [{ entries }, fullTextSearchProjects] = await Promise.all([
+
+    // Search both projects and threads in parallel
+    const [
+      projectVectorResults,
+      fullTextProjects,
+      threadVectorResults,
+      fullTextThreads,
+    ] = await Promise.all([
       rag.search(ctx, {
         namespace: "projects",
         query: args.query,
@@ -47,36 +55,77 @@ export const searchProjects = action({
         query: args.query,
         limit: 15,
       }),
+      rag.search(ctx, {
+        namespace: "threads",
+        query: args.query,
+        limit: 10,
+        vectorScoreThreshold: 0.3,
+      }),
+      ctx.runQuery(internal.threads.fullTextSearchThreads, {
+        query: args.query,
+        limit: 10,
+      }),
     ]);
-    const entryIds = entries.map((e: { entryId: string }) => e.entryId);
-    const fullTextEntryIds = fullTextSearchProjects
+
+    // Hybrid rank projects
+    const projectEntryIds = projectVectorResults.entries.map((e: { entryId: string }) => e.entryId);
+    const projectFullTextEntryIds = fullTextProjects
       .map((p: { entryId?: string }) => p.entryId)
       .filter((id: string | undefined): id is string => id !== undefined);
-    const hybridRankedEntryIds = hybridRank(
-      [entryIds, fullTextEntryIds],
-      {
-        k: 15,
-        weights: [2, 1],
-        cutoffScore: 0.05,
-      }
+    const hybridRankedProjectEntryIds = hybridRank(
+      [projectEntryIds, projectFullTextEntryIds],
+      { k: 10, weights: [2, 1], cutoffScore: 0.05 }
     );
-    const allProjects = await ctx.runQuery(
-      internal.projects.getProjectsByEntryIds,
-      {
-        entryIds: hybridRankedEntryIds,
+
+    // Hybrid rank threads
+    const threadEntryIds = threadVectorResults.entries.map((e: { entryId: string }) => e.entryId);
+    const threadFullTextEntryIds = fullTextThreads
+      .map((t: { entryId?: string }) => t.entryId)
+      .filter((id: string | undefined): id is string => id !== undefined);
+    const hybridRankedThreadEntryIds = hybridRank(
+      [threadEntryIds, threadFullTextEntryIds],
+      { k: 5, weights: [2, 1], cutoffScore: 0.05 }
+    );
+
+    // Fetch actual records in parallel
+    const [allProjects, allThreads] = await Promise.all([
+      ctx.runQuery(internal.projects.getProjectsByEntryIds, {
+        entryIds: hybridRankedProjectEntryIds,
         excludeProjectId: undefined,
-      }
-    );
+      }),
+      ctx.runQuery(internal.threads.getThreadsByEntryIdsInternal, {
+        entryIds: hybridRankedThreadEntryIds,
+      }),
+    ]);
+
+    // Build ordered project results
     type ProjectWithEntryId = (typeof allProjects)[number];
     const projectMap = new Map(allProjects.map((p: ProjectWithEntryId) => [p.entryId!, p]));
-    const projects = hybridRankedEntryIds
+    const projectResults = hybridRankedProjectEntryIds
       .map((entryId) => projectMap.get(entryId))
-      .filter((p): p is NonNullable<typeof p> => p !== undefined);
-    return projects.map((p) => ({
-      _id: p._id,
-      name: p.name,
-      summary: p.summary,
-    }));
+      .filter((p): p is NonNullable<typeof p> => p !== undefined)
+      .map((p) => ({
+        _id: p._id as string,
+        type: "project" as const,
+        name: p.name,
+        summary: p.summary,
+      }));
+
+    // Build ordered thread results
+    type ThreadRecord = (typeof allThreads)[number];
+    const threadMap = new Map(allThreads.map((t: ThreadRecord) => [t.entryId!, t]));
+    const threadResults = hybridRankedThreadEntryIds
+      .map((entryId) => threadMap.get(entryId))
+      .filter((t): t is NonNullable<typeof t> => t !== undefined)
+      .map((t) => ({
+        _id: t._id as string,
+        type: "thread" as const,
+        name: t.title,
+        summary: t.body,
+      }));
+
+    // Projects first, then threads
+    return [...projectResults, ...threadResults];
   },
 });
 

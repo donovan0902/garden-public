@@ -56,7 +56,7 @@ export {
 
 export {
   fullTextSearchProjects,
-  searchProjects,
+  searchCatalog,
   getSimilarProjects,
   searchSimilarProjectsByText,
 } from "./projects/search";
