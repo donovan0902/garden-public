@@ -39,15 +39,6 @@ import {
 const readinessSliderValues = ["just_an_idea", "early_prototype", "mostly_working", "ready_to_use"] as const;
 const readinessSliderLabels = ["Just an idea", "Early prototype", "Mostly working", "Ready to use"];
 
-const thingsThatBelong = [
-  "a script you use yourself (even a 10-liner)",
-  "a shortcut, template, or workaround that saved you time",
-  "a prototype that never shipped",
-  "a tool your manager asked you to build",
-  "a department dashboard",
-  "a compliance/reporting solution",
-];
-
 export default function SubmitProject() {
   const router = useRouter();
   const createProject = useAction(api.projects.create);

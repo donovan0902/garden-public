@@ -35,15 +35,6 @@ type Project = {
   creatorAvatar: string;
 };
 
-const thingsThatBelong = [
-  "a script you use yourself (even a 10-liner)",
-  "a shortcut, template, or workaround that saved you time",
-  "an automation or script used by your team",
-  "a dashboard built for a department or project",
-  "a prototype that could save others the same effort",
-  "a prompt pack or reusable template",
-];
-
 function ConfirmSubmissionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -147,23 +138,6 @@ function ConfirmSubmissionContent() {
         </Breadcrumb>
         <div className="mb-2 space-y-2">
           <h2 className="text-3xl font-semibold tracking-tight">Register a tool in the catalog</h2>
-          <Accordion type="single" collapsible>
-            <AccordionItem value="things" className="border-b-0">
-              <AccordionTrigger className="py-1 text-sm font-medium text-zinc-700">
-                Not sure if it belongs? It probably does.
-              </AccordionTrigger>
-              <AccordionContent className="pt-2 space-y-3">
-                <p className="text-sm text-zinc-500">
-                  Complexity doesn&apos;t matter. A simple script that does one thing well is just as valuable here as a full application — often more so.
-                </p>
-                <ul className="list-disc space-y-1 pl-5 text-sm text-zinc-600">
-                  {thingsThatBelong.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
         </div>
 
         <section className="mx-auto w-full max-w-5xl space-y-8">
