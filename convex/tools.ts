@@ -118,7 +118,7 @@ export const searchCatalog = createTool({
         if (!project) return null;
 
         const lines = [
-          `[Project ${index + 1}]`,
+          `📋 [Project ${index + 1}]`,
           `Type: project`,
           `Entry ID: ${entryId}`,
           `Name: ${project.name}`,
@@ -137,7 +137,7 @@ export const searchCatalog = createTool({
         if (!thread) return null;
 
         const lines = [
-          `[Thread ${index + 1}]`,
+          `🧵 [Thread ${index + 1}]`,
           `Type: thread`,
           `Entry ID: ${entryId}`,
           `Title: ${thread.title}`,
