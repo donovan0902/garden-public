@@ -224,9 +224,9 @@ export default function SubmitProject() {
 
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
-            <section className="w-full space-y-6">
+            <section className="w-full">
               {/* Space Selectors — grouped */}
-              <div className="space-y-3">
+              <div className="space-y-3 mb-8">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <label className="text-base font-semibold text-zinc-900">
@@ -275,20 +275,22 @@ export default function SubmitProject() {
                 </div>
               </div>
 
-              {/* Title - Required field */}
-              <div className="space-y-2">
-                <Input
-                  id="workingTitle"
-                  className="h-11 border border-zinc-300 focus-visible:border-zinc-400"
-                  value={formData.workingTitle}
-                  onChange={(e) => setFormData({ ...formData, workingTitle: e.target.value })}
-                  placeholder="Title"
-                  aria-label="Title"
-                  required
-                />
-              </div>
+              {/* Title and form tabs — grouped */}
+              <div className="space-y-6">
+                {/* Title - Required field */}
+                <div className="space-y-2">
+                  <Input
+                    id="workingTitle"
+                    className="h-11 border border-zinc-300 focus-visible:border-zinc-400"
+                    value={formData.workingTitle}
+                    onChange={(e) => setFormData({ ...formData, workingTitle: e.target.value })}
+                    placeholder="Title"
+                    aria-label="Title"
+                    required
+                  />
+                </div>
 
-              <Tabs defaultValue="details" className="!mt-10">
+                <Tabs defaultValue="details">
                 <TabsList variant="line">
                   <TabsTrigger value="details" className="px-5">Details</TabsTrigger>
                   <TabsTrigger value="media" className="px-5">Files & media</TabsTrigger>
@@ -367,6 +369,7 @@ export default function SubmitProject() {
                   <LinksEditor links={links} onChange={setLinks} disabled={isSubmitting} />
                 </TabsContent>
               </Tabs>
+              </div>
 
               <div className="flex items-center pt-4">
                 <Button type="submit" className="whitespace-nowrap" disabled={isSubmitting}>

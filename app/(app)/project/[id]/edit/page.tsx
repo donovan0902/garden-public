@@ -292,7 +292,7 @@ export default function EditProject({ params }: { params: Promise<{ id: string }
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Space Selectors — grouped */}
-          <div className="space-y-3 max-w-2xl">
+          <div className="space-y-3 max-w-2xl mb-8">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <label className="text-base font-semibold text-zinc-900">
