@@ -103,7 +103,8 @@ export default defineSchema({
       v.literal("upvote"),
       v.literal("adoption"),    // legacy — kept for migration compatibility
       v.literal("follow"),
-      v.literal("project_update")
+      v.literal("project_update"),
+      v.literal("followed_project_comment"),
     ),
     commentId: v.optional(v.id("comments")),
     count: v.optional(v.number()),
