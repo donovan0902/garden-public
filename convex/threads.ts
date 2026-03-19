@@ -1,10 +1,18 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { getCurrentUser, getCurrentUserOrThrow } from "./users";
 import { calculateHotScore } from "./projects/helpers";
 import { enqueueCommentEmail } from "./commentNotifications";
+import { rag } from "./rag";
+import type { EntryId } from "@convex-dev/rag";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function buildAllFields(title: string, body?: string): string {
+  return body ? `${title} ${body}` : title;
+}
 
 // ─── Creation ────────────────────────────────────────────────────────────────
 
@@ -17,10 +25,12 @@ export const createThread = mutation({
   handler: async (ctx, args) => {
     const user = await getCurrentUserOrThrow(ctx);
     const now = Date.now();
+    const trimmedTitle = args.title.trim();
+    const trimmedBody = args.body?.trim() || undefined;
 
     const threadId = await ctx.db.insert("threads", {
-      title: args.title.trim(),
-      body: args.body?.trim() || undefined,
+      title: trimmedTitle,
+      body: trimmedBody,
       userId: user._id,
       focusAreaId: args.focusAreaId,
       upvoteCount: 0,
@@ -28,6 +38,7 @@ export const createThread = mutation({
       engagementScore: 0,
       hotScore: calculateHotScore(0, now, now),
       createdAt: now,
+      allFields: buildAllFields(trimmedTitle, trimmedBody),
     });
 
     // Notify followers of the space about the new thread
@@ -38,8 +49,19 @@ export const createThread = mutation({
         focusAreaId: args.focusAreaId,
         contentType: "thread" as const,
         contentId: threadId,
-        contentTitle: args.title.trim(),
+        contentTitle: trimmedTitle,
         creatorUserId: user._id,
+      }
+    );
+
+    // Index thread in RAG for AI search
+    await ctx.scheduler.runAfter(
+      0,
+      internal.threads.indexThreadInRag,
+      {
+        threadId,
+        title: trimmedTitle,
+        body: trimmedBody,
       }
     );
 
@@ -62,10 +84,25 @@ export const updateThread = mutation({
     if (thread.userId !== user._id)
       throw new Error("You can only edit your own threads");
 
+    const trimmedTitle = args.title.trim();
+    const trimmedBody = args.body?.trim() || undefined;
+
     await ctx.db.patch(args.threadId, {
-      title: args.title.trim(),
-      body: args.body?.trim() || undefined,
+      title: trimmedTitle,
+      body: trimmedBody,
+      allFields: buildAllFields(trimmedTitle, trimmedBody),
     });
+
+    // Re-index thread in RAG
+    await ctx.scheduler.runAfter(
+      0,
+      internal.threads.indexThreadInRag,
+      {
+        threadId: args.threadId,
+        title: trimmedTitle,
+        body: trimmedBody,
+      }
+    );
   },
 });
 
@@ -106,6 +143,15 @@ export const deleteThread = mutation({
     await Promise.all(
       threadUpvotes.map((upvote) => ctx.db.delete(upvote._id))
     );
+
+    // Remove from RAG index
+    if (thread.entryId) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.threads.deleteThreadFromRag,
+        { entryId: thread.entryId }
+      );
+    }
 
     // Delete the thread itself
     await ctx.db.delete(args.threadId);
@@ -529,5 +575,182 @@ export const toggleCommentUpvote = mutation({
       await ctx.db.patch(args.commentId, { upvotes: updatedCount });
       return { upvotes: updatedCount, hasUpvoted: true };
     }
+  },
+});
+
+// ─── RAG Indexing (Internal) ────────────────────────────────────────────────
+
+export const indexThreadInRag = internalAction({
+  args: {
+    threadId: v.id("threads"),
+    title: v.string(),
+    body: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const text = args.body ? `${args.title}\n\n${args.body}` : args.title;
+    const { entryId } = await rag.add(ctx, {
+      namespace: "threads",
+      text,
+      key: args.threadId,
+    });
+    await ctx.runMutation(internal.threads.updateThreadEntryId, {
+      threadId: args.threadId,
+      entryId,
+    });
+  },
+});
+
+export const updateThreadEntryId = internalMutation({
+  args: {
+    threadId: v.id("threads"),
+    entryId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const thread = await ctx.db.get(args.threadId);
+    if (thread) {
+      await ctx.db.patch(args.threadId, { entryId: args.entryId });
+    }
+  },
+});
+
+export const deleteThreadFromRag = internalAction({
+  args: {
+    entryId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await rag.delete(ctx, { entryId: args.entryId as EntryId });
+  },
+});
+
+export const getThread = internalQuery({
+  args: { threadId: v.id("threads") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.threadId);
+  },
+});
+
+export const fullTextSearchThreads = internalQuery({
+  args: {
+    query: v.string(),
+    limit: v.number(),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("threads")
+      .withSearchIndex("allFields", (q) => q.search("allFields", args.query))
+      .take(args.limit);
+  },
+});
+
+export const getThreadsByEntryIdsPublic = query({
+  args: {
+    entryIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const threads = await Promise.all(
+      args.entryIds.map(async (entryId) => {
+        const thread = await ctx.db
+          .query("threads")
+          .withIndex("by_entryId", (q) => q.eq("entryId", entryId))
+          .first();
+        if (!thread) return null;
+
+        const [creator, focusArea] = await Promise.all([
+          ctx.db.get(thread.userId),
+          ctx.db.get(thread.focusAreaId),
+        ]);
+
+        return {
+          _id: thread._id,
+          title: thread.title,
+          body: thread.body,
+          upvoteCount: thread.upvoteCount,
+          commentCount: thread.commentCount,
+          creatorName: creator?.name ?? "Unknown User",
+          createdAt: thread.createdAt,
+          spaceName: focusArea?.name ?? null,
+          spaceIcon: focusArea?.icon ?? null,
+          spaceId: focusArea?._id ?? null,
+        };
+      })
+    );
+    return threads.filter(
+      (t): t is NonNullable<typeof t> => t !== null
+    );
+  },
+});
+
+// ─── Backfill ───────────────────────────────────────────────────────────────
+
+export const getThreadsWithoutEntryId = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const threads = await ctx.db
+      .query("threads")
+      .filter((q) => q.eq(q.field("entryId"), undefined))
+      .take(100);
+    return threads.map((t) => ({ _id: t._id }));
+  },
+});
+
+export const backfillThread = internalAction({
+  args: {
+    threadId: v.id("threads"),
+  },
+  handler: async (ctx, args): Promise<{ message: string; entryId: string }> => {
+    const thread = await ctx.runQuery(internal.threads.getThread, {
+      threadId: args.threadId,
+    });
+    if (!thread) throw new Error("Thread not found");
+    if (thread.entryId) {
+      return { message: "Already indexed", entryId: thread.entryId };
+    }
+
+    const text = thread.body ? `${thread.title}\n\n${thread.body}` : thread.title;
+    const { entryId } = await rag.add(ctx, {
+      namespace: "threads",
+      text,
+      key: args.threadId,
+    });
+    await ctx.runMutation(internal.threads.updateThreadEntryId, {
+      threadId: args.threadId,
+      entryId,
+    });
+    return { message: "Thread backfilled", entryId };
+  },
+});
+
+export const backfillAllThreads = internalAction({
+  args: {},
+  handler: async (ctx) => {
+    const threads = await ctx.runQuery(internal.threads.getThreadsWithoutEntryId, {});
+    let scheduled = 0;
+    for (const thread of threads) {
+      await ctx.scheduler.runAfter(
+        scheduled * 200,
+        internal.threads.backfillThread,
+        { threadId: thread._id }
+      );
+      scheduled++;
+    }
+    return { scheduled };
+  },
+});
+
+export const backfillAllFieldsForThreads = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const threads = await ctx.db
+      .query("threads")
+      .filter((q) => q.eq(q.field("allFields"), undefined))
+      .take(100);
+    let updated = 0;
+    for (const thread of threads) {
+      await ctx.db.patch(thread._id, {
+        allFields: buildAllFields(thread.title, thread.body),
+      });
+      updated++;
+    }
+    return { updated };
   },
 });

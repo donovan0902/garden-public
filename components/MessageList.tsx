@@ -5,6 +5,7 @@ import { useThreadMessages } from "@convex-dev/agent/react";
 import { api } from "@/convex/_generated/api";
 import { SearchingIndicator } from "@/components/chat/SearchingIndicator";
 import { ProjectCardsDisplay } from "@/components/chat/ProjectCardsDisplay";
+import { ThreadCardsDisplay } from "@/components/chat/ThreadCardsDisplay";
 import ReactMarkdown from "react-markdown";
 import type { OptimisticMessage } from "@/lib/types";
 
@@ -43,7 +44,7 @@ function hasTextContent(part: unknown): boolean {
 // Check if a content part is a tool-call we want to display
 function isDisplayableToolCall(part: unknown): boolean {
   if (isToolCallPart(part)) {
-    return part.toolName === "searchProjects" || part.toolName === "showProjects";
+    return part.toolName === "searchCatalog" || part.toolName === "showProjects" || part.toolName === "showThreads";
   }
   return false;
 }
@@ -93,7 +94,7 @@ function renderContentPart(part: unknown, index: number) {
 
     // Handle tool-call parts
     if (isToolCallPart(part)) {
-      if (part.toolName === "searchProjects") {
+      if (part.toolName === "searchCatalog") {
         return <SearchingIndicator key={index} />;
       }
       if (part.toolName === "showProjects") {
@@ -103,6 +104,18 @@ function renderContentPart(part: unknown, index: number) {
             <ProjectCardsDisplay
               key={index}
               projectIds={args.projectIds}
+              summary={args.summary ?? ""}
+            />
+          );
+        }
+      }
+      if (part.toolName === "showThreads") {
+        const args = part.args as { threadIds?: string[]; summary?: string };
+        if (args.threadIds && Array.isArray(args.threadIds)) {
+          return (
+            <ThreadCardsDisplay
+              key={index}
+              threadIds={args.threadIds}
               summary={args.summary ?? ""}
             />
           );
@@ -155,9 +168,10 @@ export function MessageList({ threadId, optimisticMessages = [] }: MessageListPr
       ) : (
         <>
         {messages && messages.length > 0 && (
-        // Deduplicate messages by tracking showProjects tool calls we've seen
+        // Deduplicate messages by tracking show* tool calls we've seen
         (() => {
           const seenShowProjectsCalls = new Set<string>();
+          const seenShowThreadsCalls = new Set<string>();
           return messages.map((msg, index) => {
             const role = msg.message?.role;
             const content = msg.message?.content;
@@ -166,7 +180,7 @@ export function MessageList({ threadId, optimisticMessages = [] }: MessageListPr
             // Skip tool result messages (they duplicate what tool-call shows)
             if (role === "tool") return null;
 
-            // Deduplicate showProjects tool calls by their args
+            // Deduplicate showProjects and showThreads tool calls by their args
             if (Array.isArray(content)) {
               const showProjectsPart = content.find(
                 (part) => isToolCallPart(part) && part.toolName === "showProjects"
@@ -177,6 +191,17 @@ export function MessageList({ threadId, optimisticMessages = [] }: MessageListPr
                   return null; // Skip duplicate
                 }
                 seenShowProjectsCalls.add(key);
+              }
+
+              const showThreadsPart = content.find(
+                (part) => isToolCallPart(part) && part.toolName === "showThreads"
+              );
+              if (showThreadsPart && isToolCallPart(showThreadsPart)) {
+                const key = JSON.stringify(showThreadsPart.args);
+                if (seenShowThreadsCalls.has(key)) {
+                  return null; // Skip duplicate
+                }
+                seenShowThreadsCalls.add(key);
               }
             }
 
