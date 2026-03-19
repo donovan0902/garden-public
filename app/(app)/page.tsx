@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { ProjectRow } from "@/components/ProjectRow";
 import type { ProjectRowData } from "@/lib/types";
-import { ArrowBigUp, MessageCircle } from "lucide-react";
+import { ArrowBigUp, MessageCircle, PlusCircle } from "lucide-react";
 import { SpaceIcon } from "@/components/SpaceIcon";
 
 export default function Home() {
@@ -85,14 +85,20 @@ export default function Home() {
       <main className="mx-auto flex w-full max-w-[1400px] flex-col gap-8 px-6 pb-16 pt-4">
         <section className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_400px]">
           <div className="space-y-2">
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold text-zinc-900">
-                Tools catalog
-              </h1>
-              <Link href="/guidelines" className="text-sm text-zinc-500 underline underline-offset-4 hover:text-zinc-700">
-                What can I post?
-              </Link>
-            </div>
+            <Link
+              href="/submit"
+              className="flex items-center justify-between gap-4 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 px-5 py-3 transition-colors hover:from-emerald-100 hover:to-teal-100"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-emerald-900">
+                  Built something useful?
+                </p>
+                <p className="text-xs text-emerald-700/70">
+                  Share your script, dashboard, or automation with the team.
+                </p>
+              </div>
+              <PlusCircle className="h-5 w-5 flex-shrink-0 text-emerald-600" />
+            </Link>
             <LayoutGroup>
               <div className="space-y-0">
                 {isLoading ? (
