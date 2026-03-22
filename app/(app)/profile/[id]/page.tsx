@@ -144,11 +144,6 @@ export default function ProfilePage({
   }
 
   const email = profile.email?.trim() || "";
-  const teamsChatLink = email
-    ? `https://teams.microsoft.com/l/chat/0/0?users=${encodeURIComponent(
-        email
-      )}`
-    : "";
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -177,23 +172,6 @@ export default function ProfilePage({
             <div className="relative flex flex-col items-center gap-6 pr-12 text-center md:items-start md:text-left">
               {!isOwner && email && (
                 <div className="absolute right-0 top-0 flex gap-1">
-                  {teamsChatLink && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-10 w-10"
-                      asChild
-                    >
-                      <a
-                        href={teamsChatLink}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={`Chat with ${profile.name} in Teams`}
-                      >
-                        <i className="bi bi-microsoft-teams text-xl text-zinc-600" aria-hidden="true" />
-                      </a>
-                    </Button>
-                  )}
                   <Button
                     variant="ghost"
                     size="icon"

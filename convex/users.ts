@@ -1,4 +1,4 @@
-import { query, QueryCtx, mutation, internalMutation, internalQuery } from "./_generated/server";
+import { query, QueryCtx, mutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 
@@ -133,21 +133,8 @@ export const completeOnboarding = mutation({
   },
 });
 
-// Extracts Cognito custom claims that should be kept in sync with the user record.
-// Add new synced attributes here — they will automatically be applied in all
-// three ensureUser code paths (returning user, email re-link, new user insert).
-function extractCognitoAttributes(identity: Record<string, unknown>) {
-  const department = identity["custom:department"] as string | undefined;
-  const avatarUrlId = identity["picture"] as string | undefined;
-
-  return {
-    ...(department !== undefined ? { department } : {}),
-    ...(avatarUrlId !== undefined ? { avatarUrlId } : {}),
-  };
-}
-
-// Called by the client after Cognito authentication to ensure the user
-// record exists and is linked to the current Cognito identity.
+// Called by the client after authentication to ensure the user
+// record exists and is linked to the current identity.
 export const ensureUser = mutation({
   args: {},
   handler: async (ctx) => {
@@ -156,54 +143,42 @@ export const ensureUser = mutation({
       throw new Error("Not authenticated");
     }
 
-    const cognitoSub = identity.subject;
+    const subject = identity.subject;
     const email = identity.email;
     const name = identity.name ?? email ?? "Unknown User";
+    const avatarUrlId = identity.pictureUrl ?? undefined;
 
-    const syncedAttrs = extractCognitoAttributes(identity as Record<string, unknown>);
-
-    // 1. Try lookup by externalUserId (Cognito sub)
-    const existingByExternalId = await ctx.db
+    // 1. Try lookup by externalUserId
+    const existing = await ctx.db
       .query("users")
-      .withIndex("by_externalUserId", (q) => q.eq("externalUserId", cognitoSub))
+      .withIndex("by_externalUserId", (q) => q.eq("externalUserId", subject))
       .unique();
 
-    if (existingByExternalId) {
-      const changed = (Object.keys(syncedAttrs) as Array<keyof typeof syncedAttrs>).some(
-        (k) => syncedAttrs[k] !== undefined && existingByExternalId[k] !== syncedAttrs[k]
-      );
-      if (changed) {
-        await ctx.db.patch(existingByExternalId._id, syncedAttrs);
+    if (existing) {
+      // Sync name/email/avatar if changed
+      const updates: Record<string, unknown> = {};
+      if (existing.name !== name) updates.name = name;
+      if (email && existing.email !== email) {
+        updates.email = email;
+        updates.emailLower = email.toLowerCase();
       }
-      return existingByExternalId._id;
+      if (avatarUrlId && existing.avatarUrlId !== avatarUrlId) {
+        updates.avatarUrlId = avatarUrlId;
+      }
+      if (Object.keys(updates).length > 0) {
+        await ctx.db.patch(existing._id, updates);
+      }
+      return existing._id;
     }
 
-    // 2. Try re-linking by email (for users migrated from WorkOS)
-    if (email) {
-      const emailLower = email.toLowerCase();
-      const existingByEmail = await ctx.db
-        .query("users")
-        .withIndex("by_email_lower", (q) => q.eq("emailLower", emailLower))
-        .first();
-
-      if (existingByEmail) {
-        await ctx.db.patch(existingByEmail._id, {
-          externalUserId: cognitoSub,
-          workosUserId: undefined,
-          ...syncedAttrs,
-        });
-        return existingByEmail._id;
-      }
-    }
-
-    // 3. Create new user
+    // 2. Create new user
     const userId = await ctx.db.insert("users", {
-      externalUserId: cognitoSub,
+      externalUserId: subject,
       email: email ?? undefined,
       emailLower: email ? email.toLowerCase() : undefined,
       name,
       onboardingCompleted: false,
-      ...syncedAttrs,
+      ...(avatarUrlId ? { avatarUrlId } : {}),
     });
 
     return userId;
@@ -264,22 +239,6 @@ export const getActiveUsers = query({
   },
 });
 
-// One-time backfill: populate emailLower for existing users that predate this field.
-// Run once via the Convex dashboard after deploying: internal:users:backfillEmailLower
-export const backfillEmailLower = internalMutation({
-  args: {},
-  handler: async (ctx) => {
-    const users = await ctx.db.query("users").collect();
-    let updated = 0;
-    for (const user of users) {
-      if (user.email && user.emailLower === undefined) {
-        await ctx.db.patch(user._id, { emailLower: user.email.toLowerCase() });
-        updated++;
-      }
-    }
-    return { updated };
-  },
-});
 
 export const getEmailRecipient = internalQuery({
   args: { userId: v.id("users") },

@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import {
   useMutation,
   useQuery,
 } from "convex/react";
-import { signOut } from "aws-amplify/auth";
+import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import { Bell, LogOut, User, PlusCircle } from "lucide-react";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { api } from "@/convex/_generated/api";
@@ -23,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 
 export function Header() {
+  const { signOut } = useAuth();
   const { user: convexUser, isLoading: userLoading, isAuthenticated } = useCurrentUser();
   const notifications = useQuery(api.notifications.getNotifications, { limit: 8 }) ?? [];
   const unreadCount = useQuery(api.notifications.getUnreadNotificationCount) ?? 0;
@@ -83,14 +83,6 @@ export function Header() {
           >
             Garden
           </Link>
-          <span className="hidden sm:block h-5 w-px bg-zinc-300" aria-hidden />
-          <Image
-            src="/TTGFullLogo.png"
-            alt="Tech Tribes Global"
-            width={160}
-            height={32}
-            priority
-          />
         </div>
 
         {isAuthenticated && <SearchBar />}

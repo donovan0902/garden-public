@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, startTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+
 import { useMutation, useQuery } from 'convex/react';
 import { toast } from 'sonner';
 import { api } from '@/convex/_generated/api';
@@ -66,15 +66,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-white flex items-center justify-center px-4 py-12">
       <Card className="relative w-full max-w-3xl border border-zinc-200">
-        <Image
-          src="/TTG_Rebranded_Badge.png"
-          alt="Tech Tribes badge"
-          width={60}
-          height={60}
-          className="absolute right-4 top-4 opacity-75"
-          priority
-        />
-        <CardHeader className="border-b border-zinc-100 pr-16 sm:pr-20">
+        <CardHeader className="border-b border-zinc-100">
           <CardTitle className="text-2xl text-zinc-900">Welcome to Garden</CardTitle>
           <CardDescription className="mt-2 text-base space-y-1">
             <p className="pt-2">Help us personalize your experience in the catalog.</p>

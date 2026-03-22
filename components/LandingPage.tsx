@@ -104,7 +104,7 @@ export function LandingPage() {
           <div className="relative">
             {/* Headline — kept exactly as-is */}
             <h1 className="mx-auto max-w-2xl text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Honda&apos;s catalog of internal digital tools
+              Your catalog of internal digital tools
             </h1>
 
             {/* Sub-headline */}
@@ -121,19 +121,10 @@ export function LandingPage() {
               >
                 <Link
                   href="/sign-in"
-                  aria-label="Continue with Microsoft"
+                  aria-label="Sign in"
                   className="flex items-center gap-2.5"
                 >
-                  <span
-                    aria-hidden="true"
-                    className="grid h-5 w-5 grid-cols-2 gap-[2px] rounded-[2px]"
-                  >
-                    <span className="bg-[#f25022]" />
-                    <span className="bg-[#7fba00]" />
-                    <span className="bg-[#00a4ef]" />
-                    <span className="bg-[#ffb900]" />
-                  </span>
-                  <span className="font-medium">Continue with Microsoft</span>
+                  <span className="font-medium">Get Started</span>
                 </Link>
               </Button>
             </div>

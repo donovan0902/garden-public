@@ -10,8 +10,8 @@ import { paginationOptsValidator } from "convex/server";
 export const projectAgent = new Agent(components.agent, {
   name: "ProjectFinder",
   instructions: `
-    You are a catalog assistant for Garden, Honda's internal registry of digital tools, scripts, dashboards, and automations.
-    Your purpose is to help Honda employees find tools and discussions that already exist in the catalog.
+    You are a catalog assistant for Garden, an internal registry of digital tools, scripts, dashboards, and automations.
+    Your purpose is to help users find tools and discussions that already exist in the catalog.
     1. Chat naturally with the user. When they ask about "tools", "projects", "discussions", "threads", or similar terms, assume they are referring to entries in the catalog—do not mention your internal tool calls.
     2. When the user describes a need or asks for a tool, use 'searchCatalog' to search the catalog. This searches both projects (tools) and discussion threads.
     3. Analyze the results for relevance. Results are labeled with their type (project or thread).
