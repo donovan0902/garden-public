@@ -133,58 +133,6 @@ export const completeOnboarding = mutation({
   },
 });
 
-// Called by the client after authentication to ensure the user
-// record exists and is linked to the current identity.
-export const ensureUser = mutation({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Not authenticated");
-    }
-
-    const subject = identity.subject;
-    const email = identity.email;
-    const name = identity.name ?? email ?? "Unknown User";
-    const avatarUrlId = identity.pictureUrl ?? undefined;
-
-    // 1. Try lookup by externalUserId
-    const existing = await ctx.db
-      .query("users")
-      .withIndex("by_externalUserId", (q) => q.eq("externalUserId", subject))
-      .unique();
-
-    if (existing) {
-      // Sync name/email/avatar if changed
-      const updates: Record<string, unknown> = {};
-      if (existing.name !== name) updates.name = name;
-      if (email && existing.email !== email) {
-        updates.email = email;
-        updates.emailLower = email.toLowerCase();
-      }
-      if (avatarUrlId && existing.avatarUrlId !== avatarUrlId) {
-        updates.avatarUrlId = avatarUrlId;
-      }
-      if (Object.keys(updates).length > 0) {
-        await ctx.db.patch(existing._id, updates);
-      }
-      return existing._id;
-    }
-
-    // 2. Create new user
-    const userId = await ctx.db.insert("users", {
-      externalUserId: subject,
-      email: email ?? undefined,
-      emailLower: email ? email.toLowerCase() : undefined,
-      name,
-      onboardingCompleted: false,
-      ...(avatarUrlId ? { avatarUrlId } : {}),
-    });
-
-    return userId;
-  },
-});
-
 export const getActiveUsers = query({
   args: {
     limit: v.optional(v.number()),
