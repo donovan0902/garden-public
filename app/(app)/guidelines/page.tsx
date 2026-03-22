@@ -54,7 +54,7 @@ export default function GuidelinesPage() {
           </ul>
           <div className="border-l-4 border-zinc-300 pl-6 space-y-2 mt-4">
             <p className="text-xl font-medium text-zinc-800 leading-snug">
-              If you wouldn&apos;t share it in a public Teams channel, you probably shouldn&apos;t share it here.
+              If you wouldn&apos;t share it in a public chat channel, you probably shouldn&apos;t share it here.
             </p>
             <p className="text-base text-zinc-500 leading-relaxed">
               Garden is internal, but treat it like any shared, searchable workspace visible to colleagues across the org.

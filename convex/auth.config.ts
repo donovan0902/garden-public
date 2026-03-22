@@ -1,16 +1,19 @@
-const region = process.env.COGNITO_REGION;
-const userPoolId = process.env.COGNITO_USER_POOL_ID;
-const clientId = process.env.COGNITO_CLIENT_ID;
+const clientId = process.env.WORKOS_CLIENT_ID;
 
 const authConfig = {
   providers: [
     {
-      // Standard OIDC provider: Convex auto-discovers JWKS via
-      // ${domain}/.well-known/openid-configuration
-      domain: `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`,
-      // applicationID must exactly match the "aud" claim in Cognito ID tokens,
-      // which is the App Client ID.
+      type: "customJwt" as const,
+      issuer: `https://api.workos.com/`,
+      algorithm: "RS256" as const,
+      jwks: `https://api.workos.com/sso/jwks/${clientId}`,
       applicationID: clientId,
+    },
+    {
+      type: "customJwt" as const,
+      issuer: `https://api.workos.com/user_management/${clientId}`,
+      algorithm: "RS256" as const,
+      jwks: `https://api.workos.com/sso/jwks/${clientId}`,
     },
   ],
 };

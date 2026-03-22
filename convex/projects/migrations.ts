@@ -1,10 +1,10 @@
-import { action, internalAction, internalQuery } from "../_generated/server";
+import { internalAction, internalQuery } from "../_generated/server";
 import { internalMutation as internalMutationFromFunctions } from "../functions";
 import { internal } from "../_generated/api";
 import { v } from "convex/values";
 import { rag } from "../rag";
 
-export const migrateReadinessStatusAction = action({
+export const migrateReadinessStatusAction = internalAction({
   args: {},
   handler: async (ctx): Promise<{ updated: number }> => {
     return await ctx.runMutation(internal.projects.migrateReadinessStatus, {});

@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import {
   useMutation,
   useQuery,
 } from "convex/react";
-import { signOut } from "aws-amplify/auth";
+import { useAuth } from "@workos-inc/authkit-nextjs/components";
 import { Bell, LogOut, User, PlusCircle } from "lucide-react";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { api } from "@/convex/_generated/api";
@@ -23,6 +22,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 
 export function Header() {
+  const { signOut } = useAuth();
   const { user: convexUser, isLoading: userLoading, isAuthenticated } = useCurrentUser();
   const notifications = useQuery(api.notifications.getNotifications, { limit: 8 }) ?? [];
   const unreadCount = useQuery(api.notifications.getUnreadNotificationCount) ?? 0;
@@ -83,14 +83,6 @@ export function Header() {
           >
             Garden
           </Link>
-          <span className="hidden sm:block h-5 w-px bg-zinc-300" aria-hidden />
-          <Image
-            src="/TTGFullLogo.png"
-            alt="Tech Tribes Global"
-            width={160}
-            height={32}
-            priority
-          />
         </div>
 
         {isAuthenticated && <SearchBar />}
@@ -103,7 +95,7 @@ export function Header() {
                 <NavigationMenuItem>
                   <Link
                     href="/submit"
-                    className="inline-flex items-center gap-2 rounded-md bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 px-4 py-2 text-sm font-medium text-white shadow-md shadow-emerald-500/25 transition-all hover:shadow-lg hover:shadow-emerald-500/40 hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2"
+                    className="inline-flex items-center gap-2 rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white shadow-md shadow-emerald-700/25 transition-all hover:bg-emerald-800 hover:shadow-lg hover:shadow-emerald-700/40 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
                     aria-label="Register a tool"
                   >
                     <PlusCircle className="h-4 w-4" />

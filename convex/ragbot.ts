@@ -1,7 +1,7 @@
 import { Agent, vStreamArgs } from "@convex-dev/agent";
 import { searchCatalog, showProjects, showThreads } from "./tools";
 import { components } from "./_generated/api";
-import { bedrock } from "@ai-sdk/amazon-bedrock";
+import { openai } from "@ai-sdk/openai";
 import { action, mutation, query } from "./_generated/server";
 import { getCurrentUserOrThrow } from "./users";
 import { v } from "convex/values";
@@ -10,8 +10,8 @@ import { paginationOptsValidator } from "convex/server";
 export const projectAgent = new Agent(components.agent, {
   name: "ProjectFinder",
   instructions: `
-    You are a catalog assistant for Garden, Honda's internal registry of digital tools, scripts, dashboards, and automations.
-    Your purpose is to help Honda employees find tools and discussions that already exist in the catalog.
+    You are a catalog assistant for Garden, an internal registry of digital tools, scripts, dashboards, and automations.
+    Your purpose is to help users find tools and discussions that already exist in the catalog.
     1. Chat naturally with the user. When they ask about "tools", "projects", "discussions", "threads", or similar terms, assume they are referring to entries in the catalog—do not mention your internal tool calls.
     2. When the user describes a need or asks for a tool, use 'searchCatalog' to search the catalog. This searches both projects (tools) and discussion threads.
     3. Analyze the results for relevance. Results are labeled with their type (project or thread).
@@ -21,8 +21,8 @@ export const projectAgent = new Agent(components.agent, {
     7. Once you have displayed results, do not follow up with further questions or commentary.
   `,
   tools: { searchCatalog, showProjects, showThreads },
-  languageModel: bedrock("us.anthropic.claude-haiku-4-5-20251001-v1:0"),
-  embeddingModel: bedrock.embedding("amazon.titan-embed-text-v2:0"),
+  languageModel: openai("gpt-5.4-mini"),
+  embeddingModel: openai.embedding("text-embedding-3-small"),
   maxSteps: 10,
 });
 

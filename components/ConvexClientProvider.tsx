@@ -1,117 +1,42 @@
 'use client';
 
-import '@/lib/amplify-config';
-
-import { ReactNode, useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { ConvexReactClient, useConvexAuth, useMutation } from 'convex/react';
+import { ReactNode, useCallback } from 'react';
+import { ConvexReactClient } from 'convex/react';
 import { ConvexProviderWithAuth } from 'convex/react';
-// signInWithRedirect must be imported here (layout level) so its
-// side-effect OAuth callback listener is registered on every page.
-// In Next.js, code-splitting drops it if only imported on the callback page.
-import { fetchAuthSession, signInWithRedirect } from 'aws-amplify/auth';
-import { Hub } from 'aws-amplify/utils';
-
-import { api } from '@/convex/_generated/api';
-
-// Prevent tree-shaking from removing the signInWithRedirect import
-void signInWithRedirect;
+import { AuthKitProvider, useAuth, useAccessToken } from '@workos-inc/authkit-nextjs/components';
 
 const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 export function ConvexClientProvider({ children }: { children: ReactNode }) {
   return (
-    <ConvexProviderWithAuth client={convex} useAuth={useAuthFromCognito}>
-      <EnsureUser />
-      {children}
-    </ConvexProviderWithAuth>
+    <AuthKitProvider>
+      <ConvexProviderWithAuth client={convex} useAuth={useAuthFromAuthKit}>
+        {children}
+      </ConvexProviderWithAuth>
+    </AuthKitProvider>
   );
 }
 
-function EnsureUser() {
-  const ensureUser = useMutation(api.users.ensureUser);
-  const { isAuthenticated } = useConvexAuth();
-  const hasEnsured = useRef(false);
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      hasEnsured.current = false;
-      return;
-    }
-    if (hasEnsured.current) return;
-
-    let cancelled = false;
-
-    async function run() {
-      try {
-        await ensureUser();
-        if (!cancelled) {
-          hasEnsured.current = true;
-        }
-      } catch {
-        // Mutation failed — will retry on next auth state change or remount
-      }
-    }
-
-    void run();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated, ensureUser]);
-
-  return null;
-}
-
-function useAuthFromCognito() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    async function checkAuth() {
-      try {
-        const session = await fetchAuthSession();
-        const idToken = session.tokens?.idToken?.toString() ?? null;
-        setIsAuthenticated(!!idToken);
-      } catch {
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    void checkAuth();
-
-    const unsubscribe = Hub.listen('auth', ({ payload }) => {
-      if (
-        payload.event === 'signedIn' ||
-        payload.event === 'signInWithRedirect' ||
-        payload.event === 'tokenRefresh'
-      ) {
-        void checkAuth();
-      } else if (payload.event === 'signedOut') {
-        setIsAuthenticated(false);
-      }
-    });
-
-    return unsubscribe;
-  }, []);
+function useAuthFromAuthKit() {
+  const { user, loading: isLoading } = useAuth();
+  const { getAccessToken, refresh } = useAccessToken();
+  const isAuthenticated = !!user;
 
   const fetchAccessToken = useCallback(
-    async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
+    async ({ forceRefreshToken }: { forceRefreshToken?: boolean } = {}): Promise<string | null> => {
+      if (!user) return null;
       try {
-        const session = await fetchAuthSession({
-          forceRefresh: forceRefreshToken,
-        });
-        return session.tokens?.idToken?.toString() ?? null;
-      } catch {
+        if (forceRefreshToken) {
+          return (await refresh()) ?? null;
+        }
+        return (await getAccessToken()) ?? null;
+      } catch (error) {
+        console.error('Failed to get access token:', error);
         return null;
       }
     },
-    [],
+    [user, refresh, getAccessToken],
   );
 
-  return useMemo(
-    () => ({ isLoading, isAuthenticated, fetchAccessToken }),
-    [isLoading, isAuthenticated, fetchAccessToken],
-  );
+  return { isLoading, isAuthenticated, fetchAccessToken };
 }
