@@ -1,7 +1,7 @@
 import { Agent, vStreamArgs } from "@convex-dev/agent";
 import { searchCatalog, showProjects, showThreads } from "./tools";
 import { components } from "./_generated/api";
-import { bedrock } from "@ai-sdk/amazon-bedrock";
+import { openai } from "@ai-sdk/openai";
 import { action, mutation, query } from "./_generated/server";
 import { getCurrentUserOrThrow } from "./users";
 import { v } from "convex/values";
@@ -21,8 +21,8 @@ export const projectAgent = new Agent(components.agent, {
     7. Once you have displayed results, do not follow up with further questions or commentary.
   `,
   tools: { searchCatalog, showProjects, showThreads },
-  languageModel: bedrock("us.anthropic.claude-haiku-4-5-20251001-v1:0"),
-  embeddingModel: bedrock.embedding("amazon.titan-embed-text-v2:0"),
+  languageModel: openai("gpt-5.4-mini"),
+  embeddingModel: openai.embedding("text-embedding-3-small"),
   maxSteps: 10,
 });
 
