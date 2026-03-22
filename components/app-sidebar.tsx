@@ -6,11 +6,11 @@ import { api } from "@/convex/_generated/api";
 import { CreateFocusAreaDialog } from "./CreateFocusAreaDialog";
 import { SpaceIcon } from "./SpaceIcon";
 import { Plus, PlusCircle, MessageSquarePlus, Info, Home, BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroupAction,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -31,9 +31,9 @@ function SidebarSpaces() {
       <div className="flex items-center justify-between px-2 py-1.5">
         <SidebarGroupLabel className="px-0">Spaces</SidebarGroupLabel>
         <CreateFocusAreaDialog>
-          <Button variant="ghost" size="icon" className="h-6 w-6">
+          <SidebarGroupAction className="static h-6 w-6 translate-y-0">
             <Plus className="h-4 w-4" />
-          </Button>
+          </SidebarGroupAction>
         </CreateFocusAreaDialog>
       </div>
       <SidebarGroupContent>
