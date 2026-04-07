@@ -30,11 +30,13 @@ export {
   cancelProject,
   backfillProject,
   backfillEngagementScores,
+  processDescriptionMentions,
 } from "./projects/lifecycle";
 
 export {
   list,
   listPaginated,
+  listNewestPaginated,
   getUserProjects,
   getByUserId,
   getFollowedByUser,
@@ -52,6 +54,8 @@ export {
   getUpvoteCount,
   getFollowers,
   refreshHotScores,
+  trackLinkClick,
+  getLinkClickCounts,
 } from "./projects/engagement";
 
 export {
@@ -71,10 +75,15 @@ export {
 export {
   migrateReadinessStatusAction,
   migrateReadinessStatus,
+  removeLegacyProjectUpvotes,
   getAllProjectIds,
   reindexProjectInRag,
   reindexAllProjectsInRag,
 } from "./projects/migrations";
+
+export {
+  listPersonalizedFeed,
+} from "./projects/personalizedFeed";
 
 export {
   listByProject as listVersionsByProject,

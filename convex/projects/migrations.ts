@@ -28,6 +28,25 @@ export const migrateReadinessStatus = internalMutationFromFunctions({
   },
 });
 
+export const removeLegacyProjectUpvotes = internalMutationFromFunctions({
+  args: {},
+  handler: async (ctx) => {
+    const projects = await ctx.db.query("projects").collect();
+    let updated = 0;
+
+    for (const project of projects) {
+      if (project.upvotes !== undefined) {
+        await ctx.db.patch(project._id, {
+          upvotes: undefined,
+        });
+        updated++;
+      }
+    }
+
+    return { updated };
+  },
+});
+
 // ─── RAG Re-indexing (embedding model migration) ────────────────────────────
 
 export const getAllProjectIds = internalQuery({
