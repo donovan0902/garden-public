@@ -75,6 +75,7 @@ export {
 export {
   migrateReadinessStatusAction,
   migrateReadinessStatus,
+  removeLegacyProjectUpvotes,
   getAllProjectIds,
   reindexProjectInRag,
   reindexAllProjectsInRag,

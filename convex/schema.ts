@@ -9,6 +9,7 @@ export default defineSchema({
     viewCount: v.optional(v.number()),
     entryId: v.optional(v.string()),
     status: v.union(v.literal("pending"), v.literal("active")),
+    upvotes: v.optional(v.number()),
     userId: v.id("users"),
     allFields: v.optional(v.string()),
     links: v.optional(v.array(v.object({ url: v.string(), label: v.optional(v.string()) }))),
