@@ -4,7 +4,6 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
-import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { motion, LayoutGroup } from "motion/react";
@@ -13,6 +12,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useCurrentUser } from "@/app/useCurrentUser";
+import { toastMutationError } from "@/lib/toast";
 import { ProjectRow } from "@/components/ProjectRow";
 import type { ProjectRowData } from "@/lib/types";
 import { ArrowBigUp, MessageCircle, PlusCircle } from "lucide-react";
@@ -40,7 +40,7 @@ export default function Home() {
       await toggleUpvote({ projectId });
     } catch (error) {
       console.error("Failed to toggle upvote:", error);
-      toast.error("Failed to upvote. Please try again.");
+      toastMutationError(error, "Failed to upvote. Please try again.");
     }
   };
 
@@ -49,7 +49,7 @@ export default function Home() {
       await toggleFollow({ projectId });
     } catch (error) {
       console.error("Failed to toggle follow:", error);
-      toast.error("Failed to update follow. Please try again.");
+      toastMutationError(error, "Failed to update follow. Please try again.");
     }
   };
 

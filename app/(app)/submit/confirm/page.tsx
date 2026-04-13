@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState, type KeyboardEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useAction } from "convex/react";
-import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { stripHtml } from "@/lib/utils";
+import { toastMutationError } from "@/lib/toast";
 import { ArrowBigUp } from "lucide-react";
 import {
   Breadcrumb,
@@ -74,7 +74,7 @@ function ConfirmSubmissionContent() {
       router.push("/");
     } catch (error) {
       console.error("Failed to confirm project:", error);
-      toast.error("Failed to confirm project. Please try again.");
+      toastMutationError(error, "Failed to confirm project. Please try again.");
       setIsProcessing(false);
     }
   };
@@ -88,7 +88,7 @@ function ConfirmSubmissionContent() {
       router.push("/");
     } catch (error) {
       console.error("Failed to cancel project:", error);
-      toast.error("Failed to cancel project. Please try again.");
+      toastMutationError(error, "Failed to cancel project. Please try again.");
       setIsProcessing(false);
     }
   };

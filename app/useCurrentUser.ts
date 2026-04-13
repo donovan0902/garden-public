@@ -12,6 +12,8 @@ export function useCurrentUser() {
   return {
     isLoading: convexAuthLoading || user === undefined,
     isAuthenticated: !!user,
+    // true when the visitor is browsing as the shared read-only guest account
+    isGuest: user?.externalUserId === "guest",
     user: user ?? null,
   };
 }

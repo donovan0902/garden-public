@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { useMentionSearch } from "@/hooks/use-mention-search";
 import { useCurrentUser } from "@/app/useCurrentUser";
+import { toastMutationError } from "@/lib/toast";
 import Link from "next/link";
 
 interface CommentFormProps {
@@ -41,7 +41,7 @@ export function CommentForm({
       onCancel?.();
     } catch (error) {
       console.error("Failed to post comment:", error);
-      toast.error("Failed to post comment. Please try again.");
+      toastMutationError(error, "Failed to post comment. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

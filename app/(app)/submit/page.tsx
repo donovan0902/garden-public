@@ -28,6 +28,8 @@ import Link from "next/link";
 import { LinksEditor } from "@/components/LinksEditor";
 import type { NewFileItem, NewProjectFileItem, LinkItem } from "@/lib/types";
 import { useMentionSearch } from "@/hooks/use-mention-search";
+import { useCurrentUser } from "@/app/useCurrentUser";
+import { toastMutationError } from "@/lib/toast";
 import {
   Breadcrumb,
   BreadcrumbList,
@@ -64,6 +66,7 @@ function SubmitProjectContent() {
   const [additionalSpaces, setAdditionalSpaces] = useState<Id<"focusAreas">[]>([]);
   const [selectedReadinessStatus, setSelectedReadinessStatus] = useState<"just_an_idea" | "early_prototype" | "mostly_working" | "ready_to_use">("just_an_idea");
   const mentionSearch = useMentionSearch();
+  const { isGuest } = useCurrentUser();
 
   const handlePrimarySpaceChange = (selected: Id<"focusAreas"> | "personal" | null) => {
     setSelectedFocusArea(selected);
@@ -169,7 +172,7 @@ function SubmitProjectContent() {
         }
       }
       console.error("Failed to create project:", error);
-      toast.error("Failed to share. Please try again.");
+      toastMutationError(error, "Failed to share. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -193,6 +196,18 @@ function SubmitProjectContent() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        {isGuest && (
+          <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-100 px-4 py-3 text-sm text-zinc-600">
+            <Info className="h-4 w-4 shrink-0" />
+            <span>
+              This is a read-only demo.{" "}
+              <Link href="/sign-in" className="font-medium text-zinc-900 underline underline-offset-4 hover:text-zinc-700">
+                Sign in
+              </Link>{" "}
+              to register tools and contribute.
+            </span>
+          </div>
+        )}
         <div className="mb-2 flex items-center gap-3">
           <h2 className="text-3xl font-semibold tracking-tight">Register a tool in the catalog</h2>
           <Link href="/guidelines" className="text-sm text-zinc-500 underline underline-offset-4 hover:text-zinc-700">
