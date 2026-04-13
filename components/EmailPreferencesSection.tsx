@@ -64,11 +64,11 @@ export function EmailPreferencesSection() {
         Email notifications
       </h2>
       <Card className="border-zinc-200 bg-zinc-200/80 shadow-none">
-        <CardContent className="divide-y divide-zinc-200 px-6 py-2">
+        <CardContent className="divide-y divide-zinc-200 px-6 py-0">
           {PREFERENCES.map((pref) => (
             <div
               key={pref.key}
-              className="flex items-center justify-between gap-4 py-4"
+              className="flex items-center justify-between gap-4 py-3"
             >
               <div className="space-y-0.5">
                 <Label
