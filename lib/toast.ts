@@ -8,7 +8,7 @@ import { toast } from "sonner";
  */
 export function toastMutationError(error: unknown, fallbackMessage: string): void {
   if (error instanceof Error && error.message.includes("GUEST_BLOCKED")) {
-    toast.error("This is a read-only demo. Sign in to interact.", {
+    toast.error("This is a read-only demo. Sign in to use this feature.", {
       action: {
         label: "Sign In",
         onClick: () => {

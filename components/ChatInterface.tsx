@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageList } from "./MessageList";
+import { toastMutationError } from "@/lib/toast";
 import type { OptimisticMessage } from "@/lib/types";
 
 const EXAMPLE_PROMPTS = [
@@ -54,6 +55,7 @@ export function ChatInterface() {
       console.error("Failed to send message:", error);
       // Remove optimistic message on error immediately
       setOptimisticMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
+      toastMutationError(error, "Failed to send message. Please try again.");
     }
   };
 
