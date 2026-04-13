@@ -1,5 +1,5 @@
 import { query, QueryCtx, mutation, internalQuery, internalMutation } from "./_generated/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 
 // Sentinel externalUserId for the shared read-only guest user.
@@ -39,7 +39,10 @@ export async function getCurrentUserOrThrow(ctx: QueryCtx) {
     throw new Error("User not found");
   }
   if (user.externalUserId === GUEST_EXTERNAL_USER_ID) {
-    throw new Error("GUEST_BLOCKED: guests cannot modify data");
+    // ConvexError preserves its data payload to the client in production builds;
+    // plain `Error` messages are redacted to "Server Error" and would defeat the
+    // read-only-demo toast detection in lib/toast.ts.
+    throw new ConvexError("GUEST_BLOCKED");
   }
   return user;
 }
