@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -10,9 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { isRichTextEmpty } from "@/lib/utils";
+import { toastMutationError } from "@/lib/toast";
 import { SpacePicker } from "@/components/SpacePicker";
 import { useThreadImageUpload } from "@/hooks/use-thread-image-upload";
 import { useMentionSearch } from "@/hooks/use-mention-search";
+import { useCurrentUser } from "@/app/useCurrentUser";
+import { Info } from "lucide-react";
 import Link from "next/link";
 
 export default function CreateThreadPage() {
@@ -22,6 +24,7 @@ export default function CreateThreadPage() {
   const { handleImageUpload, getStorageIdsFromHtml } =
     useThreadImageUpload();
   const mentionSearch = useMentionSearch();
+  const { isGuest } = useCurrentUser();
 
   const [selectedSpace, setSelectedSpace] = useState<
     Id<"focusAreas"> | "personal" | null
@@ -56,7 +59,7 @@ export default function CreateThreadPage() {
       router.push(`/thread/${threadId}`);
     } catch (error) {
       console.error("Failed to create thread:", error);
-      toast.error("Failed to create thread. Please try again.");
+      toastMutationError(error, "Failed to create thread. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -64,6 +67,18 @@ export default function CreateThreadPage() {
   return (
     <div className="min-h-screen bg-zinc-50">
       <main className="mx-auto max-w-xl px-6 pt-10 pb-16">
+        {isGuest && (
+          <div className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-zinc-100 px-4 py-3 text-sm text-zinc-600 mb-4">
+            <Info className="h-4 w-4 shrink-0" />
+            <span>
+              This is a read-only demo.{" "}
+              <Link href="/sign-in" className="font-medium text-zinc-900 underline underline-offset-4 hover:text-zinc-700">
+                Sign in
+              </Link>{" "}
+              to start threads and contribute.
+            </span>
+          </div>
+        )}
         <div className="flex items-center gap-3 mb-6">
           <h1 className="text-2xl font-semibold text-zinc-900">
             Start a Thread

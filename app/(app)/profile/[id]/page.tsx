@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect } from "react";
+import { type ReactNode, use, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
@@ -73,7 +73,7 @@ export default function ProfilePage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { isLoading, isAuthenticated, user: currentUser } = useCurrentUser();
+  const { isLoading, isAuthenticated, isGuest, user: currentUser } = useCurrentUser();
   const userId = id as Id<"users">;
   const isOwner = currentUser?._id === userId;
 
@@ -183,6 +183,13 @@ export default function ProfilePage({
                     <h1 className="text-3xl font-semibold text-zinc-900">
                       {profile.name}
                     </h1>
+                    {isGuest && (
+                      <Button asChild size="sm">
+                        <Link href="/sign-in" prefetch={false}>
+                          Sign In
+                        </Link>
+                      </Button>
+                    )}
                     {!isOwner && email && (
                       <Button
                         variant="ghost"
@@ -216,32 +223,21 @@ export default function ProfilePage({
             </div>
 
             <Tabs defaultValue="projects" className="min-w-0 space-y-6">
-              <div className="relative flex items-center">
-                <div className="absolute left-0">
-                  {isOwner && (
-                    <Button variant="outline" asChild>
-                      <Link href="/submit" prefetch={false}>
-                        Share a tool
-                      </Link>
-                    </Button>
-                  )}
-                </div>
-                <div className="flex flex-1 justify-center">
-                  <TabsList className="bg-white/90 shadow-sm ring-1 ring-zinc-200">
-                    <TabsTrigger value="projects" className="gap-2">
-                      Built
-                      <Badge variant="secondary" className="bg-zinc-100">
-                        {profile.projectCount}
-                      </Badge>
-                    </TabsTrigger>
-                    <TabsTrigger value="following" className="gap-2">
-                      Watching
-                      <Badge variant="secondary" className="bg-zinc-100">
-                        {profile.followingCount}
-                      </Badge>
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
+              <div className="flex justify-center">
+                <TabsList className="bg-white/90 shadow-sm ring-1 ring-zinc-200">
+                  <TabsTrigger value="projects" className="gap-2">
+                    Built
+                    <Badge variant="secondary" className="bg-zinc-100">
+                      {profile.projectCount}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="following" className="gap-2">
+                    Watching
+                    <Badge variant="secondary" className="bg-zinc-100">
+                      {profile.followingCount}
+                    </Badge>
+                  </TabsTrigger>
+                </TabsList>
               </div>
 
               <TabsContent value="projects" className="space-y-4">
@@ -250,9 +246,21 @@ export default function ProfilePage({
                 ) : projects.length === 0 ? (
                   <EmptyState
                     message={
-                      isOwner
-                        ? "Your garden is empty. What are you working on?"
-                        : "Nothing shared yet."
+                      isOwner ? (
+                        <>
+                          Your garden is empty. {" "}
+                          <Link
+                            href="/submit"
+                            prefetch={false}
+                            className="text-zinc-900 underline underline-offset-4 hover:text-zinc-700"
+                          >
+                            Share what you&apos;re working on
+                          </Link>
+                          .
+                        </>
+                      ) : (
+                        "Nothing shared yet."
+                      )
                     }
                   />
                 ) : (
@@ -295,9 +303,9 @@ export default function ProfilePage({
   );
 }
 
-function EmptyState({ message }: { message: string }) {
+function EmptyState({ message }: { message: ReactNode }) {
   return (
-    <Card className="border-dashed border-zinc-200 bg-white/70">
+    <Card className="shadow-none bg-transparent">
       <CardContent className="py-8 text-center text-sm text-zinc-500">
         {message}
       </CardContent>

@@ -1,12 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   useMutation,
   useQuery,
 } from "convex/react";
 import { useAuth } from "@workos-inc/authkit-nextjs/components";
-import { Bell, LogOut, User, PlusCircle } from "lucide-react";
+import { Bell, LogIn, LogOut, User, PlusCircle } from "lucide-react";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { usePathname } from "next/navigation";
 import { api } from "@/convex/_generated/api";
@@ -23,8 +24,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 
 export function Header() {
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { signOut } = useAuth();
-  const { user: convexUser, isLoading: userLoading, isAuthenticated } = useCurrentUser();
+  const { user: convexUser, isLoading: userLoading, isAuthenticated, isGuest } = useCurrentUser();
   const pathname = usePathname();
   const spaceMatch = pathname.match(/^\/space\/([^/]+)/);
   const submitHref = spaceMatch ? `/submit?spaceId=${spaceMatch[1]}` : "/submit";
@@ -186,7 +188,7 @@ export function Header() {
 
               {isAuthenticated && (
                 <NavigationMenuItem>
-                  <Popover>
+                  <Popover open={isProfileMenuOpen} onOpenChange={setIsProfileMenuOpen}>
                     <PopoverTrigger asChild>
                       <button className={navigationMenuTriggerStyle()}>
                         {convexUser?.name?.split(" ")[0] ?? "Profile"}
@@ -198,6 +200,7 @@ export function Header() {
                           <li>
                             <Link
                               href={`/profile/${convexUser._id}`}
+                              onClick={() => setIsProfileMenuOpen(false)}
                               className="flex flex-row w-full select-none items-center gap-2 rounded-md px-3 py-2 text-sm font-medium leading-none text-zinc-700 no-underline outline-none transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus:bg-zinc-100 focus:text-zinc-900"
                             >
                               <User className="h-4 w-4" />
@@ -206,13 +209,28 @@ export function Header() {
                           </li>
                         )}
                         <li>
-                          <button
-                            onClick={() => void signOut()}
-                            className="flex w-full select-none items-center gap-2 rounded-md px-3 py-2 font-sans text-sm font-medium normal-case tracking-normal leading-none text-zinc-700 outline-none transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus:bg-zinc-100 focus:text-zinc-900"
-                          >
-                            <LogOut className="h-4 w-4" />
-                            <span>Log Out</span>
-                          </button>
+                          {isGuest ? (
+                            <Link
+                              href="/sign-in"
+                              prefetch={false}
+                              onClick={() => setIsProfileMenuOpen(false)}
+                              className="flex w-full select-none items-center gap-2 rounded-md px-3 py-2 font-sans text-sm font-medium normal-case tracking-normal leading-none text-zinc-700 outline-none transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus:bg-zinc-100 focus:text-zinc-900"
+                            >
+                              <LogIn className="h-4 w-4" />
+                              <span>Sign In</span>
+                            </Link>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setIsProfileMenuOpen(false);
+                                void signOut();
+                              }}
+                              className="flex w-full select-none items-center gap-2 rounded-md px-3 py-2 font-sans text-sm font-medium normal-case tracking-normal leading-none text-zinc-700 outline-none transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus:bg-zinc-100 focus:text-zinc-900"
+                            >
+                              <LogOut className="h-4 w-4" />
+                              <span>Log Out</span>
+                            </button>
+                          )}
                         </li>
                       </ul>
                     </PopoverContent>

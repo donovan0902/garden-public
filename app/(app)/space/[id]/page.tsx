@@ -2,7 +2,6 @@
 
 import { use, useState, useRef, useEffect, useCallback } from "react";
 import { useQuery, useMutation, usePaginatedQuery } from "convex/react";
-import { toast } from "sonner";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { motion, LayoutGroup } from "motion/react";
@@ -12,6 +11,7 @@ import Link from "next/link";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useCurrentUser } from "@/app/useCurrentUser";
+import { toastMutationError } from "@/lib/toast";
 import { ProjectRow } from "@/components/ProjectRow";
 import { ThreadRow } from "@/components/ThreadRow";
 import { CreateThreadForm } from "@/components/CreateThreadForm";
@@ -133,7 +133,7 @@ export default function SpacePage({
       await toggleFollowSpace({ focusAreaId });
     } catch (error) {
       console.error("Failed to toggle follow:", error);
-      toast.error("Failed to update membership. Please try again.");
+      toastMutationError(error, "Failed to update membership. Please try again.");
     }
   };
 
@@ -142,7 +142,7 @@ export default function SpacePage({
       await toggleUpvote({ projectId });
     } catch (error) {
       console.error("Failed to toggle upvote:", error);
-      toast.error("Failed to upvote. Please try again.");
+      toastMutationError(error, "Failed to upvote. Please try again.");
     }
   };
 
@@ -151,7 +151,7 @@ export default function SpacePage({
       await toggleProjectFollow({ projectId });
     } catch (error) {
       console.error("Failed to toggle follow:", error);
-      toast.error("Failed to update follow. Please try again.");
+      toastMutationError(error, "Failed to update follow. Please try again.");
     }
   };
 
@@ -160,7 +160,7 @@ export default function SpacePage({
       await toggleThreadUpvote({ threadId });
     } catch (error) {
       console.error("Failed to toggle upvote:", error);
-      toast.error("Failed to upvote. Please try again.");
+      toastMutationError(error, "Failed to upvote. Please try again.");
     }
   };
 

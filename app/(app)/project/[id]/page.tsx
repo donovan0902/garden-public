@@ -4,6 +4,7 @@ import { use, useEffect, useRef, useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useCurrentUser } from "@/app/useCurrentUser";
+import { toastMutationError } from "@/lib/toast";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { motion } from "motion/react";
@@ -164,6 +165,7 @@ export default function ProjectPage({
       await toggleUpvote({ projectId });
     } catch (error) {
       console.error("Failed to toggle upvote:", error);
+      toastMutationError(error, "Failed to upvote. Please try again.");
     }
   };
 
@@ -177,6 +179,7 @@ export default function ProjectPage({
       await toggleFollow({ projectId });
     } catch (error) {
       console.error("Failed to toggle follow:", error);
+      toastMutationError(error, "Failed to update follow. Please try again.");
     }
   };
 
