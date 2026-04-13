@@ -6,7 +6,7 @@ import {
   useQuery,
 } from "convex/react";
 import { useAuth } from "@workos-inc/authkit-nextjs/components";
-import { Bell, LogOut, User, PlusCircle } from "lucide-react";
+import { Bell, LogIn, LogOut, User, PlusCircle } from "lucide-react";
 import { useCurrentUser } from "@/app/useCurrentUser";
 import { usePathname } from "next/navigation";
 import { api } from "@/convex/_generated/api";
@@ -24,7 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Header() {
   const { signOut } = useAuth();
-  const { user: convexUser, isLoading: userLoading, isAuthenticated } = useCurrentUser();
+  const { user: convexUser, isLoading: userLoading, isAuthenticated, isGuest } = useCurrentUser();
   const pathname = usePathname();
   const spaceMatch = pathname.match(/^\/space\/([^/]+)/);
   const submitHref = spaceMatch ? `/submit?spaceId=${spaceMatch[1]}` : "/submit";
@@ -206,13 +206,24 @@ export function Header() {
                           </li>
                         )}
                         <li>
-                          <button
-                            onClick={() => void signOut()}
-                            className="flex w-full select-none items-center gap-2 rounded-md px-3 py-2 font-sans text-sm font-medium normal-case tracking-normal leading-none text-zinc-700 outline-none transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus:bg-zinc-100 focus:text-zinc-900"
-                          >
-                            <LogOut className="h-4 w-4" />
-                            <span>Log Out</span>
-                          </button>
+                          {isGuest ? (
+                            <Link
+                              href="/sign-in"
+                              prefetch={false}
+                              className="flex w-full select-none items-center gap-2 rounded-md px-3 py-2 font-sans text-sm font-medium normal-case tracking-normal leading-none text-zinc-700 outline-none transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus:bg-zinc-100 focus:text-zinc-900"
+                            >
+                              <LogIn className="h-4 w-4" />
+                              <span>Sign In</span>
+                            </Link>
+                          ) : (
+                            <button
+                              onClick={() => void signOut()}
+                              className="flex w-full select-none items-center gap-2 rounded-md px-3 py-2 font-sans text-sm font-medium normal-case tracking-normal leading-none text-zinc-700 outline-none transition-colors hover:bg-zinc-100 hover:text-zinc-900 focus:bg-zinc-100 focus:text-zinc-900"
+                            >
+                              <LogOut className="h-4 w-4" />
+                              <span>Log Out</span>
+                            </button>
+                          )}
                         </li>
                       </ul>
                     </PopoverContent>

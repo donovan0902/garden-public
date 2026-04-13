@@ -73,7 +73,7 @@ export default function ProfilePage({
 }) {
   const { id } = use(params);
   const router = useRouter();
-  const { isLoading, isAuthenticated, user: currentUser } = useCurrentUser();
+  const { isLoading, isAuthenticated, isGuest, user: currentUser } = useCurrentUser();
   const userId = id as Id<"users">;
   const isOwner = currentUser?._id === userId;
 
@@ -183,6 +183,13 @@ export default function ProfilePage({
                     <h1 className="text-3xl font-semibold text-zinc-900">
                       {profile.name}
                     </h1>
+                    {isGuest && (
+                      <Button asChild size="sm">
+                        <Link href="/sign-in" prefetch={false}>
+                          Sign In
+                        </Link>
+                      </Button>
+                    )}
                     {!isOwner && email && (
                       <Button
                         variant="ghost"
