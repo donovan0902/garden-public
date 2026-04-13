@@ -1,4 +1,4 @@
-import { query, QueryCtx, mutation, internalQuery } from "./_generated/server";
+import { query, QueryCtx, mutation, internalQuery, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 
@@ -47,9 +47,9 @@ export async function getCurrentUserOrThrow(ctx: QueryCtx) {
 export async function getCurrentUser(ctx: QueryCtx) {
   const identity = await ctx.auth.getUserIdentity();
   if (identity === null) {
-    // Unauthenticated visitors are auto-signed-in as the shared read-only guest user
-    // (see ensureGuestUser below). Returns null if the guest row has not been seeded yet —
-    // the client-side <EnsureGuestUser /> bootstrap will create it on first load.
+    // Unauthenticated visitors are auto-signed-in as the shared read-only guest user.
+    // The guest row must be seeded once per deployment via internal.users.seedGuestUser
+    // (run from the Convex dashboard). Returns null if the seed has not been run yet.
     return await ctx.db
       .query("users")
       .withIndex("by_externalUserId", (q) =>
@@ -132,10 +132,10 @@ export const getProfile = query({
   },
 });
 
-// Idempotent: creates the shared read-only guest user row on first call, no-op afterward.
-// Called from the client on app mount so unauthenticated visitors always have a user record to
-// resolve against via getCurrentUser.
-export const ensureGuestUser = mutation({
+// One-time seed: creates the shared read-only guest user row. Idempotent — running it a second
+// time is a no-op. Run once per deployment from the Convex dashboard (Functions → users →
+// seedGuestUser → Run) after deploying these changes.
+export const seedGuestUser = internalMutation({
   args: {},
   handler: async (ctx) => {
     const existing = await ctx.db
