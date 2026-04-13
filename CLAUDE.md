@@ -75,7 +75,6 @@ project-hunt/
 │   ├── EmailPreferencesSection.tsx # Email notification preferences UI
 │   ├── app-sidebar.tsx         # Main navigation sidebar
 │   ├── header.tsx              # Top navigation bar (includes SearchBar)
-│   ├── LandingPage.tsx         # Public landing page component
 │   ├── ProjectRow.tsx          # Project list item card (ArrowBigUp upvote icon)
 │   ├── ProjectMediaCarousel.tsx # Media carousel with expandable/zoomed media support
 │   ├── ProjectFileDownload.tsx # File download section on project detail

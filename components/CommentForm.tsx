@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useConvexAuth } from "convex/react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { RichTextEditor } from "@/components/RichTextEditor";
 import { useMentionSearch } from "@/hooks/use-mention-search";
+import { useCurrentUser } from "@/app/useCurrentUser";
 import Link from "next/link";
 
 interface CommentFormProps {
@@ -23,7 +23,7 @@ export function CommentForm({
   submitText = "Comment",
   initialValue = "",
 }: CommentFormProps) {
-  const { isAuthenticated } = useConvexAuth();
+  const { isAuthenticated } = useCurrentUser();
   const mentionSearch = useMentionSearch();
   const [content, setContent] = useState(initialValue);
   const [isSubmitting, setIsSubmitting] = useState(false);
