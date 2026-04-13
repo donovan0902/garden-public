@@ -184,7 +184,7 @@ export default function ProfilePage({
                       {profile.name}
                     </h1>
                     {isGuest && (
-                      <Button asChild size="sm">
+                      <Button asChild size="sm" variant="link">
                         <Link href="/sign-in" prefetch={false}>
                           Sign In
                         </Link>
@@ -305,11 +305,7 @@ export default function ProfilePage({
 
 function EmptyState({ message }: { message: ReactNode }) {
   return (
-    <Card className="shadow-none bg-transparent">
-      <CardContent className="py-8 text-center text-sm text-zinc-500">
-        {message}
-      </CardContent>
-    </Card>
+    <div className="py-3 text-center text-sm text-zinc-500">{message}</div>
   );
 }
 
