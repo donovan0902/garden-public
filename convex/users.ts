@@ -148,7 +148,7 @@ export const seedGuestUser = internalMutation({
 
     return await ctx.db.insert("users", {
       externalUserId: GUEST_EXTERNAL_USER_ID,
-      name: "Ghost",
+      name: "Ghost (Read Only)",
       onboardingCompleted: true,
     });
   },
