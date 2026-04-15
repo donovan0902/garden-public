@@ -1,10 +1,22 @@
-# CLAUDE.md — Garden (project-hunt)
+# CLAUDE.md — Garden (garden-public)
 
 ## What This Is
 
 **Garden** is an internal tool-sharing platform for the workplace. Employees can share scripts, dashboards, and automations they've built, upvote and comment on others' work, and adopt tools they find useful. There is also an AI-powered chat assistant for discovering tools via natural language.
 
 The app title in `app/layout.tsx` is "Garden"; the repo is named `project-hunt`.
+
+### Public vs. Internal
+
+This repo (`garden-public`) is a **public-facing demo/mockup** of the internal `project-hunt` app. It is kept in sync with the internal repo via cherry-picks, but has been adapted for an unauthenticated public audience:
+
+- **Guest access** — visitors browse as a shared read-only guest user (`seedGuestUser` internal mutation). Middleware auth is disabled so all pages are reachable without signing in.
+- **Write-gating** — mutations (upvote, comment, submit, etc.) are blocked for the guest user and surface a toast prompting sign-in rather than silently failing.
+- **Error handling** — `toastMutationError` from `@/lib/toast` is used throughout instead of raw `toast` from `sonner`, so `GUEST_BLOCKED` ConvexErrors are surfaced clearly.
+- **Sign-in affordances** — the header and profile page show sign-in banners/buttons for unauthenticated visitors.
+- **Feed default** — unauthenticated users see the Trending feed by default (no personalized feed).
+
+When cherry-picking commits from `project-hunt` into this repo, watch for these divergence points — in particular any import of `toast` from `sonner` in mutation error handlers should stay as `toastMutationError` from `@/lib/toast`.
 
 ---
 
