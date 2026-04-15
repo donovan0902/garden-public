@@ -197,6 +197,13 @@ export const confirmProject = mutation({
     // Propagate hotScore to membership rows
     await propagateHotScoreToMemberships(ctx, args.projectId, hotScore);
 
+    // Inject into all users' personalized feeds immediately
+    await ctx.scheduler.runAfter(
+      0,
+      internal.userAffinities.injectNewProjectIntoFeeds,
+      { projectId: args.projectId }
+    );
+
     // Notify followers of all spaces this project belongs to
     const membershipRows = await ctx.db
       .query("projectSpaces")
